@@ -3,11 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
-
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
 )
 
 const (
@@ -37,12 +33,6 @@ func main() {
 		panic(err)
 	}
 
-	e := echo.New()
-
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	e.GET("/ping", PingHandler)
-
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", conf.Port)))
+	cc := NewChildChain(conf)
+	cc.Logger().Fatal(cc.Start())
 }
