@@ -3,7 +3,7 @@ package models
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,7 +36,7 @@ func TestNewBlock(t *testing.T) {
 				0,
 			},
 			output{
-				"e026cc5a4aed3c22a58cbd3d2ac754c9352c5436f638042dca99034e83636516",
+				"0xe026cc5a4aed3c22a58cbd3d2ac754c9352c5436f638042dca99034e83636516",
 				nil,
 			},
 		},
@@ -47,7 +47,7 @@ func TestNewBlock(t *testing.T) {
 				1,
 			},
 			output{
-				"f88f3819a6a679a60f8d5070af717bdfb41a87ab9eceb631136273928fb30560",
+				"0xf88f3819a6a679a60f8d5070af717bdfb41a87ab9eceb631136273928fb30560",
 				nil,
 			},
 		},
@@ -62,7 +62,7 @@ func TestNewBlock(t *testing.T) {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.root, common.Bytes2Hex(blk.Root()))
+				assert.Equal(t, out.root, hexutil.Encode(blk.Root()))
 			}
 		})
 	}
@@ -82,7 +82,7 @@ func TestBlock_Hash(t *testing.T) {
 			"null block",
 			newTestNullBlock(t),
 			output{
-				"122d07b601c05953fe8229d17e5b5c0a66fbec3b9da839aea24afc18d86a6219",
+				"0x122d07b601c05953fe8229d17e5b5c0a66fbec3b9da839aea24afc18d86a6219",
 				nil,
 			},
 		},
@@ -97,7 +97,7 @@ func TestBlock_Hash(t *testing.T) {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.hash, common.Bytes2Hex(b))
+				assert.Equal(t, out.hash, hexutil.Encode(b))
 			}
 		})
 	}

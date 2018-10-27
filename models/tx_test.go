@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,7 +37,7 @@ func TestTx_Hash(t *testing.T) {
 			"null tx",
 			newTestNullTx(t),
 			output{
-				"c758c57a2f76021ff85aa579dc03dc81ee6302c88eb43fd73190f1b036e5f0e6",
+				"0xc758c57a2f76021ff85aa579dc03dc81ee6302c88eb43fd73190f1b036e5f0e6",
 				nil,
 			},
 		},
@@ -44,7 +45,7 @@ func TestTx_Hash(t *testing.T) {
 			"deposit tx",
 			newTestDepositTx(t),
 			output{
-				"cfbf8d16cf5cd7a8f3a812ad415a163b0d112c08b061ce36f6291dae81a97f8e",
+				"0xcfbf8d16cf5cd7a8f3a812ad415a163b0d112c08b061ce36f6291dae81a97f8e",
 				nil,
 			},
 		},
@@ -59,7 +60,7 @@ func TestTx_Hash(t *testing.T) {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.hash, common.Bytes2Hex(b))
+				assert.Equal(t, out.hash, hexutil.Encode(b))
 			}
 		})
 	}
