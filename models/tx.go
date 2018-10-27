@@ -49,19 +49,19 @@ func (txOut *TxOut) EncodeRLP(w io.Writer) error {
 }
 
 type Tx struct {
-	Inputs                 [TxElementsNum]*TxIn
-	Outputs                [TxElementsNum]*TxOut
-	Signatures             [TxElementsNum][]byte
-	ConfirmationSignatures [TxElementsNum][]byte
-	Spents                 [TxElementsNum]bool
+	Inputs                 [TxElementsNum]*TxIn     `json:"ins"`
+	Outputs                [TxElementsNum]*TxOut    `json:"outs"`
+	Signatures             [TxElementsNum]Signature `json:"sigs"`
+	ConfirmationSignatures [TxElementsNum]Signature `json:"confsigs"`
+	Spents                 [TxElementsNum]bool      `json:"spents"`
 }
 
 func NewTx() *Tx {
 	tx := &Tx{
 		Inputs:                 [TxElementsNum]*TxIn{},
 		Outputs:                [TxElementsNum]*TxOut{},
-		Signatures:             [TxElementsNum][]byte{},
-		ConfirmationSignatures: [TxElementsNum][]byte{},
+		Signatures:             [TxElementsNum]Signature{},
+		ConfirmationSignatures: [TxElementsNum]Signature{},
 		Spents:                 [TxElementsNum]bool{},
 	}
 
@@ -110,7 +110,7 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 
 	buf := bytes.NewBuffer(b)
 	for _, sig := range tx.Signatures {
-		if _, err := buf.Write(sig); err != nil {
+		if _, err := buf.Write(sig.Bytes()); err != nil {
 			return nil, err
 		}
 	}
@@ -124,11 +124,11 @@ func (tx *Tx) Sign(idx int, privKey *ecdsa.PrivateKey) error {
 		return err
 	}
 
-	sig, err := crypto.Sign(hashBytes, privKey)
+	sigBytes, err := crypto.Sign(hashBytes, privKey)
 	if err != nil {
 		return err
 	}
-	tx.Signatures[idx] = sig
+	tx.Signatures[idx] = newSignatureFromBytes(sigBytes)
 
 	return nil
 }
@@ -141,12 +141,12 @@ func (tx *Tx) Signers() ([]common.Address, error) {
 
 	signers := make([]common.Address, TxElementsNum)
 	for i, sig := range tx.Signatures {
-		if bytes.Equal(sig, nullSignature) {
+		if bytes.Equal(sig.Bytes(), nullSignature.Bytes()) {
 			signers[i] = nullAddress
 			continue
 		}
 
-		pubKey, err := crypto.SigToPub(hashBytes, sig)
+		pubKey, err := crypto.SigToPub(hashBytes, sig.Bytes())
 		if err != nil {
 			return nil, err
 		}

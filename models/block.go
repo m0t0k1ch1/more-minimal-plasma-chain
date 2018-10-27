@@ -12,15 +12,15 @@ import (
 )
 
 type BlockSummary struct {
-	Txes      []string `json:"txes"`
-	Number    uint64   `json:"num"`
-	Signature string   `json:"sig"`
+	Txes      []string  `json:"txes"`
+	Number    uint64    `json:"num"`
+	Signature Signature `json:"sig"`
 }
 
 type Block struct {
 	Txes       []*Tx
 	Number     uint64
-	Signature  []byte
+	Signature  Signature
 	merkleTree *merkle.Tree
 }
 
@@ -85,7 +85,7 @@ func (blk *Block) Summary() (*BlockSummary, error) {
 	summary := &BlockSummary{
 		Txes:      make([]string, len(blk.Txes)),
 		Number:    blk.Number,
-		Signature: common.Bytes2Hex(blk.Signature),
+		Signature: blk.Signature,
 	}
 
 	for i, tx := range blk.Txes {
@@ -106,11 +106,11 @@ func (blk *Block) Sign(privKey *ecdsa.PrivateKey) error {
 		return err
 	}
 
-	sig, err := crypto.Sign(hashBytes, privKey)
+	sigBytes, err := crypto.Sign(hashBytes, privKey)
 	if err != nil {
 		return err
 	}
-	blk.Signature = sig
+	blk.Signature = newSignatureFromBytes(sigBytes)
 
 	return nil
 }
@@ -121,11 +121,11 @@ func (blk *Block) Signer() (common.Address, error) {
 		return common.Address{}, err
 	}
 
-	if bytes.Equal(blk.Signature, nullSignature) {
+	if bytes.Equal(blk.Signature.Bytes(), nullSignature.Bytes()) {
 		return nullAddress, nil
 	}
 
-	pubKey, err := crypto.SigToPub(hashBytes, blk.Signature)
+	pubKey, err := crypto.SigToPub(hashBytes, blk.Signature.Bytes())
 	if err != nil {
 		return common.Address{}, err
 	}
