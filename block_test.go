@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,4 +29,19 @@ func TestBlock_Hash(t *testing.T) {
 			assert.Equal(t, tc.hex, hex.EncodeToString(b))
 		})
 	}
+}
+
+func TestBlock_Sign(t *testing.T) {
+	privKey, err := crypto.GenerateKey()
+	require.NoError(t, err)
+
+	addr := crypto.PubkeyToAddress(privKey.PublicKey)
+
+	blk := NewBlock(0)
+	require.NoError(t, blk.Sign(privKey))
+
+	signer, err := blk.Signer()
+	require.NoError(t, err)
+
+	assert.Equal(t, addr, signer)
 }

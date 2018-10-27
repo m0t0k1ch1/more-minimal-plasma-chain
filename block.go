@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"crypto/ecdsa"
 	"io"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 )
@@ -36,4 +39,37 @@ func (blk *Block) Hash() ([]byte, error) {
 	}
 
 	return crypto.Keccak256(b), nil
+}
+
+func (blk *Block) Sign(privKey *ecdsa.PrivateKey) error {
+	hashBytes, err := blk.Hash()
+	if err != nil {
+		return err
+	}
+
+	sig, err := crypto.Sign(hashBytes, privKey)
+	if err != nil {
+		return err
+	}
+	blk.Signature = sig
+
+	return nil
+}
+
+func (blk *Block) Signer() (common.Address, error) {
+	hashBytes, err := blk.Hash()
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	if bytes.Equal(blk.Signature, NullSignature) {
+		return NullAddress, nil
+	}
+
+	pubKey, err := crypto.SigToPub(hashBytes, blk.Signature)
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	return crypto.PubkeyToAddress(*pubKey), nil
 }
