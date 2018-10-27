@@ -37,6 +37,7 @@ func NewChildChain(conf *Config) *ChildChain {
 			return h(&Context{c})
 		}
 	})
+
 	cc.GET("/ping", cc.PingHandler)
 	cc.POST("/blocks", cc.PostBlockHandler)
 	cc.GET("/blocks/:num", cc.GetBlockHandler)
