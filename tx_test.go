@@ -41,7 +41,7 @@ func TestTx_Hash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			b, err := tc.tx.Hash()
 			require.NoError(t, err)
-			assert.Equal(t, hex.EncodeToString(b), tc.hex)
+			assert.Equal(t, tc.hex, hex.EncodeToString(b))
 		})
 	}
 }
