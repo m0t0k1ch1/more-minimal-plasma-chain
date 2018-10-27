@@ -95,6 +95,8 @@ func NewTx() *Tx {
 	return tx
 }
 
+// implements RLP Encoder interface
+// ref. https://godoc.org/github.com/ethereum/go-ethereum/rlp#Encoder
 func (tx *Tx) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, []interface{}{
 		tx.Inputs, tx.Outputs,
