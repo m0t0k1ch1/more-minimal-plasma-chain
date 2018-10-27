@@ -91,9 +91,19 @@ func NewTx() *Tx {
 		tx.Outputs[i] = NullTxOut
 		tx.Signatures[i] = NullSignature
 		tx.Confirmations[i] = NullSignature
+		tx.Spents[i] = false
 	}
 
 	return tx
+}
+
+func (tx *Tx) IsDeposit() bool {
+	for _, in := range tx.Inputs {
+		if in.BlockNum != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // implements RLP Encoder interface
