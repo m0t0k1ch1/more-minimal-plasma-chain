@@ -118,25 +118,6 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (tx *Tx) Summary() (*TxSummary, error) {
-	summary := &TxSummary{
-		Inputs:                 tx.Inputs,
-		Outputs:                tx.Outputs,
-		Signatures:             [txElementsNum]string{},
-		ConfirmationSignatures: [txElementsNum]string{},
-		Spents:                 tx.Spents,
-	}
-
-	for i, sig := range tx.Signatures {
-		summary.Signatures[i] = common.Bytes2Hex(sig)
-	}
-	for i, confsig := range tx.ConfirmationSignatures {
-		summary.ConfirmationSignatures[i] = common.Bytes2Hex(confsig)
-	}
-
-	return summary, nil
-}
-
 func (tx *Tx) Sign(idx int, privKey *ecdsa.PrivateKey) error {
 	hashBytes, err := tx.Hash()
 	if err != nil {

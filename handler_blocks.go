@@ -73,12 +73,7 @@ func (cc *ChildChain) GetBlockTxHandler(c *Context) error {
 		return c.JSONError(ErrTxNotFound)
 	}
 
-	txSummary, err := tx.Summary()
-	if err != nil {
-		return c.JSONError(err)
-	}
-
-	return c.JSONSuccess(txSummary)
+	return c.JSONSuccess(tx)
 }
 
 func (cc *ChildChain) getBlockHandler(c *Context, num uint64) error {
