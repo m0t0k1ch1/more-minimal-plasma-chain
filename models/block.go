@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	merkle "github.com/m0t0k1ch1/fixed-merkle"
 )
 
 type BlockSummary struct {
@@ -17,17 +18,46 @@ type BlockSummary struct {
 }
 
 type Block struct {
-	Txes      []*Tx
-	Number    uint64
-	Signature []byte
+	Txes       []*Tx
+	Number     uint64
+	Signature  []byte
+	merkleTree *merkle.Tree
 }
 
-func NewBlock(num uint64) *Block {
-	return &Block{
-		Txes:      []*Tx{},
-		Number:    num,
-		Signature: NullSignature,
+func NewBlock(txes []*Tx, num uint64) (*Block, error) {
+	blk := &Block{
+		Txes:       txes,
+		Number:     num,
+		Signature:  nullSignature,
+		merkleTree: nil,
 	}
+
+	if err := blk.initMerkleTree(); err != nil {
+		return nil, err
+	}
+
+	return blk, nil
+}
+
+func (blk *Block) initMerkleTree() error {
+	leaves := make([][]byte, len(blk.Txes))
+	for i, tx := range blk.Txes {
+		leaf, err := tx.MerkleLeaf()
+		if err != nil {
+			return err
+		}
+
+		leaves[i] = leaf
+	}
+
+	tree, err := merkle.NewTree(MerkleConfig(), leaves)
+	if err != nil {
+		return err
+	}
+
+	blk.merkleTree = tree
+
+	return nil
 }
 
 // implements RLP Encoder interface
@@ -45,6 +75,10 @@ func (blk *Block) Hash() ([]byte, error) {
 	}
 
 	return crypto.Keccak256(b), nil
+}
+
+func (blk *Block) Root() []byte {
+	return blk.merkleTree.Root().Bytes()
 }
 
 func (blk *Block) Summary() (*BlockSummary, error) {
@@ -87,8 +121,8 @@ func (blk *Block) Signer() (common.Address, error) {
 		return common.Address{}, err
 	}
 
-	if bytes.Equal(blk.Signature, NullSignature) {
-		return NullAddress, nil
+	if bytes.Equal(blk.Signature, nullSignature) {
+		return nullAddress, nil
 	}
 
 	pubKey, err := crypto.SigToPub(hashBytes, blk.Signature)

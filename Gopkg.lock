@@ -66,6 +66,14 @@
   version = "v0.2.7"
 
 [[projects]]
+  digest = "1:7d104dc2e5adf174f7a86cafdcfa56adbe9e93534f9d2bf71a80439fc8718d4a"
+  name = "github.com/m0t0k1ch1/fixed-merkle"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8cbe058df467bfcb5a729f84cabd21b175cad249"
+  version = "v0.2.0"
+
+[[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
@@ -141,9 +149,11 @@
   input-imports = [
     "github.com/ethereum/go-ethereum/common",
     "github.com/ethereum/go-ethereum/crypto",
+    "github.com/ethereum/go-ethereum/crypto/sha3",
     "github.com/ethereum/go-ethereum/rlp",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
+    "github.com/m0t0k1ch1/fixed-merkle",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
   ]

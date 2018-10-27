@@ -10,29 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-const (
-	TxElementsNum = 2
-)
-
-var (
-	NullAddress = common.BytesToAddress([]byte{
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	})
-	NullSignature = []byte{
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-	}
-
-	NullTxIn  = NewTxIn(0, 0, 0)
-	NullTxOut = NewTxOut(NullAddress, 0)
-)
-
 type TxIn struct {
 	BlockNum    uint64
 	TxIndex     uint64
@@ -72,27 +49,27 @@ func (txOut *TxOut) EncodeRLP(w io.Writer) error {
 }
 
 type Tx struct {
-	Inputs        [TxElementsNum]*TxIn
-	Outputs       [TxElementsNum]*TxOut
-	Signatures    [TxElementsNum][]byte
-	Confirmations [TxElementsNum][]byte
-	Spents        [TxElementsNum]bool
+	Inputs        [txElementsNum]*TxIn
+	Outputs       [txElementsNum]*TxOut
+	Signatures    [txElementsNum][]byte
+	Confirmations [txElementsNum][]byte
+	Spents        [txElementsNum]bool
 }
 
 func NewTx() *Tx {
 	tx := &Tx{
-		Inputs:        [TxElementsNum]*TxIn{},
-		Outputs:       [TxElementsNum]*TxOut{},
-		Signatures:    [TxElementsNum][]byte{},
-		Confirmations: [TxElementsNum][]byte{},
-		Spents:        [TxElementsNum]bool{},
+		Inputs:        [txElementsNum]*TxIn{},
+		Outputs:       [txElementsNum]*TxOut{},
+		Signatures:    [txElementsNum][]byte{},
+		Confirmations: [txElementsNum][]byte{},
+		Spents:        [txElementsNum]bool{},
 	}
 
-	for i := 0; i < TxElementsNum; i++ {
-		tx.Inputs[i] = NullTxIn
-		tx.Outputs[i] = NullTxOut
-		tx.Signatures[i] = NullSignature
-		tx.Confirmations[i] = NullSignature
+	for i := 0; i < txElementsNum; i++ {
+		tx.Inputs[i] = nullTxIn
+		tx.Outputs[i] = nullTxOut
+		tx.Signatures[i] = nullSignature
+		tx.Confirmations[i] = nullSignature
 		tx.Spents[i] = false
 	}
 
@@ -125,6 +102,22 @@ func (tx *Tx) Hash() ([]byte, error) {
 	return crypto.Keccak256(b), nil
 }
 
+func (tx *Tx) MerkleLeaf() ([]byte, error) {
+	b, err := rlp.EncodeToBytes(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := bytes.NewBuffer(b)
+	for _, sig := range tx.Signatures {
+		if _, err := buf.Write(sig); err != nil {
+			return nil, err
+		}
+	}
+
+	return buf.Bytes(), nil
+}
+
 func (tx *Tx) Sign(idx int, privKey *ecdsa.PrivateKey) error {
 	hashBytes, err := tx.Hash()
 	if err != nil {
@@ -146,10 +139,10 @@ func (tx *Tx) Signers() ([]common.Address, error) {
 		return nil, err
 	}
 
-	signers := make([]common.Address, TxElementsNum)
+	signers := make([]common.Address, txElementsNum)
 	for i, sig := range tx.Signatures {
-		if bytes.Equal(sig, NullSignature) {
-			signers[i] = NullAddress
+		if bytes.Equal(sig, nullSignature) {
+			signers[i] = nullAddress
 			continue
 		}
 

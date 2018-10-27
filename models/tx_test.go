@@ -1,7 +1,6 @@
 package models
 
 import (
-	"encoding/hex"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -10,39 +9,58 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	testAddress = common.HexToAddress("0x82a978b3f5962a5b0957d9ee9eef472ee55b42f1")
-)
+func newTestNullTx(t *testing.T) *Tx {
+	return NewTx()
+}
 
-func newTestDepositTx() *Tx {
+func newTestDepositTx(t *testing.T) *Tx {
 	tx := NewTx()
-	tx.Outputs[0] = NewTxOut(testAddress, 1)
+	tx.Outputs[0] = NewTxOut(
+		common.HexToAddress("0x1111111111111111111111111111111111111111"),
+		1,
+	)
 	return tx
 }
 
 func TestTx_Hash(t *testing.T) {
+	type output struct {
+		hash string
+		err  error
+	}
 	testCases := []struct {
 		name string
 		tx   *Tx
-		hex  string
+		out  output
 	}{
 		{
 			"null tx",
-			NewTx(),
-			"c758c57a2f76021ff85aa579dc03dc81ee6302c88eb43fd73190f1b036e5f0e6",
+			newTestNullTx(t),
+			output{
+				"c758c57a2f76021ff85aa579dc03dc81ee6302c88eb43fd73190f1b036e5f0e6",
+				nil,
+			},
 		},
 		{
 			"deposit tx",
-			newTestDepositTx(),
-			"1d394fb5982739838796ab991da432ddf7123e7bb4b5a3dc92c342458a7d40e1",
+			newTestDepositTx(t),
+			output{
+				"cfbf8d16cf5cd7a8f3a812ad415a163b0d112c08b061ce36f6291dae81a97f8e",
+				nil,
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			b, err := tc.tx.Hash()
-			require.NoError(t, err)
-			assert.Equal(t, tc.hex, hex.EncodeToString(b))
+			tx, out := tc.tx, tc.out
+
+			b, err := tx.Hash()
+			if out.err != nil {
+				assert.EqualError(t, err, out.err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, out.hash, common.Bytes2Hex(b))
+			}
 		})
 	}
 }
@@ -51,16 +69,16 @@ func TestTx_Sign(t *testing.T) {
 	privKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
-	addr := crypto.PubkeyToAddress(privKey.PublicKey)
+	tx := newTestNullTx(t)
 
-	tx := NewTx()
+	// sign
 	require.NoError(t, tx.Sign(0, privKey))
 
+	// verify
 	signers, err := tx.Signers()
 	require.NoError(t, err)
-
-	assert.Equal(t, addr, signers[0])
+	assert.Equal(t, crypto.PubkeyToAddress(privKey.PublicKey), signers[0])
 	for i := 1; i < len(signers); i++ {
-		assert.Equal(t, NullAddress, signers[i])
+		assert.Equal(t, nullAddress, signers[i])
 	}
 }
