@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"crypto/ecdsa"
 	"io"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -121,4 +123,43 @@ func (tx *Tx) Hash() ([]byte, error) {
 	}
 
 	return crypto.Keccak256(b), nil
+}
+
+func (tx *Tx) Sign(idx int, privKey *ecdsa.PrivateKey) error {
+	hashBytes, err := tx.Hash()
+	if err != nil {
+		return err
+	}
+
+	sig, err := crypto.Sign(hashBytes, privKey)
+	if err != nil {
+		return err
+	}
+	tx.Signatures[idx] = sig
+
+	return nil
+}
+
+func (tx *Tx) Signers() ([]common.Address, error) {
+	hashBytes, err := tx.Hash()
+	if err != nil {
+		return nil, err
+	}
+
+	signers := make([]common.Address, TxElementsNum)
+	for i, sig := range tx.Signatures {
+		if bytes.Equal(sig, NullSignature) {
+			signers[i] = NullAddress
+			continue
+		}
+
+		pubKey, err := crypto.SigToPub(hashBytes, sig)
+		if err != nil {
+			return nil, err
+		}
+
+		signers[i] = crypto.PubkeyToAddress(*pubKey)
+	}
+
+	return signers, nil
 }
