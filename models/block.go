@@ -12,11 +12,11 @@ import (
 
 type Block struct {
 	Txes      []*Tx
-	Number    uint
+	Number    uint64
 	Signature []byte
 }
 
-func NewBlock(num uint) *Block {
+func NewBlock(num uint64) *Block {
 	return &Block{
 		Txes:      nil,
 		Number:    num,

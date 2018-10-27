@@ -34,12 +34,12 @@ var (
 )
 
 type TxIn struct {
-	BlockNum    uint
-	TxIndex     uint
-	OutputIndex uint
+	BlockNum    uint64
+	TxIndex     uint64
+	OutputIndex uint64
 }
 
-func NewTxIn(blkNum, txIndex, oIndex uint) *TxIn {
+func NewTxIn(blkNum, txIndex, oIndex uint64) *TxIn {
 	return &TxIn{
 		BlockNum:    blkNum,
 		TxIndex:     txIndex,
@@ -55,10 +55,10 @@ func (txIn *TxIn) EncodeRLP(w io.Writer) error {
 
 type TxOut struct {
 	Owner  common.Address
-	Amount uint
+	Amount uint64
 }
 
-func NewTxOut(owner common.Address, amount uint) *TxOut {
+func NewTxOut(owner common.Address, amount uint64) *TxOut {
 	return &TxOut{
 		Owner:  owner,
 		Amount: amount,
