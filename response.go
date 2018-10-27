@@ -16,3 +16,10 @@ func NewSuccessResponse(result interface{}) *Response {
 		Result: result,
 	}
 }
+
+func NewErrorResponse(err *Error) *Response {
+	return &Response{
+		State:  ResponseStateError,
+		Result: err,
+	}
+}

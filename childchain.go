@@ -37,6 +37,7 @@ func NewChildChain(conf *Config) *ChildChain {
 			return h(&Context{c})
 		}
 	})
+	cc.e.HTTPErrorHandler = cc.httpErrorHandler
 
 	cc.GET("/ping", cc.PingHandler)
 	cc.POST("/blocks", cc.PostBlockHandler)
@@ -65,4 +66,22 @@ func (cc *ChildChain) Logger() echo.Logger {
 
 func (cc *ChildChain) Start() error {
 	return cc.e.Start(fmt.Sprintf(":%d", cc.config.Port))
+}
+
+func (cc *ChildChain) httpErrorHandler(err error, c echo.Context) {
+	cc.e.Logger.Error(err)
+
+	code := http.StatusInternalServerError
+	msg := http.StatusText(code)
+
+	if httpErr, ok := err.(*echo.HTTPError); ok {
+		code = httpErr.Code
+		msg = fmt.Sprintf("%v", httpErr.Message)
+	}
+
+	appErr := NewError(code, msg)
+
+	if err := c.JSON(appErr.Code, NewErrorResponse(appErr)); err != nil {
+		cc.e.Logger.Error(err)
+	}
 }
