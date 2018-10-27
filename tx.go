@@ -74,6 +74,7 @@ type Tx struct {
 	Outputs       [TxElementsNum]*TxOut
 	Signatures    [TxElementsNum][]byte
 	Confirmations [TxElementsNum][]byte
+	Spents        [TxElementsNum]bool
 }
 
 func NewTx() *Tx {
@@ -82,6 +83,7 @@ func NewTx() *Tx {
 		Outputs:       [TxElementsNum]*TxOut{},
 		Signatures:    [TxElementsNum][]byte{},
 		Confirmations: [TxElementsNum][]byte{},
+		Spents:        [TxElementsNum]bool{},
 	}
 
 	for i := 0; i < TxElementsNum; i++ {
