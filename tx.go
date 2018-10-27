@@ -29,7 +29,6 @@ var (
 
 	NullTxIn  = NewTxIn(0, 0, 0)
 	NullTxOut = NewTxOut(NullAddress, 0)
-	NullTx    = NewTx()
 )
 
 type TxIn struct {

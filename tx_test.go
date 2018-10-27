@@ -27,7 +27,7 @@ func TestTx_Hash(t *testing.T) {
 	}{
 		{
 			"null tx",
-			NullTx,
+			NewTx(),
 			"c758c57a2f76021ff85aa579dc03dc81ee6302c88eb43fd73190f1b036e5f0e6",
 		},
 		{
