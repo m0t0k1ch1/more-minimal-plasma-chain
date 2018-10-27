@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	merkle "github.com/m0t0k1ch1/fixed-merkle"
@@ -94,7 +95,7 @@ func (blk *Block) Summary() (*BlockSummary, error) {
 			return nil, err
 		}
 
-		summary.Txes[i] = common.ToHex(b)
+		summary.Txes[i] = hexutil.Encode(b)
 	}
 
 	return summary, nil
