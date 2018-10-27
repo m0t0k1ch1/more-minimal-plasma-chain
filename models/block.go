@@ -25,10 +25,10 @@ type Block struct {
 	merkleTree *merkle.Tree
 }
 
-func NewBlock(txes []*Tx, num uint64) (*Block, error) {
+func NewBlock(txes []*Tx, blkNum uint64) (*Block, error) {
 	blk := &Block{
 		Txes:       txes,
-		Number:     num,
+		Number:     blkNum,
 		Signature:  nullSignature,
 		merkleTree: nil,
 	}

@@ -20,11 +20,11 @@ func NewBlockchain() *Blockchain {
 	}
 }
 
-func (bc *Blockchain) GetBlock(num uint64) *Block {
+func (bc *Blockchain) GetBlock(blkNum uint64) *Block {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	return bc.getBlock(num)
+	return bc.getBlock(blkNum)
 }
 
 func (bc *Blockchain) GetTx(blkNum uint64, txIndex int) *Tx {
@@ -62,8 +62,8 @@ func (bc *Blockchain) AddBlock(txes []*Tx) (uint64, error) {
 	return blk.Number, nil
 }
 
-func (bc *Blockchain) getBlock(num uint64) *Block {
-	blk, ok := bc.chain[num]
+func (bc *Blockchain) getBlock(blkNum uint64) *Block {
+	blk, ok := bc.chain[blkNum]
 	if !ok {
 		return nil
 	}
