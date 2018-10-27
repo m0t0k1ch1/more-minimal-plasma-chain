@@ -3,7 +3,7 @@ package models
 import "github.com/ethereum/go-ethereum/common"
 
 const (
-	txElementsNum = 2
+	TxElementsNum = 2
 )
 
 var (

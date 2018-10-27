@@ -48,32 +48,24 @@ func (txOut *TxOut) EncodeRLP(w io.Writer) error {
 	})
 }
 
-type TxSummary struct {
-	Inputs                 [txElementsNum]*TxIn  `json:"ins"`
-	Outputs                [txElementsNum]*TxOut `json:"outs"`
-	Signatures             [txElementsNum]string `json:"sigs"`
-	ConfirmationSignatures [txElementsNum]string `json:"confsigs"`
-	Spents                 [txElementsNum]bool   `json:"spents"`
-}
-
 type Tx struct {
-	Inputs                 [txElementsNum]*TxIn
-	Outputs                [txElementsNum]*TxOut
-	Signatures             [txElementsNum][]byte
-	ConfirmationSignatures [txElementsNum][]byte
-	Spents                 [txElementsNum]bool
+	Inputs                 [TxElementsNum]*TxIn
+	Outputs                [TxElementsNum]*TxOut
+	Signatures             [TxElementsNum][]byte
+	ConfirmationSignatures [TxElementsNum][]byte
+	Spents                 [TxElementsNum]bool
 }
 
 func NewTx() *Tx {
 	tx := &Tx{
-		Inputs:                 [txElementsNum]*TxIn{},
-		Outputs:                [txElementsNum]*TxOut{},
-		Signatures:             [txElementsNum][]byte{},
-		ConfirmationSignatures: [txElementsNum][]byte{},
-		Spents:                 [txElementsNum]bool{},
+		Inputs:                 [TxElementsNum]*TxIn{},
+		Outputs:                [TxElementsNum]*TxOut{},
+		Signatures:             [TxElementsNum][]byte{},
+		ConfirmationSignatures: [TxElementsNum][]byte{},
+		Spents:                 [TxElementsNum]bool{},
 	}
 
-	for i := 0; i < txElementsNum; i++ {
+	for i := 0; i < TxElementsNum; i++ {
 		tx.Inputs[i] = nullTxIn
 		tx.Outputs[i] = nullTxOut
 		tx.Signatures[i] = nullSignature
@@ -166,7 +158,7 @@ func (tx *Tx) Signers() ([]common.Address, error) {
 		return nil, err
 	}
 
-	signers := make([]common.Address, txElementsNum)
+	signers := make([]common.Address, TxElementsNum)
 	for i, sig := range tx.Signatures {
 		if bytes.Equal(sig, nullSignature) {
 			signers[i] = nullAddress
