@@ -41,7 +41,7 @@ func NewChildChain(conf *Config) *ChildChain {
 
 	cc.GET("/ping", cc.PingHandler)
 	cc.POST("/blocks", cc.PostBlockHandler)
-	cc.GET("/blocks/:num", cc.GetBlockHandler)
+	cc.GET("/blocks/:blkNum", cc.GetBlockHandler)
 	cc.GET("/blocks/:blkNum/txes/:txIndex", cc.GetBlockTxHandler)
 	cc.POST("/depositBlocks", cc.PostDepositBlockHandler)
 

@@ -8,25 +8,25 @@ import (
 )
 
 func (cc *ChildChain) GetBlockHandler(c *Context) error {
-	numStr := c.Param("num")
+	blkNumStr := c.Param("blkNum")
 
-	num, err := strconv.ParseUint(numStr, 10, 64)
+	blkNum, err := strconv.ParseUint(blkNumStr, 10, 64)
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	return cc.getBlockHandler(c, num)
+	return cc.getBlockHandler(c, blkNum)
 }
 
 func (cc *ChildChain) PostBlockHandler(c *Context) error {
 	txes := cc.mempool.Extract()
 
-	num, err := cc.blockchain.AddBlock(txes)
+	blkNum, err := cc.blockchain.AddBlock(txes)
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	return cc.getBlockHandler(c, num)
+	return cc.getBlockHandler(c, blkNum)
 }
 
 func (cc *ChildChain) PostDepositBlockHandler(c *Context) error {
@@ -46,12 +46,12 @@ func (cc *ChildChain) PostDepositBlockHandler(c *Context) error {
 	tx := models.NewTx()
 	tx.Outputs[0] = models.NewTxOut(owner, amount)
 
-	num, err := cc.blockchain.AddBlock([]*models.Tx{tx})
+	blkNum, err := cc.blockchain.AddBlock([]*models.Tx{tx})
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	return cc.getBlockHandler(c, num)
+	return cc.getBlockHandler(c, blkNum)
 }
 
 func (cc *ChildChain) GetBlockTxHandler(c *Context) error {
@@ -76,8 +76,8 @@ func (cc *ChildChain) GetBlockTxHandler(c *Context) error {
 	return c.JSONSuccess(tx)
 }
 
-func (cc *ChildChain) getBlockHandler(c *Context, num uint64) error {
-	blk := cc.blockchain.GetBlock(num)
+func (cc *ChildChain) getBlockHandler(c *Context, blkNum uint64) error {
+	blk := cc.blockchain.GetBlock(blkNum)
 	if blk == nil {
 		return c.JSONError(ErrBlockNotFound)
 	}
