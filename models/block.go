@@ -13,8 +13,8 @@ import (
 
 type BlockSummary struct {
 	Txes      []string `json:"txes"`
-	Number    uint64   `json:"number"`
-	Signature string   `json:"signature"`
+	Number    uint64   `json:"num"`
+	Signature string   `json:"sig"`
 }
 
 type Block struct {
