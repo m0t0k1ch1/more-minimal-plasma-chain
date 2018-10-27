@@ -40,6 +40,17 @@ func TestNewBlock(t *testing.T) {
 				nil,
 			},
 		},
+		{
+			"deposit block",
+			input{
+				[]*Tx{newTestDepositTx(t)},
+				1,
+			},
+			output{
+				"f88f3819a6a679a60f8d5070af717bdfb41a87ab9eceb631136273928fb30560",
+				nil,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -53,7 +64,6 @@ func TestNewBlock(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, out.root, common.Bytes2Hex(blk.Root()))
 			}
-
 		})
 	}
 }
