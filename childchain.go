@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -11,33 +10,24 @@ import (
 )
 
 const (
-	DefaultBlockNumber = 1
 	DefaultMempoolSize = 1000
-)
-
-var (
-	mu sync.RWMutex
 )
 
 type HandlerFunc func(*Context) error
 
 type ChildChain struct {
-	mu                 *sync.RWMutex
-	e                  *echo.Echo
-	config             *Config
-	currentBlockNumber uint64
-	blocks             map[uint64]*models.Block
-	mempool            *models.Mempool
+	e          *echo.Echo
+	config     *Config
+	blockchain *models.Blockchain
+	mempool    *models.Mempool
 }
 
 func NewChildChain(conf *Config) *ChildChain {
 	cc := &ChildChain{
-		mu:                 &sync.RWMutex{},
-		e:                  echo.New(),
-		config:             conf,
-		currentBlockNumber: DefaultBlockNumber,
-		blocks:             map[uint64]*models.Block{},
-		mempool:            models.NewMempool(DefaultMempoolSize),
+		e:          echo.New(),
+		config:     conf,
+		blockchain: models.NewBlockchain(),
+		mempool:    models.NewMempool(DefaultMempoolSize),
 	}
 
 	cc.e.Use(middleware.Logger())

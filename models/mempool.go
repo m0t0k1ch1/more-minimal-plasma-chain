@@ -19,12 +19,12 @@ func NewMempool(size int) *Mempool {
 }
 
 func (mp *Mempool) Add(tx *Tx) error {
+	mp.mu.Lock()
+	defer mp.mu.Unlock()
+
 	if mp.offset >= len(mp.pool) {
 		return ErrMempoolFull
 	}
-
-	mp.mu.Lock()
-	defer mp.mu.Unlock()
 
 	mp.pool[mp.offset] = tx
 	mp.offset++
