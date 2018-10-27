@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:c0decf632843204d2b8781de7b26e7038584e2dcccc7e2f401e88ae85b1df2b7"
+  name = "github.com/btcsuite/btcd"
+  packages = ["btcec"]
+  pruneopts = "UT"
+  revision = "67e573d211ace594f1366b4ce9d39726c4b19bd0"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -10,15 +18,18 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:b44fe4f532d719dabc8ed9b4e14319ddf1c5f6ad7e801e42f4878e7c87638f33"
+  digest = "1:08af77c41dc6a9ab5dd123ce76356fa4068d57287c060cdc934e1131973dd037"
   name = "github.com/ethereum/go-ethereum"
   packages = [
     "common",
     "common/hexutil",
+    "common/math",
+    "crypto",
+    "crypto/secp256k1",
     "crypto/sha3",
     "rlp",
   ]
-  pruneopts = "UT"
+  pruneopts = "T"
   revision = "8bbe72075e4e16442c4e28d999edee12e294329e"
   version = "v1.8.17"
 
@@ -46,6 +57,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/ethereum/go-ethereum/common",
+    "github.com/ethereum/go-ethereum/crypto",
     "github.com/ethereum/go-ethereum/rlp",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
