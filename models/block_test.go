@@ -17,12 +17,12 @@ func newTestNullBlock(t *testing.T) *Block {
 
 func TestNewBlock(t *testing.T) {
 	type input struct {
-		txes []*Tx
-		num  uint64
+		txes   []*Tx
+		blkNum uint64
 	}
 	type output struct {
-		root string
-		err  error
+		rootHex string
+		err     error
 	}
 	testCases := []struct {
 		name string
@@ -57,12 +57,12 @@ func TestNewBlock(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			in, out := tc.in, tc.out
 
-			blk, err := NewBlock(in.txes, in.num)
+			blk, err := NewBlock(in.txes, in.blkNum)
 			if out.err != nil {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.root, hexutil.Encode(blk.Root()))
+				assert.Equal(t, out.rootHex, hexutil.Encode(blk.Root()))
 			}
 		})
 	}
@@ -70,8 +70,8 @@ func TestNewBlock(t *testing.T) {
 
 func TestBlock_Hash(t *testing.T) {
 	type output struct {
-		hash string
-		err  error
+		hashHex string
+		err     error
 	}
 	testCases := []struct {
 		name string
@@ -92,12 +92,12 @@ func TestBlock_Hash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			blk, out := tc.blk, tc.out
 
-			b, err := blk.Hash()
+			hashBytes, err := blk.Hash()
 			if out.err != nil {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.hash, hexutil.Encode(b))
+				assert.Equal(t, out.hashHex, hexutil.Encode(hashBytes))
 			}
 		})
 	}

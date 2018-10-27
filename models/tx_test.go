@@ -25,8 +25,8 @@ func newTestDepositTx(t *testing.T) *Tx {
 
 func TestTx_Hash(t *testing.T) {
 	type output struct {
-		hash string
-		err  error
+		hashHex string
+		err     error
 	}
 	testCases := []struct {
 		name string
@@ -55,12 +55,12 @@ func TestTx_Hash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx, out := tc.tx, tc.out
 
-			b, err := tx.Hash()
+			hashBytes, err := tx.Hash()
 			if out.err != nil {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.hash, hexutil.Encode(b))
+				assert.Equal(t, out.hashHex, hexutil.Encode(hashBytes))
 			}
 		})
 	}
