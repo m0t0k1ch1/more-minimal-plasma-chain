@@ -32,21 +32,21 @@ func (bc *Blockchain) GetBlock(num uint64) *Block {
 	return blk
 }
 
-func (bc *Blockchain) AddBlock(txes []*Tx) error {
+func (bc *Blockchain) AddBlock(txes []*Tx) (uint64, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
 	blk, err := NewBlock(txes, bc.currentBlockNumber)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if _, ok := bc.chain[blk.Number]; ok {
-		return ErrBlockAlreadyExists
+		return 0, ErrBlockAlreadyExists
 	}
 
 	bc.chain[blk.Number] = blk
 	bc.currentBlockNumber++
 
-	return nil
+	return blk.Number, nil
 }
