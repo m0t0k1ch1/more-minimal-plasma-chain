@@ -18,7 +18,7 @@ type Block struct {
 
 func NewBlock(num uint64) *Block {
 	return &Block{
-		Txes:      nil,
+		Txes:      []*Tx{},
 		Number:    num,
 		Signature: NullSignature,
 	}
