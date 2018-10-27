@@ -2,10 +2,8 @@ package main
 
 import (
 	"net/http"
-
-	"github.com/labstack/echo"
 )
 
-func PingHandler(c echo.Context) error {
+func (cc *ChildChain) PingHandler(c *Context) error {
 	return c.String(http.StatusOK, "pong")
 }
