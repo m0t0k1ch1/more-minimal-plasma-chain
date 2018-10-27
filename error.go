@@ -7,6 +7,11 @@ var (
 		1000,
 		"unexpected error",
 	)
+
+	ErrBlockNotFound = NewError(
+		3001,
+		"block is not found",
+	)
 )
 
 type Error struct {
