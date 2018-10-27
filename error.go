@@ -17,6 +17,10 @@ var (
 		3001,
 		"block is not found",
 	)
+	ErrTxNotFound = NewError(
+		3002,
+		"tx is not found",
+	)
 )
 
 type Error struct {

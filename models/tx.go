@@ -11,9 +11,9 @@ import (
 )
 
 type TxIn struct {
-	BlockNum    uint64
-	TxIndex     uint64
-	OutputIndex uint64
+	BlockNum    uint64 `json:"blknum"`
+	TxIndex     uint64 `json:"txindex"`
+	OutputIndex uint64 `json:"oindex"`
 }
 
 func NewTxIn(blkNum, txIndex, oIndex uint64) *TxIn {
@@ -31,8 +31,8 @@ func (txIn *TxIn) EncodeRLP(w io.Writer) error {
 }
 
 type TxOut struct {
-	Owner  common.Address
-	Amount uint64
+	Owner  common.Address `json:"owner"`
+	Amount uint64         `json:"amount"`
 }
 
 func NewTxOut(owner common.Address, amount uint64) *TxOut {
@@ -48,28 +48,36 @@ func (txOut *TxOut) EncodeRLP(w io.Writer) error {
 	})
 }
 
+type TxSummary struct {
+	Inputs                 [txElementsNum]*TxIn  `json:"ins"`
+	Outputs                [txElementsNum]*TxOut `json:"outs"`
+	Signatures             [txElementsNum]string `json:"sigs"`
+	ConfirmationSignatures [txElementsNum]string `json:"confsigs"`
+	Spents                 [txElementsNum]bool   `json:"spents"`
+}
+
 type Tx struct {
-	Inputs        [txElementsNum]*TxIn
-	Outputs       [txElementsNum]*TxOut
-	Signatures    [txElementsNum][]byte
-	Confirmations [txElementsNum][]byte
-	Spents        [txElementsNum]bool
+	Inputs                 [txElementsNum]*TxIn
+	Outputs                [txElementsNum]*TxOut
+	Signatures             [txElementsNum][]byte
+	ConfirmationSignatures [txElementsNum][]byte
+	Spents                 [txElementsNum]bool
 }
 
 func NewTx() *Tx {
 	tx := &Tx{
-		Inputs:        [txElementsNum]*TxIn{},
-		Outputs:       [txElementsNum]*TxOut{},
-		Signatures:    [txElementsNum][]byte{},
-		Confirmations: [txElementsNum][]byte{},
-		Spents:        [txElementsNum]bool{},
+		Inputs:                 [txElementsNum]*TxIn{},
+		Outputs:                [txElementsNum]*TxOut{},
+		Signatures:             [txElementsNum][]byte{},
+		ConfirmationSignatures: [txElementsNum][]byte{},
+		Spents:                 [txElementsNum]bool{},
 	}
 
 	for i := 0; i < txElementsNum; i++ {
 		tx.Inputs[i] = nullTxIn
 		tx.Outputs[i] = nullTxOut
 		tx.Signatures[i] = nullSignature
-		tx.Confirmations[i] = nullSignature
+		tx.ConfirmationSignatures[i] = nullSignature
 		tx.Spents[i] = false
 	}
 
@@ -116,6 +124,25 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func (tx *Tx) Summary() (*TxSummary, error) {
+	summary := &TxSummary{
+		Inputs:                 tx.Inputs,
+		Outputs:                tx.Outputs,
+		Signatures:             [txElementsNum]string{},
+		ConfirmationSignatures: [txElementsNum]string{},
+		Spents:                 tx.Spents,
+	}
+
+	for i, sig := range tx.Signatures {
+		summary.Signatures[i] = common.Bytes2Hex(sig)
+	}
+	for i, confsig := range tx.ConfirmationSignatures {
+		summary.ConfirmationSignatures[i] = common.Bytes2Hex(confsig)
+	}
+
+	return summary, nil
 }
 
 func (tx *Tx) Sign(idx int, privKey *ecdsa.PrivateKey) error {

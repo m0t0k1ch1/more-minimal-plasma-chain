@@ -24,12 +24,23 @@ func (bc *Blockchain) GetBlock(num uint64) *Block {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	blk, ok := bc.chain[num]
-	if !ok {
+	return bc.getBlock(num)
+}
+
+func (bc *Blockchain) GetTx(blkNum uint64, txIndex int) *Tx {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+
+	blk := bc.getBlock(blkNum)
+	if blk == nil {
 		return nil
 	}
 
-	return blk
+	if txIndex >= len(blk.Txes) {
+		return nil
+	}
+
+	return blk.Txes[txIndex]
 }
 
 func (bc *Blockchain) AddBlock(txes []*Tx) (uint64, error) {
@@ -49,4 +60,13 @@ func (bc *Blockchain) AddBlock(txes []*Tx) (uint64, error) {
 	bc.currentBlockNumber++
 
 	return blk.Number, nil
+}
+
+func (bc *Blockchain) getBlock(num uint64) *Block {
+	blk, ok := bc.chain[num]
+	if !ok {
+		return nil
+	}
+
+	return blk
 }
