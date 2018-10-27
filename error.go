@@ -8,6 +8,11 @@ var (
 		"unexpected error",
 	)
 
+	ErrInvalidAddressHex = NewError(
+		2001,
+		"address is invalid hex",
+	)
+
 	ErrBlockNotFound = NewError(
 		3001,
 		"block is not found",
