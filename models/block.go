@@ -10,6 +10,12 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
+type BlockSummary struct {
+	Txes      []string `json:"txes"`
+	Number    uint64   `json:"number"`
+	Signature string   `json:"signature"`
+}
+
 type Block struct {
 	Txes      []*Tx
 	Number    uint64
@@ -39,6 +45,25 @@ func (blk *Block) Hash() ([]byte, error) {
 	}
 
 	return crypto.Keccak256(b), nil
+}
+
+func (blk *Block) Summary() (*BlockSummary, error) {
+	summary := &BlockSummary{
+		Txes:      make([]string, len(blk.Txes)),
+		Number:    blk.Number,
+		Signature: common.Bytes2Hex(blk.Signature),
+	}
+
+	for i, tx := range blk.Txes {
+		b, err := tx.Hash()
+		if err != nil {
+			return nil, err
+		}
+
+		summary.Txes[i] = common.Bytes2Hex(b)
+	}
+
+	return summary, nil
 }
 
 func (blk *Block) Sign(privKey *ecdsa.PrivateKey) error {
