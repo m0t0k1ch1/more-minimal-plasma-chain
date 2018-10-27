@@ -14,7 +14,14 @@ func (cc *ChildChain) GetBlockHandler(c *Context) error {
 		return err
 	}
 
-	return c.JSONSuccess(cc.getBlock(num))
+	blk := cc.getBlock(num)
+
+	blkSummary, err := blk.Summary()
+	if err != nil {
+		return err
+	}
+
+	return c.JSONSuccess(blkSummary)
 }
 
 func (cc *ChildChain) PostBlockHandler(c *Context) error {
