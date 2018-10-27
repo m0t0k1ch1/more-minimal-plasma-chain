@@ -1,4 +1,3 @@
 {
-  "port": 1323,
-  "log_level": "INFO"
+  "port": 1323
 }
