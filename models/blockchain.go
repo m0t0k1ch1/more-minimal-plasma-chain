@@ -1,9 +1,16 @@
 package models
 
-import "sync"
+import (
+	"errors"
+	"sync"
+)
 
 const (
 	DefaultBlockNumber = 1
+)
+
+var (
+	ErrBlockAlreadyExists = errors.New("block already exists")
 )
 
 type Blockchain struct {

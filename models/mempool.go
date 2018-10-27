@@ -1,6 +1,13 @@
 package models
 
-import "sync"
+import (
+	"errors"
+	"sync"
+)
+
+var (
+	ErrMempoolFull = errors.New("mempool is full")
+)
 
 type Mempool struct {
 	mu     *sync.RWMutex
