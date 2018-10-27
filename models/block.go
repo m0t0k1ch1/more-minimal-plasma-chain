@@ -94,7 +94,7 @@ func (blk *Block) Summary() (*BlockSummary, error) {
 			return nil, err
 		}
 
-		summary.Txes[i] = common.Bytes2Hex(b)
+		summary.Txes[i] = common.ToHex(b)
 	}
 
 	return summary, nil
