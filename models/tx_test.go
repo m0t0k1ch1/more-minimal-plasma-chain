@@ -66,6 +66,49 @@ func TestTx_Hash(t *testing.T) {
 	}
 }
 
+func TestTx_ConfirmationHash(t *testing.T) {
+	type output struct {
+		confHashHex string
+		err         error
+	}
+	testCases := []struct {
+		name string
+		tx   *Tx
+		out  output
+	}{
+		{
+			"null tx",
+			newTestNullTx(t),
+			output{
+				"0xe8bd8330f57eeb0fe2d8afd9f5bcc53ebcddd1378054a6bbdb224e48ddd50ca1",
+				nil,
+			},
+		},
+		{
+			"deposit tx",
+			newTestDepositTx(t),
+			output{
+				"0x26a410eed92c10d92d54d131f9d77896d7b0fd4d4582b8650e6db5ecf112e05f",
+				nil,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tx, out := tc.tx, tc.out
+
+			confHashBytes, err := tx.ConfirmationHash()
+			if out.err != nil {
+				assert.EqualError(t, err, out.err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, out.confHashHex, hexutil.Encode(confHashBytes))
+			}
+		})
+	}
+}
+
 func TestTx_Sign(t *testing.T) {
 	privKey, err := crypto.GenerateKey()
 	require.NoError(t, err)

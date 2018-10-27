@@ -102,6 +102,15 @@ func (tx *Tx) Hash() ([]byte, error) {
 	return crypto.Keccak256(b), nil
 }
 
+func (tx *Tx) ConfirmationHash() ([]byte, error) {
+	hashBytes, err := tx.Hash()
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.Keccak256(hashBytes), nil
+}
+
 func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	b, err := rlp.EncodeToBytes(tx)
 	if err != nil {
@@ -118,7 +127,7 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (tx *Tx) Sign(idx int, privKey *ecdsa.PrivateKey) error {
+func (tx *Tx) Sign(iIndex int, privKey *ecdsa.PrivateKey) error {
 	hashBytes, err := tx.Hash()
 	if err != nil {
 		return err
@@ -128,7 +137,22 @@ func (tx *Tx) Sign(idx int, privKey *ecdsa.PrivateKey) error {
 	if err != nil {
 		return err
 	}
-	tx.Signatures[idx] = newSignatureFromBytes(sigBytes)
+	tx.Signatures[iIndex] = newSignatureFromBytes(sigBytes)
+
+	return nil
+}
+
+func (tx *Tx) Confirm(iIndex int, privKey *ecdsa.PrivateKey) error {
+	confHashBytes, err := tx.ConfirmationHash()
+	if err != nil {
+		return err
+	}
+
+	confSigBytes, err := crypto.Sign(confHashBytes, privKey)
+	if err != nil {
+		return err
+	}
+	tx.ConfirmationSignatures[iIndex] = newSignatureFromBytes(confSigBytes)
 
 	return nil
 }
