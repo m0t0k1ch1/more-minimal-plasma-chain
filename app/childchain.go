@@ -40,12 +40,12 @@ func NewChildChain(conf *Config) *ChildChain {
 	cc.e.HTTPErrorHandler = cc.httpErrorHandler
 
 	cc.GET("/ping", cc.PingHandler)
+	cc.POST("/depositBlocks", cc.PostDepositBlockHandler)
 	cc.POST("/blocks", cc.PostBlockHandler)
 	cc.GET("/blocks/:blkNum", cc.GetBlockHandler)
 	cc.GET("/blocks/:blkNum/txes/:txIndex", cc.GetBlockTxHandler)
-	cc.POST("/depositBlocks", cc.PostDepositBlockHandler)
+	cc.PUT("/blocks/:blkNum/txes/:txIndex", cc.PutBlockTxHandler)
 	cc.POST("/txes", cc.PostTxHandler)
-	cc.PUT("/txes", cc.PutTxHandler)
 
 	return cc
 }

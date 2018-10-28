@@ -25,12 +25,20 @@ var (
 		"owner address hex is invalid",
 	)
 	ErrAmountRequired = NewError(
-		2013,
+		2103,
 		"amount is required",
 	)
 	ErrInvalidAmount = NewError(
-		2014,
+		2104,
 		"amount is invalid",
+	)
+	ErrTxRequired = NewError(
+		2105,
+		"tx is required",
+	)
+	ErrInvalidTxHex = NewError(
+		2106,
+		"tx hex is invalid",
 	)
 
 	ErrBlockNotFound = NewError(

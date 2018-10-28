@@ -5,7 +5,10 @@ import (
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/labstack/echo"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 type Context struct {
@@ -59,6 +62,28 @@ func (c *Context) GetAmountFromForm() (uint64, error) {
 	}
 
 	return amount, nil
+}
+
+func (c *Context) GetTxFromForm() (*types.Tx, error) {
+	if _, ok := c.Request().Form["tx"]; !ok {
+		return nil, ErrTxRequired
+	}
+
+	txCoreStr := c.FormValue("tx")
+	txCoreBytes, err := hexutil.Decode(txCoreStr)
+	if err != nil {
+		return nil, ErrInvalidTxHex
+	}
+
+	var txc types.TxCore
+	if err := rlp.DecodeBytes(txCoreBytes, &txc); err != nil {
+		return nil, ErrInvalidTxHex
+	}
+
+	tx := types.NewTx()
+	tx.TxCore = &txc
+
+	return tx, nil
 }
 
 func (c *Context) JSONSuccess(result interface{}) error {

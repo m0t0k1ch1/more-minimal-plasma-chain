@@ -47,24 +47,6 @@ func (cc *ChildChain) PostDepositBlockHandler(c *Context) error {
 	return cc.getBlockHandler(c, blkNum)
 }
 
-func (cc *ChildChain) GetBlockTxHandler(c *Context) error {
-	blkNum, err := c.GetBlockNumberFromPath()
-	if err != nil {
-		return c.JSONError(err)
-	}
-	txIndex, err := c.GetTxIndexFromPath()
-	if err != nil {
-		return c.JSONError(err)
-	}
-
-	tx := cc.blockchain.GetTx(blkNum, txIndex)
-	if tx == nil {
-		return c.JSONError(ErrTxNotFound)
-	}
-
-	return c.JSONSuccess(tx)
-}
-
 func (cc *ChildChain) getBlockHandler(c *Context, blkNum uint64) error {
 	blk := cc.blockchain.GetBlock(blkNum)
 	if blk == nil {
