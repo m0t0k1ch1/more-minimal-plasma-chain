@@ -14,6 +14,20 @@ func (cc *ChildChain) GetBlockHandler(c *Context) error {
 }
 
 func (cc *ChildChain) PostBlockHandler(c *Context) error {
+	c.Request().ParseForm()
+
+	bt, err := c.GetBlockTypeFromForm()
+	if err != nil {
+		return c.JSONError(err)
+	}
+
+	if bt.IsDeposit() {
+		return cc.postDepositBlockHandler(c)
+	}
+	return cc.postBlockHandler(c)
+}
+
+func (cc *ChildChain) postBlockHandler(c *Context) error {
 	txes := cc.mempool.Extract()
 
 	blkNum, err := cc.blockchain.AddBlock(txes)
@@ -24,9 +38,7 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 	return cc.getBlockHandler(c, blkNum)
 }
 
-func (cc *ChildChain) PostDepositBlockHandler(c *Context) error {
-	c.Request().ParseForm()
-
+func (cc *ChildChain) postDepositBlockHandler(c *Context) error {
 	owner, err := c.GetOwnerFromForm()
 	if err != nil {
 		return c.JSONError(err)

@@ -37,6 +37,19 @@ func (c *Context) GetTxIndexFromPath() (int, error) {
 	return txIndex, nil
 }
 
+func (c *Context) GetBlockTypeFromForm() (BlockType, error) {
+	if _, ok := c.Request().Form["type"]; !ok {
+		return BlockTypeNormal, nil
+	}
+
+	bt := BlockType(c.FormValue("type"))
+	if !bt.IsValid() {
+		return "", ErrInvalidBlockType
+	}
+
+	return bt, nil
+}
+
 func (c *Context) GetOwnerFromForm() (common.Address, error) {
 	if _, ok := c.Request().Form["owner"]; !ok {
 		return common.Address{}, ErrOwnerRequired
@@ -44,7 +57,7 @@ func (c *Context) GetOwnerFromForm() (common.Address, error) {
 
 	ownerStr := c.FormValue("owner")
 	if !common.IsHexAddress(ownerStr) {
-		return common.Address{}, ErrInvalidOwnerAddressHex
+		return common.Address{}, ErrInvalidOwnerHex
 	}
 
 	return common.HexToAddress(ownerStr), nil

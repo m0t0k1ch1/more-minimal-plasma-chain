@@ -16,28 +16,32 @@ var (
 		2002,
 		"tx index is invalid",
 	)
-	ErrOwnerRequired = NewError(
+	ErrInvalidBlockType = NewError(
 		2101,
-		"owner is required",
+		"block type is invalid",
 	)
-	ErrInvalidOwnerAddressHex = NewError(
+	ErrOwnerRequired = NewError(
 		2102,
-		"owner address hex is invalid",
+		"'owner' param is required",
+	)
+	ErrInvalidOwnerHex = NewError(
+		2103,
+		"owner hex is invalid",
 	)
 	ErrAmountRequired = NewError(
-		2103,
-		"amount is required",
+		2104,
+		"'amount' param is required",
 	)
 	ErrInvalidAmount = NewError(
-		2104,
+		2105,
 		"amount is invalid",
 	)
 	ErrTxRequired = NewError(
-		2105,
-		"tx is required",
+		2106,
+		"'tx' param is required",
 	)
 	ErrInvalidTxHex = NewError(
-		2106,
+		2107,
 		"tx hex is invalid",
 	)
 
