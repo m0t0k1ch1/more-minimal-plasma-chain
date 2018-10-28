@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
@@ -9,10 +8,6 @@ import (
 
 const (
 	DefaultBlockNumber = 1
-)
-
-var (
-	ErrBlockAlreadyExists = errors.New("block already exists")
 )
 
 type Blockchain struct {
@@ -59,10 +54,6 @@ func (bc *Blockchain) AddBlock(txes []*types.Tx) (uint64, error) {
 	blk, err := types.NewBlock(txes, bc.currentBlockNumber)
 	if err != nil {
 		return 0, err
-	}
-
-	if _, ok := bc.chain[blk.Number]; ok {
-		return 0, ErrBlockAlreadyExists
 	}
 
 	bc.chain[blk.Number] = blk
