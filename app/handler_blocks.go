@@ -1,14 +1,11 @@
 package app
 
 import (
-	"strconv"
-
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 func (cc *ChildChain) GetBlockHandler(c *Context) error {
-	blkNum, err := c.ParamBlockNumber()
+	blkNum, err := c.GetBlockNumberFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
@@ -28,15 +25,13 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 }
 
 func (cc *ChildChain) PostDepositBlockHandler(c *Context) error {
-	ownerStr := c.FormValue("owner")
-	amountStr := c.FormValue("amount")
+	c.Request().ParseForm()
 
-	if !common.IsHexAddress(ownerStr) {
-		return c.JSONError(ErrInvalidAddressHex)
+	owner, err := c.GetOwnerFromForm()
+	if err != nil {
+		return c.JSONError(err)
 	}
-	owner := common.HexToAddress(ownerStr)
-
-	amount, err := strconv.ParseUint(amountStr, 10, 64)
+	amount, err := c.GetAmountFromForm()
 	if err != nil {
 		return c.JSONError(err)
 	}
@@ -53,11 +48,11 @@ func (cc *ChildChain) PostDepositBlockHandler(c *Context) error {
 }
 
 func (cc *ChildChain) GetBlockTxHandler(c *Context) error {
-	blkNum, err := c.ParamBlockNumber()
+	blkNum, err := c.GetBlockNumberFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
-	txIndex, err := c.ParamTxIndex()
+	txIndex, err := c.GetTxIndexFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}

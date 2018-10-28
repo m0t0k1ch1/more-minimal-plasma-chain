@@ -8,26 +8,38 @@ var (
 		"unexpected error",
 	)
 
-	ErrInvalidAddressHex = NewError(
-		2001,
-		"invalid address hex",
-	)
 	ErrInvalidBlockNumber = NewError(
-		2002,
-		"invalid block number",
+		2001,
+		"block number is invalid",
 	)
 	ErrInvalidTxIndex = NewError(
-		2003,
-		"invalid tx index",
+		2002,
+		"tx index is invalid",
+	)
+	ErrOwnerRequired = NewError(
+		2101,
+		"owner is required",
+	)
+	ErrInvalidOwnerAddressHex = NewError(
+		2102,
+		"owner address hex is invalid",
+	)
+	ErrAmountRequired = NewError(
+		2013,
+		"amount is required",
+	)
+	ErrInvalidAmount = NewError(
+		2014,
+		"amount is invalid",
 	)
 
 	ErrBlockNotFound = NewError(
 		3001,
-		"block not found",
+		"block is not found",
 	)
 	ErrTxNotFound = NewError(
 		3002,
-		"tx not found",
+		"tx is not found",
 	)
 )
 
