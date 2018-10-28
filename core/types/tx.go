@@ -14,62 +14,25 @@ const (
 	TxElementsNum = 2
 )
 
-var (
-	nullTxIn  = NewTxIn(0, 0, 0)
-	nullTxOut = NewTxOut(nullAddress, 0)
-)
-
-type TxIn struct {
-	BlockNum    uint64 `json:"blknum"`
-	TxIndex     uint64 `json:"txindex"`
-	OutputIndex uint64 `json:"oindex"`
-}
-
-func NewTxIn(blkNum, txIndex, oIndex uint64) *TxIn {
-	return &TxIn{
-		BlockNum:    blkNum,
-		TxIndex:     txIndex,
-		OutputIndex: oIndex,
-	}
-}
-
-func (txIn *TxIn) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, []interface{}{
-		txIn.BlockNum, txIn.TxIndex, txIn.OutputIndex,
-	})
-}
-
-type TxOut struct {
-	Owner  common.Address `json:"owner"`
-	Amount uint64         `json:"amount"`
-}
-
-func NewTxOut(owner common.Address, amount uint64) *TxOut {
-	return &TxOut{
-		Owner:  owner,
-		Amount: amount,
-	}
-}
-
-func (txOut *TxOut) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, []interface{}{
-		txOut.Owner.Bytes(), txOut.Amount,
-	})
+type TxCore struct {
+	Inputs     [TxElementsNum]*TxIn     `json:"ins"`
+	Outputs    [TxElementsNum]*TxOut    `json:"outs"`
+	Signatures [TxElementsNum]Signature `json:"sigs"`
 }
 
 type Tx struct {
-	Inputs                 [TxElementsNum]*TxIn     `json:"ins"`
-	Outputs                [TxElementsNum]*TxOut    `json:"outs"`
-	Signatures             [TxElementsNum]Signature `json:"sigs"`
+	*TxCore
 	ConfirmationSignatures [TxElementsNum]Signature `json:"confsigs"`
 	Spents                 [TxElementsNum]bool      `json:"spents"`
 }
 
 func NewTx() *Tx {
 	tx := &Tx{
-		Inputs:                 [TxElementsNum]*TxIn{},
-		Outputs:                [TxElementsNum]*TxOut{},
-		Signatures:             [TxElementsNum]Signature{},
+		TxCore: &TxCore{
+			Inputs:     [TxElementsNum]*TxIn{},
+			Outputs:    [TxElementsNum]*TxOut{},
+			Signatures: [TxElementsNum]Signature{},
+		},
 		ConfirmationSignatures: [TxElementsNum]Signature{},
 		Spents:                 [TxElementsNum]bool{},
 	}
