@@ -1,4 +1,4 @@
-package models
+package types
 
 import (
 	"sync"
@@ -13,19 +13,19 @@ const (
 )
 
 var (
-	initonce     sync.Once
-	merkleConfig *merkle.Config
+	initonce   sync.Once
+	merkleConf *merkle.Config
 )
 
 func initMerkleConfig() {
-	merkleConfig, _ = merkle.NewConfig(
+	merkleConf, _ = merkle.NewConfig(
 		sha3.NewKeccak256(),
 		merkleTreeDepth,
 		merkleLeafSize,
 	)
 }
 
-func MerkleConfig() *merkle.Config {
+func merkleConfig() *merkle.Config {
 	initonce.Do(initMerkleConfig)
-	return merkleConfig
+	return merkleConf
 }

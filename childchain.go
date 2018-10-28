@@ -6,7 +6,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/models"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 )
 
 const (
@@ -18,16 +18,16 @@ type HandlerFunc func(*Context) error
 type ChildChain struct {
 	e          *echo.Echo
 	config     *Config
-	blockchain *models.Blockchain
-	mempool    *models.Mempool
+	blockchain *core.Blockchain
+	mempool    *core.Mempool
 }
 
 func NewChildChain(conf *Config) *ChildChain {
 	cc := &ChildChain{
 		e:          echo.New(),
 		config:     conf,
-		blockchain: models.NewBlockchain(),
-		mempool:    models.NewMempool(DefaultMempoolSize),
+		blockchain: core.NewBlockchain(),
+		mempool:    core.NewMempool(DefaultMempoolSize),
 	}
 
 	cc.e.Use(middleware.Logger())
@@ -44,6 +44,8 @@ func NewChildChain(conf *Config) *ChildChain {
 	cc.GET("/blocks/:blkNum", cc.GetBlockHandler)
 	cc.GET("/blocks/:blkNum/txes/:txIndex", cc.GetBlockTxHandler)
 	cc.POST("/depositBlocks", cc.PostDepositBlockHandler)
+	cc.POST("/txes", cc.PostTxHandler)
+	cc.PUT("/txes", cc.PutTxHandler)
 
 	return cc
 }
@@ -54,6 +56,10 @@ func (cc *ChildChain) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) 
 
 func (cc *ChildChain) POST(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
 	cc.Add(http.MethodPost, path, h, m...)
+}
+
+func (cc *ChildChain) PUT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
+	cc.Add(http.MethodPut, path, h, m...)
 }
 
 func (cc *ChildChain) Add(method, path string, h HandlerFunc, m ...echo.MiddlewareFunc) {

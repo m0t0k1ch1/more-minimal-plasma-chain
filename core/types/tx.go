@@ -1,4 +1,4 @@
-package models
+package types
 
 import (
 	"bytes"
@@ -8,6 +8,15 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+)
+
+const (
+	TxElementsNum = 2
+)
+
+var (
+	nullTxIn  = NewTxIn(0, 0, 0)
+	nullTxOut = NewTxOut(nullAddress, 0)
 )
 
 type TxIn struct {
@@ -137,7 +146,13 @@ func (tx *Tx) Sign(iIndex int, privKey *ecdsa.PrivateKey) error {
 	if err != nil {
 		return err
 	}
-	tx.Signatures[iIndex] = newSignatureFromBytes(sigBytes)
+
+	sig, err := NewSignatureFromBytes(sigBytes)
+	if err != nil {
+		return err
+	}
+
+	tx.Signatures[iIndex] = sig
 
 	return nil
 }
@@ -152,7 +167,13 @@ func (tx *Tx) Confirm(iIndex int, privKey *ecdsa.PrivateKey) error {
 	if err != nil {
 		return err
 	}
-	tx.ConfirmationSignatures[iIndex] = newSignatureFromBytes(confSigBytes)
+
+	sig, err := NewSignatureFromBytes(confSigBytes)
+	if err != nil {
+		return err
+	}
+
+	tx.ConfirmationSignatures[iIndex] = sig
 
 	return nil
 }

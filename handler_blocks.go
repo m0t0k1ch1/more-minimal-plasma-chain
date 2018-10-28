@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/models"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 func (cc *ChildChain) GetBlockHandler(c *Context) error {
@@ -43,10 +43,10 @@ func (cc *ChildChain) PostDepositBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	tx := models.NewTx()
-	tx.Outputs[0] = models.NewTxOut(owner, amount)
+	tx := types.NewTx()
+	tx.Outputs[0] = types.NewTxOut(owner, amount)
 
-	blkNum, err := cc.blockchain.AddBlock([]*models.Tx{tx})
+	blkNum, err := cc.blockchain.AddBlock([]*types.Tx{tx})
 	if err != nil {
 		return c.JSONError(err)
 	}

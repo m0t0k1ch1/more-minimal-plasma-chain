@@ -1,4 +1,4 @@
-package models
+package types
 
 import (
 	"bytes"
@@ -51,7 +51,7 @@ func (blk *Block) initMerkleTree() error {
 		leaves[i] = leaf
 	}
 
-	tree, err := merkle.NewTree(MerkleConfig(), leaves)
+	tree, err := merkle.NewTree(merkleConfig(), leaves)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,13 @@ func (blk *Block) Sign(privKey *ecdsa.PrivateKey) error {
 	if err != nil {
 		return err
 	}
-	blk.Signature = newSignatureFromBytes(sigBytes)
+
+	sig, err := NewSignatureFromBytes(sigBytes)
+	if err != nil {
+		return err
+	}
+
+	blk.Signature = sig
 
 	return nil
 }
