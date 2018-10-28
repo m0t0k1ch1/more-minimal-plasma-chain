@@ -4,19 +4,21 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
+
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/app"
 )
 
 const (
 	DefaultConfigPath = "config.json"
 )
 
-func loadConfig(path string) (*Config, error) {
+func loadConfig(path string) (*app.Config, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 
-	var conf Config
+	var conf app.Config
 	if err := json.NewDecoder(file).Decode(&conf); err != nil {
 		return nil, err
 	}
@@ -33,6 +35,6 @@ func main() {
 		panic(err)
 	}
 
-	cc := NewChildChain(conf)
+	cc := app.NewChildChain(conf)
 	cc.Logger().Fatal(cc.Start())
 }
