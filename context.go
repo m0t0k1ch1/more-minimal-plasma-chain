@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo"
 )
@@ -12,6 +13,22 @@ type Context struct {
 
 func NewContext(c echo.Context) *Context {
 	return &Context{c}
+}
+
+func (c *Context) ParamBlockNumber() (uint64, error) {
+	blkNum, err := strconv.ParseUint(c.Param("blkNum"), 10, 64)
+	if err != nil {
+		return 0, ErrInvalidBlockNumber
+	}
+	return blkNum, nil
+}
+
+func (c *Context) ParamTxIndex() (int, error) {
+	txIndex, err := strconv.Atoi(c.Param("txIndex"))
+	if err != nil {
+		return 0, ErrInvalidTxIndex
+	}
+	return txIndex, nil
 }
 
 func (c *Context) JSONSuccess(result interface{}) error {

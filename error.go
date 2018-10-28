@@ -10,16 +10,24 @@ var (
 
 	ErrInvalidAddressHex = NewError(
 		2001,
-		"address is invalid hex",
+		"invalid address hex",
+	)
+	ErrInvalidBlockNumber = NewError(
+		2002,
+		"invalid block number",
+	)
+	ErrInvalidTxIndex = NewError(
+		2003,
+		"invalid tx index",
 	)
 
 	ErrBlockNotFound = NewError(
 		3001,
-		"block is not found",
+		"block not found",
 	)
 	ErrTxNotFound = NewError(
 		3002,
-		"tx is not found",
+		"tx not found",
 	)
 )
 

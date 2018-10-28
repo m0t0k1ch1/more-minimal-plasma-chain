@@ -8,9 +8,7 @@ import (
 )
 
 func (cc *ChildChain) GetBlockHandler(c *Context) error {
-	blkNumStr := c.Param("blkNum")
-
-	blkNum, err := strconv.ParseUint(blkNumStr, 10, 64)
+	blkNum, err := c.ParamBlockNumber()
 	if err != nil {
 		return c.JSONError(err)
 	}
@@ -55,15 +53,11 @@ func (cc *ChildChain) PostDepositBlockHandler(c *Context) error {
 }
 
 func (cc *ChildChain) GetBlockTxHandler(c *Context) error {
-	blkNumStr := c.Param("blkNum")
-	txIndexStr := c.Param("txIndex")
-
-	blkNum, err := strconv.ParseUint(blkNumStr, 10, 64)
+	blkNum, err := c.ParamBlockNumber()
 	if err != nil {
 		return c.JSONError(err)
 	}
-
-	txIndex, err := strconv.Atoi(txIndexStr)
+	txIndex, err := c.ParamTxIndex()
 	if err != nil {
 		return c.JSONError(err)
 	}
