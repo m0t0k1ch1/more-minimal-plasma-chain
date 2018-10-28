@@ -8,7 +8,7 @@ const (
 type BlockType string
 
 func (bt BlockType) IsValid() bool {
-	return bt == BlockTypeNormal || bt == BlockTypeDeposit
+	return bt.IsNormal() || bt.IsDeposit()
 }
 
 func (bt BlockType) IsNormal() bool {
