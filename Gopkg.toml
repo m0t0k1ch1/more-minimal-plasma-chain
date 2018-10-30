@@ -35,7 +35,7 @@
 
 [[constraint]]
   name = "github.com/m0t0k1ch1/fixed-merkle"
-  version = "0.2.0"
+  version = "0.3.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
