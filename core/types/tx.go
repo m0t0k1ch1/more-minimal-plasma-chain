@@ -36,18 +36,24 @@ func NewTx() *Tx {
 	return tx
 }
 
-func (tx *Tx) inputCores() [TxElementsNum]*TxInCore {
-	txInCores := [TxElementsNum]*TxInCore{}
+func (tx *Tx) inputCores() [TxElementsNum]interface{} {
+	txInCores := [TxElementsNum]interface{}{}
 	for i := 0; i < TxElementsNum; i++ {
-		txInCores[i] = tx.Inputs[i].TxInCore
+		txIn := tx.Inputs[i]
+		txInCores[i] = []interface{}{
+			txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex,
+		}
 	}
 	return txInCores
 }
 
-func (tx *Tx) outputCores() [TxElementsNum]*TxOutCore {
-	txOutCores := [TxElementsNum]*TxOutCore{}
+func (tx *Tx) outputCores() [TxElementsNum]interface{} {
+	txOutCores := [TxElementsNum]interface{}{}
 	for i := 0; i < TxElementsNum; i++ {
-		txOutCores[i] = tx.Outputs[i].TxOutCore
+		txOut := tx.Outputs[i]
+		txOutCores[i] = []interface{}{
+			txOut.OwnerAddress, txOut.Amount,
+		}
 	}
 	return txOutCores
 }
