@@ -11,7 +11,7 @@ import (
 )
 
 type BlockSummary struct {
-	Txes      []string  `json:"txes"`
+	TxHashes  []string  `json:"txes"`
 	Number    uint64    `json:"num"`
 	Signature Signature `json:"sig"`
 	Root      string    `json:"root"`
@@ -73,28 +73,27 @@ func (blk *Block) Root() ([]byte, error) {
 }
 
 func (blk *Block) Summary() (*BlockSummary, error) {
-	rootBytes, err := blk.Root()
-	if err != nil {
-		return nil, err
-	}
-
-	summary := &BlockSummary{
-		Txes:      make([]string, len(blk.Txes)),
-		Number:    blk.Number,
-		Signature: blk.Signature,
-		Root:      hexutil.Encode(rootBytes),
-	}
-
+	txHashes := make([]string, len(blk.Txes))
 	for i, tx := range blk.Txes {
 		b, err := tx.Hash()
 		if err != nil {
 			return nil, err
 		}
 
-		summary.Txes[i] = hexutil.Encode(b)
+		txHashes[i] = hexutil.Encode(b)
 	}
 
-	return summary, nil
+	rootBytes, err := blk.Root()
+	if err != nil {
+		return nil, err
+	}
+
+	return &BlockSummary{
+		TxHashes:  txHashes,
+		Number:    blk.Number,
+		Signature: blk.Signature,
+		Root:      hexutil.Encode(rootBytes),
+	}, nil
 }
 
 func (blk *Block) Sign(signer *Account) error {
