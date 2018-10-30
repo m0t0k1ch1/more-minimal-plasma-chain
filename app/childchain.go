@@ -22,7 +22,6 @@ type ChildChain struct {
 	config     *Config
 	operator   *types.Account
 	blockchain *core.Blockchain
-	mempool    *core.Mempool
 }
 
 func NewChildChain(conf *Config) (*ChildChain, error) {
@@ -36,7 +35,6 @@ func NewChildChain(conf *Config) (*ChildChain, error) {
 		config:     conf,
 		operator:   types.NewAccount(privKey),
 		blockchain: core.NewBlockchain(),
-		mempool:    core.NewMempool(DefaultMempoolSize),
 	}
 
 	cc.e.Use(middleware.Logger())

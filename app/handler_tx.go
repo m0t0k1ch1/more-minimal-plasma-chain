@@ -8,7 +8,7 @@ func (cc *ChildChain) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	if err := cc.mempool.Add(tx); err != nil {
+	if err := cc.blockchain.AddTx(tx); err != nil {
 		return c.JSONError(err)
 	}
 

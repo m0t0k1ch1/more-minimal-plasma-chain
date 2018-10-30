@@ -1,9 +1,5 @@
 package app
 
-import (
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
-)
-
 func (cc *ChildChain) GetBlockHandler(c *Context) error {
 	blkNum, err := c.GetBlockNumberFromPath()
 	if err != nil {
@@ -28,9 +24,7 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 }
 
 func (cc *ChildChain) postBlockHandler(c *Context) error {
-	txes := cc.mempool.Extract()
-
-	blkNum, err := cc.blockchain.AddBlock(txes)
+	blkNum, err := cc.blockchain.AddBlock(cc.operator)
 	if err != nil {
 		return c.JSONError(err)
 	}
@@ -39,7 +33,7 @@ func (cc *ChildChain) postBlockHandler(c *Context) error {
 }
 
 func (cc *ChildChain) postDepositBlockHandler(c *Context) error {
-	owner, err := c.GetOwnerFromForm()
+	ownerAddr, err := c.GetOwnerFromForm()
 	if err != nil {
 		return c.JSONError(err)
 	}
@@ -48,10 +42,7 @@ func (cc *ChildChain) postDepositBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	tx := types.NewTx()
-	tx.Outputs[0] = types.NewTxOut(owner, amount)
-
-	blkNum, err := cc.blockchain.AddBlock([]*types.Tx{tx})
+	blkNum, err := cc.blockchain.AddDepositBlock(ownerAddr, amount, cc.operator)
 	if err != nil {
 		return c.JSONError(err)
 	}
