@@ -4,17 +4,23 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type TxOut struct {
+type TxOutCore struct {
 	OwnerAddress common.Address `json:"owner"`
 	Amount       uint64         `json:"amount"`
-	IsSpent      bool           `json:"spent"`
+}
+
+type TxOut struct {
+	*TxOutCore
+	IsSpent bool `json:"spent"`
 }
 
 func NewTxOut(ownerAddr common.Address, amount uint64) *TxOut {
 	return &TxOut{
-		OwnerAddress: ownerAddr,
-		Amount:       amount,
-		IsSpent:      false,
+		TxOutCore: &TxOutCore{
+			OwnerAddress: ownerAddr,
+			Amount:       amount,
+		},
+		IsSpent: false,
 	}
 }
 
