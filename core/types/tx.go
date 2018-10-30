@@ -69,10 +69,14 @@ func (tx *Tx) IsDeposit() bool {
 	return true
 }
 
-func (tx *Tx) Hash() ([]byte, error) {
-	b, err := rlp.EncodeToBytes([]interface{}{
+func (tx *Tx) Encode() ([]byte, error) {
+	return rlp.EncodeToBytes([]interface{}{
 		tx.inputCores(), tx.outputCores(),
 	})
+}
+
+func (tx *Tx) Hash() ([]byte, error) {
+	b, err := tx.Encode()
 	if err != nil {
 		return nil, err
 	}

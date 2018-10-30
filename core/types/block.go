@@ -31,7 +31,7 @@ func NewBlock(txes []*Tx, blkNum uint64) *Block {
 	}
 }
 
-func (blk *Block) Hash() ([]byte, error) {
+func (blk *Block) Encode() ([]byte, error) {
 	txCores := make([]interface{}, len(blk.Txes))
 	for i, tx := range blk.Txes {
 		txCores[i] = []interface{}{
@@ -39,9 +39,13 @@ func (blk *Block) Hash() ([]byte, error) {
 		}
 	}
 
-	b, err := rlp.EncodeToBytes([]interface{}{
+	return rlp.EncodeToBytes([]interface{}{
 		txCores, blk.Number,
 	})
+}
+
+func (blk *Block) Hash() ([]byte, error) {
+	b, err := blk.Encode()
 	if err != nil {
 		return nil, err
 	}
