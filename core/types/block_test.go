@@ -35,6 +35,14 @@ func TestBlock_Hash(t *testing.T) {
 				nil,
 			},
 		},
+		{
+			"deposit block",
+			newTestBlock(t, []*Tx{newTestDepositTx(t)}, 1),
+			output{
+				"0xde3e0e2864dfae133ca62399c2e194e813ede8ff7723e43c9c4660841d32b144",
+				nil,
+			},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -36,6 +36,30 @@ func NewTx() *Tx {
 	return tx
 }
 
+func (tx *Tx) inputCores() [TxElementsNum]*TxInCore {
+	txInCores := [TxElementsNum]*TxInCore{}
+	for i := 0; i < TxElementsNum; i++ {
+		txInCores[i] = tx.Inputs[i].TxInCore
+	}
+	return txInCores
+}
+
+func (tx *Tx) outputCores() [TxElementsNum]*TxOutCore {
+	txOutCores := [TxElementsNum]*TxOutCore{}
+	for i := 0; i < TxElementsNum; i++ {
+		txOutCores[i] = tx.Outputs[i].TxOutCore
+	}
+	return txOutCores
+}
+
+func (tx *Tx) signatures() [TxElementsNum]Signature {
+	sigs := [TxElementsNum]Signature{}
+	for i := 0; i < TxElementsNum; i++ {
+		sigs[i] = tx.Inputs[i].Signature
+	}
+	return sigs
+}
+
 func (tx *Tx) IsDeposit() bool {
 	for _, txIn := range tx.Inputs {
 		if txIn.BlockNumber != 0 {
@@ -47,7 +71,7 @@ func (tx *Tx) IsDeposit() bool {
 
 func (tx *Tx) Hash() ([]byte, error) {
 	b, err := rlp.EncodeToBytes([]interface{}{
-		tx.Inputs, tx.Outputs,
+		tx.inputCores(), tx.outputCores(),
 	})
 	if err != nil {
 		return nil, err
@@ -66,7 +90,9 @@ func (tx *Tx) ConfirmationHash() ([]byte, error) {
 }
 
 func (tx *Tx) MerkleLeaf() ([]byte, error) {
-	b, err := rlp.EncodeToBytes(tx)
+	b, err := rlp.EncodeToBytes([]interface{}{
+		tx.inputCores(), tx.outputCores(),
+	})
 	if err != nil {
 		return nil, err
 	}
