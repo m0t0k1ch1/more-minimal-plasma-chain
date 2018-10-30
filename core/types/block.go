@@ -31,20 +31,6 @@ func NewBlock(txes []*Tx, blkNum uint64) *Block {
 	}
 }
 
-func (blk *Block) MerkleTree() (*merkle.Tree, error) {
-	leaves := make([][]byte, len(blk.Txes))
-	for i, tx := range blk.Txes {
-		leaf, err := tx.MerkleLeaf()
-		if err != nil {
-			return nil, err
-		}
-
-		leaves[i] = leaf
-	}
-
-	return merkle.NewTree(merkleConfig(), leaves)
-}
-
 // implements RLP Encoder interface
 // ref. https://godoc.org/github.com/ethereum/go-ethereum/rlp#Encoder
 func (blk *Block) EncodeRLP(w io.Writer) error {
@@ -60,6 +46,20 @@ func (blk *Block) Hash() ([]byte, error) {
 	}
 
 	return crypto.Keccak256(b), nil
+}
+
+func (blk *Block) MerkleTree() (*merkle.Tree, error) {
+	leaves := make([][]byte, len(blk.Txes))
+	for i, tx := range blk.Txes {
+		leaf, err := tx.MerkleLeaf()
+		if err != nil {
+			return nil, err
+		}
+
+		leaves[i] = leaf
+	}
+
+	return merkle.NewTree(merkleConfig(), leaves)
 }
 
 func (blk *Block) Root() ([]byte, error) {
