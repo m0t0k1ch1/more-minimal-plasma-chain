@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"io"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -120,13 +119,13 @@ func (tx *Tx) Sign(iIndex int, signer *Account) error {
 	return nil
 }
 
-func (tx *Tx) Confirm(iIndex int, privKey *ecdsa.PrivateKey) error {
+func (tx *Tx) Confirm(iIndex int, signer *Account) error {
 	confHashBytes, err := tx.ConfirmationHash()
 	if err != nil {
 		return err
 	}
 
-	confSigBytes, err := crypto.Sign(confHashBytes, privKey)
+	confSigBytes, err := signer.Sign(confHashBytes)
 	if err != nil {
 		return err
 	}
@@ -147,20 +146,33 @@ func (tx *Tx) SignerAddresses() ([]common.Address, error) {
 		return nil, err
 	}
 
-	signers := make([]common.Address, TxElementsNum)
-	for i, sig := range tx.Signatures {
+	return tx.signerAddresses(hashBytes, tx.Signatures)
+}
+
+func (tx *Tx) ConfirmationSignerAddresses() ([]common.Address, error) {
+	confHashBytes, err := tx.ConfirmationHash()
+	if err != nil {
+		return nil, err
+	}
+
+	return tx.signerAddresses(confHashBytes, tx.ConfirmationSignatures)
+}
+
+func (tx *Tx) signerAddresses(b []byte, sigs [TxElementsNum]Signature) ([]common.Address, error) {
+	signerAddrs := make([]common.Address, len(sigs))
+	for i, sig := range sigs {
 		if bytes.Equal(sig.Bytes(), nullSignature.Bytes()) {
-			signers[i] = nullAddress
+			signerAddrs[i] = nullAddress
 			continue
 		}
 
-		pubKey, err := crypto.SigToPub(hashBytes, sig.Bytes())
+		signerAddr, err := sig.SignerAddress(b)
 		if err != nil {
 			return nil, err
 		}
 
-		signers[i] = crypto.PubkeyToAddress(*pubKey)
+		signerAddrs[i] = signerAddr
 	}
 
-	return signers, nil
+	return signerAddrs, nil
 }

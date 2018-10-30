@@ -130,3 +130,25 @@ func TestTx_Sign(t *testing.T) {
 		}
 	}
 }
+
+func TestTx_Confirm(t *testing.T) {
+	privKey, err := crypto.GenerateKey()
+	require.NoError(t, err)
+
+	confSigner := NewAccount(privKey)
+	tx := newTestNullTx(t)
+
+	// sign
+	require.NoError(t, tx.Confirm(0, confSigner))
+
+	// verify
+	confSignerAddrs, err := tx.ConfirmationSignerAddresses()
+	require.NoError(t, err)
+	for i, confSignerAddr := range confSignerAddrs {
+		if i == 0 {
+			assert.Equal(t, confSigner.Address(), confSignerAddr)
+		} else {
+			assert.Equal(t, nullAddress, confSignerAddr)
+		}
+	}
+}

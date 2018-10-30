@@ -3,7 +3,9 @@ package types
 import (
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 const (
@@ -45,4 +47,13 @@ func (sig Signature) Bytes() []byte {
 
 func (sig Signature) MarshalText() ([]byte, error) {
 	return hexutil.Bytes(sig[:]).MarshalText()
+}
+
+func (sig Signature) SignerAddress(b []byte) (common.Address, error) {
+	pubKey, err := crypto.SigToPub(b, sig.Bytes())
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	return crypto.PubkeyToAddress(*pubKey), nil
 }
