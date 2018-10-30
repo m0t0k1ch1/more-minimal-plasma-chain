@@ -14,6 +14,7 @@ type BlockSummary struct {
 	Txes      []string  `json:"txes"`
 	Number    uint64    `json:"num"`
 	Signature Signature `json:"sig"`
+	Root      string    `json:"root"`
 }
 
 type Block struct {
@@ -72,10 +73,16 @@ func (blk *Block) Root() ([]byte, error) {
 }
 
 func (blk *Block) Summary() (*BlockSummary, error) {
+	rootBytes, err := blk.Root()
+	if err != nil {
+		return nil, err
+	}
+
 	summary := &BlockSummary{
 		Txes:      make([]string, len(blk.Txes)),
 		Number:    blk.Number,
 		Signature: blk.Signature,
+		Root:      hexutil.Encode(rootBytes),
 	}
 
 	for i, tx := range blk.Txes {
