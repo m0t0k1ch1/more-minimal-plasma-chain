@@ -122,6 +122,24 @@ func (bc *Blockchain) AddTx(tx *types.Tx) error {
 	return nil
 }
 
+func (bc *Blockchain) GetTxProof(blkNum, txIndex uint64) ([]byte, error) {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+
+	if !bc.isExistTx(blkNum, txIndex) {
+		return nil, ErrTxNotFound
+	}
+
+	blk := bc.getBlock(blkNum)
+
+	tree, err := blk.MerkleTree()
+	if err != nil {
+		return nil, err
+	}
+
+	return tree.CreateMembershipProof(txIndex)
+}
+
 func (bc *Blockchain) GetTxIn(blkNum, txIndex, iIndex uint64) (*types.TxIn, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()

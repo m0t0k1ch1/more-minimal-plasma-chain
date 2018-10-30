@@ -50,6 +50,7 @@ func NewChildChain(conf *Config) (*ChildChain, error) {
 	cc.POST("/blocks", cc.PostBlockHandler)
 	cc.GET("/blocks/:blkNum", cc.GetBlockHandler)
 	cc.GET("/blocks/:blkNum/txes/:txIndex", cc.GetBlockTxHandler)
+	cc.GET("/blocks/:blkNum/txes/:txIndex/proof", cc.GetBlockTxProofHandler)
 	cc.PUT("/blocks/:blkNum/txes/:txIndex/inputs/:iIndex", cc.PutBlockTxInHandler)
 	cc.POST("/txes", cc.PostTxHandler)
 
