@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	nullTxOut = NewTxOut(nullAddress, 0)
+	nullTxOut = NewTxOut(NullAddress, 0)
 )
 
 type TxOut struct {

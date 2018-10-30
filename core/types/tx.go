@@ -98,7 +98,7 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (tx *Tx) Sign(iIndex int, signer *Account) error {
+func (tx *Tx) Sign(iIndex uint64, signer *Account) error {
 	hashBytes, err := tx.Hash()
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func (tx *Tx) Sign(iIndex int, signer *Account) error {
 	return nil
 }
 
-func (tx *Tx) Confirm(iIndex int, signer *Account) error {
+func (tx *Tx) Confirm(iIndex uint64, signer *Account) error {
 	confHashBytes, err := tx.ConfirmationHash()
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func (tx *Tx) signerAddresses(b []byte, sigs [TxElementsNum]Signature) ([]common
 	signerAddrs := make([]common.Address, len(sigs))
 	for i, sig := range sigs {
 		if bytes.Equal(sig.Bytes(), NullSignature.Bytes()) {
-			signerAddrs[i] = nullAddress
+			signerAddrs[i] = NullAddress
 			continue
 		}
 

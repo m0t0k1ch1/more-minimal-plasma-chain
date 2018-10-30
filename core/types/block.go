@@ -114,17 +114,12 @@ func (blk *Block) Sign(signer *Account) error {
 func (blk *Block) SignerAddress() (common.Address, error) {
 	hashBytes, err := blk.Hash()
 	if err != nil {
-		return common.Address{}, err
+		return NullAddress, err
 	}
 
 	if bytes.Equal(blk.Signature.Bytes(), NullSignature.Bytes()) {
-		return nullAddress, nil
+		return NullAddress, nil
 	}
 
-	pubKey, err := crypto.SigToPub(hashBytes, blk.Signature.Bytes())
-	if err != nil {
-		return common.Address{}, err
-	}
-
-	return crypto.PubkeyToAddress(*pubKey), nil
+	return blk.Signature.SignerAddress(hashBytes)
 }

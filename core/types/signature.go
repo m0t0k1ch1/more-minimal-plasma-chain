@@ -32,7 +32,7 @@ type Signature [SignatureSize]byte
 
 func NewSignatureFromBytes(b []byte) (Signature, error) {
 	if len(b) != SignatureSize {
-		return Signature{}, ErrInvalidSignatureSize
+		return NullSignature, ErrInvalidSignatureSize
 	}
 
 	sig := Signature{}
@@ -52,7 +52,7 @@ func (sig Signature) MarshalText() ([]byte, error) {
 func (sig Signature) SignerAddress(b []byte) (common.Address, error) {
 	pubKey, err := crypto.SigToPub(b, sig.Bytes())
 	if err != nil {
-		return common.Address{}, err
+		return NullAddress, err
 	}
 
 	return crypto.PubkeyToAddress(*pubKey), nil

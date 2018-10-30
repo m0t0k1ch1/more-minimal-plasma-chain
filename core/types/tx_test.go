@@ -126,7 +126,7 @@ func TestTx_Sign(t *testing.T) {
 		if i == 0 {
 			assert.Equal(t, signer.Address(), signerAddr)
 		} else {
-			assert.Equal(t, nullAddress, signerAddr)
+			assert.Equal(t, NullAddress, signerAddr)
 		}
 	}
 }
@@ -148,7 +148,7 @@ func TestTx_Confirm(t *testing.T) {
 		if i == 0 {
 			assert.Equal(t, confSigner.Address(), confSignerAddr)
 		} else {
-			assert.Equal(t, nullAddress, confSignerAddr)
+			assert.Equal(t, NullAddress, confSignerAddr)
 		}
 	}
 }
