@@ -1,6 +1,10 @@
 package app
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+)
 
 var (
 	ErrUnexpected = NewError(
@@ -16,42 +20,60 @@ var (
 		2002,
 		"tx index is invalid",
 	)
+
 	ErrInvalidBlockType = NewError(
-		2101,
+		3001,
 		"block type is invalid",
 	)
 	ErrOwnerRequired = NewError(
-		2102,
+		3002,
 		"'owner' param is required",
 	)
 	ErrInvalidOwnerHex = NewError(
-		2103,
+		3003,
 		"owner hex is invalid",
 	)
 	ErrAmountRequired = NewError(
-		2104,
+		3004,
 		"'amount' param is required",
 	)
 	ErrInvalidAmount = NewError(
-		2105,
+		3005,
 		"amount is invalid",
 	)
 	ErrTxRequired = NewError(
-		2106,
+		3006,
 		"'tx' param is required",
 	)
 	ErrInvalidTxHex = NewError(
-		2107,
+		3007,
 		"tx hex is invalid",
 	)
 
 	ErrBlockNotFound = NewError(
-		3001,
+		4001,
 		"block is not found",
 	)
 	ErrTxNotFound = NewError(
-		3002,
+		4002,
 		"tx is not found",
+	)
+
+	ErrInvalidTxInput = NewError(
+		5001,
+		core.ErrInvalidTxInput.Error(),
+	)
+	ErrTxInputAlreadySpent = NewError(
+		5002,
+		core.ErrTxInputAlreadySpent.Error(),
+	)
+	ErrInvalidTxSignature = NewError(
+		5003,
+		core.ErrInvalidTxSignature.Error(),
+	)
+	ErrInvalidTxBalance = NewError(
+		5004,
+		core.ErrInvalidTxBalance.Error(),
 	)
 )
 

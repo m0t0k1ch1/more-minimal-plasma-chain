@@ -27,7 +27,7 @@ func NewBlock(txes []*Tx, blkNum uint64) *Block {
 	return &Block{
 		Txes:      txes,
 		Number:    blkNum,
-		Signature: nullSignature,
+		Signature: NullSignature,
 	}
 }
 
@@ -117,7 +117,7 @@ func (blk *Block) SignerAddress() (common.Address, error) {
 		return common.Address{}, err
 	}
 
-	if bytes.Equal(blk.Signature.Bytes(), nullSignature.Bytes()) {
+	if bytes.Equal(blk.Signature.Bytes(), NullSignature.Bytes()) {
 		return nullAddress, nil
 	}
 

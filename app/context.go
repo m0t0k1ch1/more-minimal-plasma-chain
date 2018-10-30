@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/labstack/echo"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
@@ -28,8 +29,8 @@ func (c *Context) GetBlockNumberFromPath() (uint64, error) {
 	return blkNum, nil
 }
 
-func (c *Context) GetTxIndexFromPath() (int, error) {
-	txIndex, err := strconv.Atoi(c.Param("txIndex"))
+func (c *Context) GetTxIndexFromPath() (uint64, error) {
+	txIndex, err := strconv.ParseUint(c.Param("txIndex"), 10, 64)
 	if err != nil {
 		return 0, ErrInvalidTxIndex
 	}
@@ -104,6 +105,17 @@ func (c *Context) JSONSuccess(result interface{}) error {
 }
 
 func (c *Context) JSONError(err error) error {
+	switch err {
+	case core.ErrInvalidTxInput:
+		err = ErrInvalidTxInput
+	case core.ErrTxInputAlreadySpent:
+		err = ErrTxInputAlreadySpent
+	case core.ErrInvalidTxSignature:
+		err = ErrInvalidTxSignature
+	case core.ErrInvalidTxBalance:
+		err = ErrInvalidTxBalance
+	}
+
 	var appErr *Error
 	if e, ok := err.(*Error); ok {
 		appErr = e

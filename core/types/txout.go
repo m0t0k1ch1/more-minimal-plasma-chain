@@ -12,19 +12,19 @@ var (
 )
 
 type TxOut struct {
-	Owner  common.Address `json:"owner"`
-	Amount uint64         `json:"amount"`
+	OwnerAddress common.Address `json:"owner"`
+	Amount       uint64         `json:"amount"`
 }
 
-func NewTxOut(owner common.Address, amount uint64) *TxOut {
+func NewTxOut(ownerAddr common.Address, amount uint64) *TxOut {
 	return &TxOut{
-		Owner:  owner,
-		Amount: amount,
+		OwnerAddress: ownerAddr,
+		Amount:       amount,
 	}
 }
 
 func (txOut *TxOut) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, []interface{}{
-		txOut.Owner.Bytes(), txOut.Amount,
+		txOut.OwnerAddress.Bytes(), txOut.Amount,
 	})
 }

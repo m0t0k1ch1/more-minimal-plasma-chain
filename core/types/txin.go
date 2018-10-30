@@ -11,14 +11,14 @@ var (
 )
 
 type TxIn struct {
-	BlockNum    uint64 `json:"blknum"`
+	BlockNumber uint64 `json:"blknum"`
 	TxIndex     uint64 `json:"txindex"`
 	OutputIndex uint64 `json:"oindex"`
 }
 
 func NewTxIn(blkNum, txIndex, oIndex uint64) *TxIn {
 	return &TxIn{
-		BlockNum:    blkNum,
+		BlockNumber: blkNum,
 		TxIndex:     txIndex,
 		OutputIndex: oIndex,
 	}
@@ -26,6 +26,6 @@ func NewTxIn(blkNum, txIndex, oIndex uint64) *TxIn {
 
 func (txIn *TxIn) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, []interface{}{
-		txIn.BlockNum, txIn.TxIndex, txIn.OutputIndex,
+		txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex,
 	})
 }

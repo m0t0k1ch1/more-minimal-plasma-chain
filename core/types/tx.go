@@ -39,8 +39,8 @@ func NewTx() *Tx {
 	for i := 0; i < TxElementsNum; i++ {
 		tx.Inputs[i] = nullTxIn
 		tx.Outputs[i] = nullTxOut
-		tx.Signatures[i] = nullSignature
-		tx.ConfirmationSignatures[i] = nullSignature
+		tx.Signatures[i] = NullSignature
+		tx.ConfirmationSignatures[i] = NullSignature
 		tx.Spents[i] = false
 	}
 
@@ -48,8 +48,8 @@ func NewTx() *Tx {
 }
 
 func (tx *Tx) IsDeposit() bool {
-	for _, in := range tx.Inputs {
-		if in.BlockNum != 0 {
+	for _, txIn := range tx.Inputs {
+		if txIn.BlockNumber != 0 {
 			return false
 		}
 	}
@@ -161,7 +161,7 @@ func (tx *Tx) ConfirmationSignerAddresses() ([]common.Address, error) {
 func (tx *Tx) signerAddresses(b []byte, sigs [TxElementsNum]Signature) ([]common.Address, error) {
 	signerAddrs := make([]common.Address, len(sigs))
 	for i, sig := range sigs {
-		if bytes.Equal(sig.Bytes(), nullSignature.Bytes()) {
+		if bytes.Equal(sig.Bytes(), NullSignature.Bytes()) {
 			signerAddrs[i] = nullAddress
 			continue
 		}
