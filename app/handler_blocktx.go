@@ -12,15 +12,7 @@ func (cc *ChildChain) GetBlockTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	tx, err := cc.blockchain.GetTx(blkNum, txIndex)
-	if err != nil {
-		if err == core.ErrTxNotFound {
-			return c.JSONError(ErrTxNotFound)
-		}
-		return c.JSONError(err)
-	}
-
-	return c.JSONSuccess(tx)
+	return cc.getBlockTxHandler(c, blkNum, txIndex)
 }
 
 func (cc *ChildChain) PutBlockTxHandler(c *Context) error {
@@ -53,5 +45,17 @@ func (cc *ChildChain) PutBlockTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return nil
+	return cc.getBlockTxHandler(c, blkNum, txIndex)
+}
+
+func (cc *ChildChain) getBlockTxHandler(c *Context, blkNum, txIndex uint64) error {
+	tx, err := cc.blockchain.GetTx(blkNum, txIndex)
+	if err != nil {
+		if err == core.ErrTxNotFound {
+			return c.JSONError(ErrTxNotFound)
+		}
+		return c.JSONError(err)
+	}
+
+	return c.JSONSuccess(tx)
 }
