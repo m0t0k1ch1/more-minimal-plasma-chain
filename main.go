@@ -35,6 +35,10 @@ func main() {
 		panic(err)
 	}
 
-	cc := app.NewChildChain(conf)
+	cc, err := app.NewChildChain(conf)
+	if err != nil {
+		panic(err)
+	}
+
 	cc.Logger().Fatal(cc.Start())
 }

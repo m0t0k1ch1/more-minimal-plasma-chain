@@ -1,4 +1,6 @@
 {
   "port": 1323,
-  "operator_address_hex": "hex format of the Plasma operator address"
+  "operator": {
+    "privkey": "<operator's privkey>"
+  }
 }

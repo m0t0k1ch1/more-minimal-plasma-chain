@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 const (
@@ -18,14 +20,21 @@ type HandlerFunc func(*Context) error
 type ChildChain struct {
 	e          *echo.Echo
 	config     *Config
+	operator   *types.Account
 	blockchain *core.Blockchain
 	mempool    *core.Mempool
 }
 
-func NewChildChain(conf *Config) *ChildChain {
+func NewChildChain(conf *Config) (*ChildChain, error) {
+	privKey, err := crypto.HexToECDSA(conf.Operator.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
 	cc := &ChildChain{
 		e:          echo.New(),
 		config:     conf,
+		operator:   types.NewAccount(privKey),
 		blockchain: core.NewBlockchain(),
 		mempool:    core.NewMempool(DefaultMempoolSize),
 	}
@@ -46,7 +55,7 @@ func NewChildChain(conf *Config) *ChildChain {
 	cc.PUT("/blocks/:blkNum/txes/:txIndex", cc.PutBlockTxHandler)
 	cc.POST("/txes", cc.PostTxHandler)
 
-	return cc
+	return cc, nil
 }
 
 func (cc *ChildChain) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
