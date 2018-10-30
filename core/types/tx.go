@@ -94,9 +94,7 @@ func (tx *Tx) ConfirmationHash() ([]byte, error) {
 }
 
 func (tx *Tx) MerkleLeaf() ([]byte, error) {
-	b, err := rlp.EncodeToBytes([]interface{}{
-		tx.inputCores(), tx.outputCores(),
-	})
+	b, err := tx.Encode()
 	if err != nil {
 		return nil, err
 	}
