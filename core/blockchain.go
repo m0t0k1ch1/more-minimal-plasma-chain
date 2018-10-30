@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"errors"
 	"sync"
 
@@ -114,11 +115,22 @@ func (bc *Blockchain) AddTx(tx *types.Tx) error {
 		if txIn.BlockNumber == 0 {
 			continue
 		}
-		bc.chain[txIn.BlockNumber].Txes[txIn.TxIndex].Spents[txIn.OutputIndex] = true
+		bc.chain[txIn.BlockNumber].Txes[txIn.TxIndex].Outputs[txIn.OutputIndex].Spent()
 	}
 	bc.currentBlock.Txes = append(bc.currentBlock.Txes, tx)
 
 	return nil
+}
+
+func (bc *Blockchain) GetTxIn(blkNum, txIndex, iIndex uint64) (*types.TxIn, error) {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+
+	if !bc.isExistTxIn(blkNum, txIndex, iIndex) {
+		return nil, ErrTxInNotFound
+	}
+
+	return bc.getTxIn(blkNum, txIndex, iIndex), nil
 }
 
 func (bc *Blockchain) SetConfirmationSignature(blkNum, txIndex, iIndex uint64, confSig types.Signature) error {
@@ -145,7 +157,48 @@ func (bc *Blockchain) SetConfirmationSignature(blkNum, txIndex, iIndex uint64, c
 		return ErrInvalidTxConfirmationSignature
 	}
 
-	bc.chain[blkNum].Txes[txIndex].ConfirmationSignatures[iIndex] = confSig
+	bc.chain[blkNum].Txes[txIndex].Inputs[iIndex].ConfirmationSignature = confSig
+
+	return nil
+}
+
+func (bc *Blockchain) validateTx(tx *types.Tx) error {
+	iAmount, oAmount := uint64(0), uint64(0)
+
+	for _, txOut := range tx.Outputs {
+		oAmount += txOut.Amount
+	}
+
+	for i, txIn := range tx.Inputs {
+		if txIn.BlockNumber == 0 {
+			continue
+		}
+
+		if !bc.isExistTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex) {
+			return ErrInvalidTxIn
+		}
+
+		inTxOut := bc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+
+		if inTxOut.IsSpent {
+			return ErrTxOutAlreadySpent
+		}
+
+		signerAddr, err := tx.SignerAddress(uint64(i))
+		if err != nil {
+			return ErrInvalidTxSignature
+		}
+		if txIn.Signature == types.NullSignature ||
+			!bytes.Equal(signerAddr.Bytes(), inTxOut.OwnerAddress.Bytes()) {
+			return ErrInvalidTxSignature
+		}
+
+		iAmount += inTxOut.Amount
+	}
+
+	if !tx.IsDeposit() && iAmount < oAmount {
+		return ErrInvalidTxBalance
+	}
 
 	return nil
 }
@@ -193,46 +246,4 @@ func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex uint64) bool {
 
 func (bc *Blockchain) getTxOut(blkNum, txIndex, oIndex uint64) *types.TxOut {
 	return bc.chain[blkNum].Txes[txIndex].Outputs[oIndex]
-}
-
-func (bc *Blockchain) validateTx(tx *types.Tx) error {
-	signerAddrs, err := tx.SignerAddresses()
-	if err != nil {
-		return err
-	}
-
-	iAmount, oAmount := uint64(0), uint64(0)
-
-	for _, txOut := range tx.Outputs {
-		oAmount += txOut.Amount
-	}
-
-	for i, txIn := range tx.Inputs {
-		if txIn.BlockNumber == 0 {
-			continue
-		}
-
-		if !bc.isExistTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex) {
-			return ErrInvalidTxIn
-		}
-
-		inTx := bc.getTx(txIn.BlockNumber, txIn.TxIndex)
-		inTxOut := inTx.Outputs[txIn.OutputIndex]
-
-		if inTx.Spents[txIn.OutputIndex] {
-			return ErrTxOutAlreadySpent
-		}
-		if tx.Signatures[i] == types.NullSignature ||
-			signerAddrs[i].Hex() != inTxOut.OwnerAddress.Hex() {
-			return ErrInvalidTxSignature
-		}
-
-		iAmount += inTxOut.Amount
-	}
-
-	if !tx.IsDeposit() && iAmount < oAmount {
-		return ErrInvalidTxBalance
-	}
-
-	return nil
 }

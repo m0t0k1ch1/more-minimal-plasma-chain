@@ -27,6 +27,10 @@ func (c *Context) GetTxIndexFromPath() (uint64, error) {
 	return c.getUint64FromPath("txIndex")
 }
 
+func (c *Context) GetInputIndexFromPath() (uint64, error) {
+	return c.getUint64FromPath("iIndex")
+}
+
 func (c *Context) getUint64FromPath(key string) (uint64, error) {
 	val, err := strconv.ParseUint(c.getPathParam(key), 10, 64)
 	if err != nil {
@@ -61,10 +65,6 @@ func (c *Context) GetOwnerFromForm() (common.Address, error) {
 
 func (c *Context) GetAmountFromForm() (uint64, error) {
 	return c.getRequiredUint64FromForm("amount")
-}
-
-func (c *Context) GetIndexFromForm() (uint64, error) {
-	return c.getRequiredUint64FromForm("idx")
 }
 
 func (c *Context) GetConfirmationSignatureFromForm() (types.Signature, error) {
@@ -117,25 +117,22 @@ func (c *Context) getRequiredSignatureFromForm(key string) (types.Signature, err
 }
 
 func (c *Context) getRequiredTxFromForm(key string) (*types.Tx, error) {
-	txCoreStr, err := c.getRequiredFormParam(key)
+	txStr, err := c.getRequiredFormParam(key)
 	if err != nil {
 		return nil, err
 	}
 
-	txCoreBytes, err := hexutil.Decode(txCoreStr)
+	txBytes, err := hexutil.Decode(txStr)
 	if err != nil {
 		return nil, NewInvalidFormParamError(key)
 	}
 
-	var txc types.TxCore
-	if err := rlp.DecodeBytes(txCoreBytes, &txc); err != nil {
+	var tx types.Tx
+	if err := rlp.DecodeBytes(txBytes, &tx); err != nil {
 		return nil, NewInvalidFormParamError(key)
 	}
 
-	tx := types.NewTx()
-	tx.TxCore = &txc
-
-	return tx, nil
+	return &tx, nil
 }
 
 func (c *Context) getRequiredFormParam(key string) (string, error) {

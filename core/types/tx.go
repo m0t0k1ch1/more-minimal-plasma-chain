@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"io"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -13,35 +14,24 @@ const (
 	TxElementsNum = 2
 )
 
-type TxCore struct {
-	Inputs     [TxElementsNum]*TxIn     `json:"ins"`
-	Outputs    [TxElementsNum]*TxOut    `json:"outs"`
-	Signatures [TxElementsNum]Signature `json:"sigs"`
-}
+var (
+	ErrInvalidTxInIndex = errors.New("invalid txin index")
+)
 
 type Tx struct {
-	*TxCore
-	ConfirmationSignatures [TxElementsNum]Signature `json:"confsigs"`
-	Spents                 [TxElementsNum]bool      `json:"spents"`
+	Inputs  [TxElementsNum]*TxIn  `json:"ins"`
+	Outputs [TxElementsNum]*TxOut `json:"outs"`
 }
 
 func NewTx() *Tx {
 	tx := &Tx{
-		TxCore: &TxCore{
-			Inputs:     [TxElementsNum]*TxIn{},
-			Outputs:    [TxElementsNum]*TxOut{},
-			Signatures: [TxElementsNum]Signature{},
-		},
-		ConfirmationSignatures: [TxElementsNum]Signature{},
-		Spents:                 [TxElementsNum]bool{},
+		Inputs:  [TxElementsNum]*TxIn{},
+		Outputs: [TxElementsNum]*TxOut{},
 	}
 
 	for i := 0; i < TxElementsNum; i++ {
-		tx.Inputs[i] = nullTxIn
-		tx.Outputs[i] = nullTxOut
-		tx.Signatures[i] = NullSignature
-		tx.ConfirmationSignatures[i] = NullSignature
-		tx.Spents[i] = false
+		tx.Inputs[i] = NewTxIn(0, 0, 0)
+		tx.Outputs[i] = NewTxOut(NullAddress, 0)
 	}
 
 	return tx
@@ -89,8 +79,8 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	}
 
 	buf := bytes.NewBuffer(b)
-	for _, sig := range tx.Signatures {
-		if _, err := buf.Write(sig.Bytes()); err != nil {
+	for _, txIn := range tx.Inputs {
+		if _, err := buf.Write(txIn.Signature.Bytes()); err != nil {
 			return nil, err
 		}
 	}
@@ -99,6 +89,10 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 }
 
 func (tx *Tx) Sign(iIndex uint64, signer *Account) error {
+	if iIndex >= uint64(len(tx.Inputs)) {
+		return ErrInvalidTxInIndex
+	}
+
 	hashBytes, err := tx.Hash()
 	if err != nil {
 		return err
@@ -108,18 +102,21 @@ func (tx *Tx) Sign(iIndex uint64, signer *Account) error {
 	if err != nil {
 		return err
 	}
-
 	sig, err := NewSignatureFromBytes(sigBytes)
 	if err != nil {
 		return err
 	}
 
-	tx.Signatures[iIndex] = sig
+	tx.Inputs[iIndex].Signature = sig
 
 	return nil
 }
 
 func (tx *Tx) Confirm(iIndex uint64, signer *Account) error {
+	if iIndex >= uint64(len(tx.Inputs)) {
+		return ErrInvalidTxInIndex
+	}
+
 	confHashBytes, err := tx.ConfirmationHash()
 	if err != nil {
 		return err
@@ -129,50 +126,46 @@ func (tx *Tx) Confirm(iIndex uint64, signer *Account) error {
 	if err != nil {
 		return err
 	}
-
-	sig, err := NewSignatureFromBytes(confSigBytes)
+	confSig, err := NewSignatureFromBytes(confSigBytes)
 	if err != nil {
 		return err
 	}
 
-	tx.ConfirmationSignatures[iIndex] = sig
+	tx.Inputs[iIndex].ConfirmationSignature = confSig
 
 	return nil
 }
 
-func (tx *Tx) SignerAddresses() ([]common.Address, error) {
+func (tx *Tx) SignerAddress(iIndex uint64) (common.Address, error) {
+	if iIndex >= uint64(len(tx.Inputs)) {
+		return NullAddress, ErrInvalidTxInIndex
+	}
+
 	hashBytes, err := tx.Hash()
 	if err != nil {
-		return nil, err
+		return NullAddress, err
 	}
 
-	return tx.signerAddresses(hashBytes, tx.Signatures)
+	return tx.signerAddress(hashBytes, tx.Inputs[iIndex].Signature)
 }
 
-func (tx *Tx) ConfirmationSignerAddresses() ([]common.Address, error) {
+func (tx *Tx) ConfirmationSignerAddress(iIndex uint64) (common.Address, error) {
+	if iIndex >= uint64(len(tx.Inputs)) {
+		return NullAddress, ErrInvalidTxInIndex
+	}
+
 	confHashBytes, err := tx.ConfirmationHash()
 	if err != nil {
-		return nil, err
+		return NullAddress, err
 	}
 
-	return tx.signerAddresses(confHashBytes, tx.ConfirmationSignatures)
+	return tx.signerAddress(confHashBytes, tx.Inputs[iIndex].ConfirmationSignature)
 }
 
-func (tx *Tx) signerAddresses(b []byte, sigs [TxElementsNum]Signature) ([]common.Address, error) {
-	signerAddrs := make([]common.Address, len(sigs))
-	for i, sig := range sigs {
-		if bytes.Equal(sig.Bytes(), NullSignature.Bytes()) {
-			signerAddrs[i] = NullAddress
-			continue
-		}
-
-		signerAddr, err := sig.SignerAddress(b)
-		if err != nil {
-			return nil, err
-		}
-
-		signerAddrs[i] = signerAddr
+func (tx *Tx) signerAddress(b []byte, sig Signature) (common.Address, error) {
+	if bytes.Equal(sig.Bytes(), NullSignature.Bytes()) {
+		return NullAddress, nil
 	}
 
-	return signerAddrs, nil
+	return sig.SignerAddress(b)
 }

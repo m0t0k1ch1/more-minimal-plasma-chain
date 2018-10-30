@@ -120,9 +120,9 @@ func TestTx_Sign(t *testing.T) {
 	require.NoError(t, tx.Sign(0, signer))
 
 	// verify
-	signerAddrs, err := tx.SignerAddresses()
-	require.NoError(t, err)
-	for i, signerAddr := range signerAddrs {
+	for i := 0; i < len(tx.Inputs); i++ {
+		signerAddr, err := tx.SignerAddress(uint64(i))
+		require.NoError(t, err)
 		if i == 0 {
 			assert.Equal(t, signer.Address(), signerAddr)
 		} else {
@@ -142,9 +142,9 @@ func TestTx_Confirm(t *testing.T) {
 	require.NoError(t, tx.Confirm(0, confSigner))
 
 	// verify
-	confSignerAddrs, err := tx.ConfirmationSignerAddresses()
-	require.NoError(t, err)
-	for i, confSignerAddr := range confSignerAddrs {
+	for i := 0; i < len(tx.Inputs); i++ {
+		confSignerAddr, err := tx.ConfirmationSignerAddress(uint64(i))
+		require.NoError(t, err)
 		if i == 0 {
 			assert.Equal(t, confSigner.Address(), confSignerAddr)
 		} else {
