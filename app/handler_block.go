@@ -1,5 +1,7 @@
 package app
 
+import "github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+
 func (cc *ChildChain) GetBlockHandler(c *Context) error {
 	blkNum, err := c.GetBlockNumberFromPath()
 	if err != nil {
@@ -51,9 +53,12 @@ func (cc *ChildChain) postDepositBlockHandler(c *Context) error {
 }
 
 func (cc *ChildChain) getBlockHandler(c *Context, blkNum uint64) error {
-	blk := cc.blockchain.GetBlock(blkNum)
-	if blk == nil {
-		return c.JSONError(ErrBlockNotFound)
+	blk, err := cc.blockchain.GetBlock(blkNum)
+	if err != nil {
+		if err == core.ErrBlockNotFound {
+			return c.JSONError(ErrBlockNotFound)
+		}
+		return c.JSONError(err)
 	}
 
 	blkSummary, err := blk.Summary()

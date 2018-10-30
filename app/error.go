@@ -14,13 +14,14 @@ const (
 var (
 	ErrUnexpected = NewError(10000, "unexpected error")
 
-	ErrBlockNotFound = NewError(11001, "block is not found")
-	ErrTxNotFound    = NewError(11002, "tx is not found")
-
-	ErrInvalidTxInput      = NewError(12001, core.ErrInvalidTxInput.Error())
-	ErrTxInputAlreadySpent = NewError(12002, core.ErrTxInputAlreadySpent.Error())
-	ErrInvalidTxSignature  = NewError(12003, core.ErrInvalidTxSignature.Error())
-	ErrInvalidTxBalance    = NewError(12004, core.ErrInvalidTxBalance.Error())
+	ErrBlockNotFound                  = NewError(11001, core.ErrBlockNotFound.Error())
+	ErrTxNotFound                     = NewError(11002, core.ErrTxNotFound.Error())
+	ErrInvalidTxSignature             = NewError(11003, core.ErrInvalidTxSignature.Error())
+	ErrInvalidTxConfirmationSignature = NewError(11004, core.ErrInvalidTxConfirmationSignature.Error())
+	ErrInvalidTxBalance               = NewError(11005, core.ErrInvalidTxBalance.Error())
+	ErrTxInNotFound                   = NewError(11006, core.ErrTxInNotFound.Error())
+	ErrInvalidTxIn                    = NewError(11007, core.ErrInvalidTxIn.Error())
+	ErrTxOutAlreadySpent              = NewError(11008, core.ErrTxOutAlreadySpent.Error())
 )
 
 type Error struct {

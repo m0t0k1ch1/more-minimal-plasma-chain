@@ -1,7 +1,6 @@
 package core
 
 import (
-	"bytes"
 	"errors"
 	"sync"
 
@@ -14,10 +13,17 @@ const (
 )
 
 var (
-	ErrInvalidTxInput      = errors.New("tx input is invalid")
-	ErrTxInputAlreadySpent = errors.New("tx input is already spent")
-	ErrInvalidTxSignature  = errors.New("tx signature is invalid")
-	ErrInvalidTxBalance    = errors.New("tx balance is invalid")
+	ErrBlockNotFound = errors.New("block is not found")
+
+	ErrTxNotFound                     = errors.New("tx is not found")
+	ErrInvalidTxSignature             = errors.New("tx signature is invalid")
+	ErrInvalidTxConfirmationSignature = errors.New("tx confirmation signature is invalid")
+	ErrInvalidTxBalance               = errors.New("tx balance is invalid")
+
+	ErrTxInNotFound = errors.New("txin is not found")
+	ErrInvalidTxIn  = errors.New("txin is invalid")
+
+	ErrTxOutAlreadySpent = errors.New("txout is already spent")
 )
 
 type Blockchain struct {
@@ -41,11 +47,15 @@ func (bc *Blockchain) CurrentBlockNumber() uint64 {
 	return bc.currentBlock.Number
 }
 
-func (bc *Blockchain) GetBlock(blkNum uint64) *types.Block {
+func (bc *Blockchain) GetBlock(blkNum uint64) (*types.Block, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	return bc.getBlock(blkNum)
+	if !bc.isExistBlock(blkNum) {
+		return nil, ErrBlockNotFound
+	}
+
+	return bc.getBlock(blkNum), nil
 }
 
 func (bc *Blockchain) AddBlock(signer *types.Account) (uint64, error) {
@@ -81,11 +91,15 @@ func (bc *Blockchain) AddDepositBlock(ownerAddr common.Address, amount uint64, s
 	return blk.Number, nil
 }
 
-func (bc *Blockchain) GetTx(blkNum uint64, txIndex uint64) *types.Tx {
+func (bc *Blockchain) GetTx(blkNum, txIndex uint64) (*types.Tx, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	return bc.getTx(blkNum, txIndex)
+	if !bc.isExistTx(blkNum, txIndex) {
+		return nil, ErrTxNotFound
+	}
+
+	return bc.getTx(blkNum, txIndex), nil
 }
 
 func (bc *Blockchain) AddTx(tx *types.Tx) error {
@@ -107,26 +121,78 @@ func (bc *Blockchain) AddTx(tx *types.Tx) error {
 	return nil
 }
 
-func (bc *Blockchain) getBlock(blkNum uint64) *types.Block {
-	blk, ok := bc.chain[blkNum]
-	if !ok {
-		return nil
+func (bc *Blockchain) SetConfirmationSignature(blkNum, txIndex, iIndex uint64, confSig types.Signature) error {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+
+	if !bc.isExistTxIn(blkNum, txIndex, iIndex) {
+		return ErrTxInNotFound
 	}
 
-	return blk
+	tx := bc.getTx(blkNum, txIndex)
+	txIn := tx.Inputs[iIndex]
+	inTxOut := bc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+
+	confHashBytes, err := tx.ConfirmationHash()
+	if err != nil {
+		return err
+	}
+	confSigner, err := confSig.SignerAddress(confHashBytes)
+	if err != nil {
+		return ErrInvalidTxConfirmationSignature
+	}
+	if confSigner.Hex() != inTxOut.OwnerAddress.Hex() {
+		return ErrInvalidTxConfirmationSignature
+	}
+
+	bc.chain[blkNum].Txes[txIndex].ConfirmationSignatures[iIndex] = confSig
+
+	return nil
 }
 
-func (bc *Blockchain) getTx(blkNum uint64, txIndex uint64) *types.Tx {
-	blk := bc.getBlock(blkNum)
-	if blk == nil {
-		return nil
+func (bc *Blockchain) isExistBlock(blkNum uint64) bool {
+	_, ok := bc.chain[blkNum]
+	return ok
+}
+
+func (bc *Blockchain) getBlock(blkNum uint64) *types.Block {
+	return bc.chain[blkNum]
+}
+
+func (bc *Blockchain) isExistTx(blkNum, txIndex uint64) bool {
+	if !bc.isExistBlock(blkNum) {
+		return false
 	}
 
-	if txIndex >= uint64(len(blk.Txes)) {
-		return nil
+	return txIndex < uint64(len(bc.chain[blkNum].Txes))
+}
+
+func (bc *Blockchain) getTx(blkNum, txIndex uint64) *types.Tx {
+	return bc.chain[blkNum].Txes[txIndex]
+}
+
+func (bc *Blockchain) isExistTxIn(blkNum, txIndex, iIndex uint64) bool {
+	if !bc.isExistTx(blkNum, txIndex) {
+		return false
 	}
 
-	return blk.Txes[txIndex]
+	return iIndex < uint64(len(bc.chain[blkNum].Txes[txIndex].Inputs))
+}
+
+func (bc *Blockchain) getTxIn(blkNum, txIndex, iIndex uint64) *types.TxIn {
+	return bc.chain[blkNum].Txes[txIndex].Inputs[iIndex]
+}
+
+func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex uint64) bool {
+	if !bc.isExistTx(blkNum, txIndex) {
+		return false
+	}
+
+	return oIndex < uint64(len(bc.chain[blkNum].Txes[txIndex].Outputs))
+}
+
+func (bc *Blockchain) getTxOut(blkNum, txIndex, oIndex uint64) *types.TxOut {
+	return bc.chain[blkNum].Txes[txIndex].Outputs[oIndex]
 }
 
 func (bc *Blockchain) validateTx(tx *types.Tx) error {
@@ -146,23 +212,22 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 			continue
 		}
 
+		if !bc.isExistTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex) {
+			return ErrInvalidTxIn
+		}
+
 		inTx := bc.getTx(txIn.BlockNumber, txIn.TxIndex)
-		if inTx == nil ||
-			txIn.OutputIndex >= uint64(len(inTx.Outputs)) ||
-			txIn.OutputIndex >= uint64(len(inTx.Spents)) {
-			return ErrInvalidTxInput
-		}
-		if inTx.Spents[txIn.OutputIndex] {
-			return ErrTxInputAlreadySpent
-		}
-
 		inTxOut := inTx.Outputs[txIn.OutputIndex]
-		iAmount += inTxOut.Amount
 
+		if inTx.Spents[txIn.OutputIndex] {
+			return ErrTxOutAlreadySpent
+		}
 		if tx.Signatures[i] == types.NullSignature ||
-			!bytes.Equal(inTxOut.OwnerAddress.Bytes(), signerAddrs[i].Bytes()) {
+			signerAddrs[i].Hex() != inTxOut.OwnerAddress.Hex() {
 			return ErrInvalidTxSignature
 		}
+
+		iAmount += inTxOut.Amount
 	}
 
 	if !tx.IsDeposit() && iAmount < oAmount {
