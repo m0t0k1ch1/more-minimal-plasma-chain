@@ -113,16 +113,20 @@ func TestTx_Sign(t *testing.T) {
 	privKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
+	signer := NewAccount(privKey)
 	tx := newTestNullTx(t)
 
 	// sign
-	require.NoError(t, tx.Sign(0, privKey))
+	require.NoError(t, tx.Sign(0, signer))
 
 	// verify
-	signers, err := tx.Signers()
+	signerAddrs, err := tx.SignerAddresses()
 	require.NoError(t, err)
-	assert.Equal(t, crypto.PubkeyToAddress(privKey.PublicKey), signers[0])
-	for i := 1; i < len(signers); i++ {
-		assert.Equal(t, nullAddress, signers[i])
+	for i, signerAddr := range signerAddrs {
+		if i == 0 {
+			assert.Equal(t, signer.Address(), signerAddr)
+		} else {
+			assert.Equal(t, nullAddress, signerAddr)
+		}
 	}
 }

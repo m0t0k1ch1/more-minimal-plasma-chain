@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"io"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -101,13 +100,13 @@ func (blk *Block) Summary() (*BlockSummary, error) {
 	return summary, nil
 }
 
-func (blk *Block) Sign(privKey *ecdsa.PrivateKey) error {
+func (blk *Block) Sign(signer *Account) error {
 	hashBytes, err := blk.Hash()
 	if err != nil {
 		return err
 	}
 
-	sigBytes, err := crypto.Sign(hashBytes, privKey)
+	sigBytes, err := signer.Sign(hashBytes)
 	if err != nil {
 		return err
 	}
@@ -122,7 +121,7 @@ func (blk *Block) Sign(privKey *ecdsa.PrivateKey) error {
 	return nil
 }
 
-func (blk *Block) Signer() (common.Address, error) {
+func (blk *Block) SignerAddress() (common.Address, error) {
 	hashBytes, err := blk.Hash()
 	if err != nil {
 		return common.Address{}, err

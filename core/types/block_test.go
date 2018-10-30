@@ -107,13 +107,14 @@ func TestBlock_Sign(t *testing.T) {
 	privKey, err := crypto.GenerateKey()
 	require.NoError(t, err)
 
+	signer := NewAccount(privKey)
 	blk := newTestNullBlock(t)
 
 	// sign
-	require.NoError(t, blk.Sign(privKey))
+	require.NoError(t, blk.Sign(signer))
 
 	// verify
-	signer, err := blk.Signer()
+	signerAddr, err := blk.SignerAddress()
 	require.NoError(t, err)
-	assert.Equal(t, crypto.PubkeyToAddress(privKey.PublicKey), signer)
+	assert.Equal(t, signer.Address(), signerAddr)
 }

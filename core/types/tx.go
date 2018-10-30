@@ -99,13 +99,13 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (tx *Tx) Sign(iIndex int, privKey *ecdsa.PrivateKey) error {
+func (tx *Tx) Sign(iIndex int, signer *Account) error {
 	hashBytes, err := tx.Hash()
 	if err != nil {
 		return err
 	}
 
-	sigBytes, err := crypto.Sign(hashBytes, privKey)
+	sigBytes, err := signer.Sign(hashBytes)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (tx *Tx) Confirm(iIndex int, privKey *ecdsa.PrivateKey) error {
 	return nil
 }
 
-func (tx *Tx) Signers() ([]common.Address, error) {
+func (tx *Tx) SignerAddresses() ([]common.Address, error) {
 	hashBytes, err := tx.Hash()
 	if err != nil {
 		return nil, err
