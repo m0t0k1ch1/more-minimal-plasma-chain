@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"errors"
-	"io"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -46,16 +45,10 @@ func (tx *Tx) IsDeposit() bool {
 	return true
 }
 
-// implements RLP Encoder interface
-// ref. https://godoc.org/github.com/ethereum/go-ethereum/rlp#Encoder
-func (tx *Tx) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, []interface{}{
+func (tx *Tx) Hash() ([]byte, error) {
+	b, err := rlp.EncodeToBytes([]interface{}{
 		tx.Inputs, tx.Outputs,
 	})
-}
-
-func (tx *Tx) Hash() ([]byte, error) {
-	b, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		return nil, err
 	}

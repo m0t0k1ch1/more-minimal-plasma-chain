@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"io"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -31,16 +30,10 @@ func NewBlock(txes []*Tx, blkNum uint64) *Block {
 	}
 }
 
-// implements RLP Encoder interface
-// ref. https://godoc.org/github.com/ethereum/go-ethereum/rlp#Encoder
-func (blk *Block) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, []interface{}{
+func (blk *Block) Hash() ([]byte, error) {
+	b, err := rlp.EncodeToBytes([]interface{}{
 		blk.Txes, blk.Number,
 	})
-}
-
-func (blk *Block) Hash() ([]byte, error) {
-	b, err := rlp.EncodeToBytes(blk)
 	if err != nil {
 		return nil, err
 	}
