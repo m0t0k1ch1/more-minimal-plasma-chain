@@ -81,6 +81,13 @@ func (bc *Blockchain) AddDepositBlock(ownerAddr common.Address, amount uint64, s
 	return blk.Number, nil
 }
 
+func (bc *Blockchain) GetTx(blkNum uint64, txIndex uint64) *types.Tx {
+	bc.mu.RLock()
+	defer bc.mu.RUnlock()
+
+	return bc.getTx(blkNum, txIndex)
+}
+
 func (bc *Blockchain) AddTx(tx *types.Tx) error {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
@@ -100,11 +107,26 @@ func (bc *Blockchain) AddTx(tx *types.Tx) error {
 	return nil
 }
 
-func (bc *Blockchain) GetTx(blkNum uint64, txIndex uint64) *types.Tx {
-	bc.mu.RLock()
-	defer bc.mu.RUnlock()
+func (bc *Blockchain) getBlock(blkNum uint64) *types.Block {
+	blk, ok := bc.chain[blkNum]
+	if !ok {
+		return nil
+	}
 
-	return bc.getTx(blkNum, txIndex)
+	return blk
+}
+
+func (bc *Blockchain) getTx(blkNum uint64, txIndex uint64) *types.Tx {
+	blk := bc.getBlock(blkNum)
+	if blk == nil {
+		return nil
+	}
+
+	if txIndex >= uint64(len(blk.Txes)) {
+		return nil
+	}
+
+	return blk.Txes[txIndex]
 }
 
 func (bc *Blockchain) validateTx(tx *types.Tx) error {
@@ -148,26 +170,4 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 	}
 
 	return nil
-}
-
-func (bc *Blockchain) getBlock(blkNum uint64) *types.Block {
-	blk, ok := bc.chain[blkNum]
-	if !ok {
-		return nil
-	}
-
-	return blk
-}
-
-func (bc *Blockchain) getTx(blkNum uint64, txIndex uint64) *types.Tx {
-	blk := bc.getBlock(blkNum)
-	if blk == nil {
-		return nil
-	}
-
-	if txIndex >= uint64(len(blk.Txes)) {
-		return nil
-	}
-
-	return blk.Txes[txIndex]
 }
