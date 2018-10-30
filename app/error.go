@@ -6,75 +6,21 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 )
 
+const (
+	PathParamErrorCode = 20001
+	FormParamErrorCode = 20002
+)
+
 var (
-	ErrUnexpected = NewError(
-		1000,
-		"unexpected error",
-	)
+	ErrUnexpected = NewError(10000, "unexpected error")
 
-	ErrInvalidBlockNumber = NewError(
-		2001,
-		"block number is invalid",
-	)
-	ErrInvalidTxIndex = NewError(
-		2002,
-		"tx index is invalid",
-	)
+	ErrBlockNotFound = NewError(11001, "block is not found")
+	ErrTxNotFound    = NewError(11002, "tx is not found")
 
-	ErrInvalidBlockType = NewError(
-		3001,
-		"block type is invalid",
-	)
-	ErrOwnerRequired = NewError(
-		3002,
-		"'owner' param is required",
-	)
-	ErrInvalidOwnerHex = NewError(
-		3003,
-		"owner hex is invalid",
-	)
-	ErrAmountRequired = NewError(
-		3004,
-		"'amount' param is required",
-	)
-	ErrInvalidAmount = NewError(
-		3005,
-		"amount is invalid",
-	)
-	ErrTxRequired = NewError(
-		3006,
-		"'tx' param is required",
-	)
-	ErrInvalidTxHex = NewError(
-		3007,
-		"tx hex is invalid",
-	)
-
-	ErrBlockNotFound = NewError(
-		4001,
-		"block is not found",
-	)
-	ErrTxNotFound = NewError(
-		4002,
-		"tx is not found",
-	)
-
-	ErrInvalidTxInput = NewError(
-		5001,
-		core.ErrInvalidTxInput.Error(),
-	)
-	ErrTxInputAlreadySpent = NewError(
-		5002,
-		core.ErrTxInputAlreadySpent.Error(),
-	)
-	ErrInvalidTxSignature = NewError(
-		5003,
-		core.ErrInvalidTxSignature.Error(),
-	)
-	ErrInvalidTxBalance = NewError(
-		5004,
-		core.ErrInvalidTxBalance.Error(),
-	)
+	ErrInvalidTxInput      = NewError(12001, core.ErrInvalidTxInput.Error())
+	ErrTxInputAlreadySpent = NewError(12002, core.ErrTxInputAlreadySpent.Error())
+	ErrInvalidTxSignature  = NewError(12003, core.ErrInvalidTxSignature.Error())
+	ErrInvalidTxBalance    = NewError(12004, core.ErrInvalidTxBalance.Error())
 )
 
 type Error struct {
@@ -87,6 +33,27 @@ func NewError(code int, msg string) *Error {
 		Code:    code,
 		Message: msg,
 	}
+}
+
+func NewInvalidPathParamError(key string) *Error {
+	return NewError(
+		PathParamErrorCode,
+		fmt.Sprintf("'%s' is invalid", key),
+	)
+}
+
+func NewRequiredFormParamError(key string) *Error {
+	return NewError(
+		FormParamErrorCode,
+		fmt.Sprintf("'%s' is required", key),
+	)
+}
+
+func NewInvalidFormParamError(key string) *Error {
+	return NewError(
+		FormParamErrorCode,
+		fmt.Sprintf("'%s' is invalid", key),
+	)
 }
 
 func (err *Error) Error() string {

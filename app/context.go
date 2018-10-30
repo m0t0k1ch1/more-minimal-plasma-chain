@@ -21,83 +21,138 @@ func NewContext(c echo.Context) *Context {
 }
 
 func (c *Context) GetBlockNumberFromPath() (uint64, error) {
-	blkNum, err := strconv.ParseUint(c.Param("blkNum"), 10, 64)
-	if err != nil {
-		return 0, ErrInvalidBlockNumber
-	}
-
-	return blkNum, nil
+	return c.getUint64FromPath("blkNum")
 }
 
 func (c *Context) GetTxIndexFromPath() (uint64, error) {
-	txIndex, err := strconv.ParseUint(c.Param("txIndex"), 10, 64)
+	return c.getUint64FromPath("txIndex")
+}
+
+func (c *Context) getUint64FromPath(key string) (uint64, error) {
+	val, err := strconv.ParseUint(c.getPathParam(key), 10, 64)
 	if err != nil {
-		return 0, ErrInvalidTxIndex
+		return 0, NewInvalidPathParamError(key)
 	}
 
-	return txIndex, nil
+	return val, nil
+}
+
+func (c *Context) getPathParam(key string) string {
+	return c.Param(key)
 }
 
 func (c *Context) GetBlockTypeFromForm() (BlockType, error) {
-	if _, ok := c.Request().Form["type"]; !ok {
+	key := "type"
+
+	if !c.isExistFormParam(key) {
 		return BlockTypeNormal, nil
 	}
 
-	bt := BlockType(c.FormValue("type"))
+	bt := BlockType(c.getFormParam(key))
 	if !bt.IsValid() {
-		return "", ErrInvalidBlockType
+		return "", NewInvalidFormParamError(key)
 	}
 
 	return bt, nil
 }
 
 func (c *Context) GetOwnerFromForm() (common.Address, error) {
-	if _, ok := c.Request().Form["owner"]; !ok {
-		return common.Address{}, ErrOwnerRequired
-	}
-
-	ownerStr := c.FormValue("owner")
-	if !common.IsHexAddress(ownerStr) {
-		return common.Address{}, ErrInvalidOwnerHex
-	}
-
-	return common.HexToAddress(ownerStr), nil
+	return c.getRequiredAddressFromForm("owner")
 }
 
 func (c *Context) GetAmountFromForm() (uint64, error) {
-	if _, ok := c.Request().Form["amount"]; !ok {
-		return 0, ErrAmountRequired
-	}
+	return c.getRequiredUint64FromForm("amount")
+}
 
-	amountStr := c.FormValue("amount")
-	amount, err := strconv.ParseUint(amountStr, 10, 64)
-	if err != nil {
-		return 0, ErrInvalidAmount
-	}
+func (c *Context) GetIndexFromForm() (uint64, error) {
+	return c.getRequiredUint64FromForm("idx")
+}
 
-	return amount, nil
+func (c *Context) GetConfirmationSignatureFromForm() (types.Signature, error) {
+	return c.getRequiredSignatureFromForm("confsig")
 }
 
 func (c *Context) GetTxFromForm() (*types.Tx, error) {
-	if _, ok := c.Request().Form["tx"]; !ok {
-		return nil, ErrTxRequired
+	return c.getRequiredTxFromForm("tx")
+}
+
+func (c *Context) getRequiredUint64FromForm(key string) (uint64, error) {
+	valStr, err := c.getRequiredFormParam(key)
+	if err != nil {
+		return 0, err
 	}
 
-	txCoreStr := c.FormValue("tx")
+	val, err := strconv.ParseUint(valStr, 10, 64)
+	if err != nil {
+		return 0, NewInvalidFormParamError(key)
+	}
+
+	return val, nil
+}
+
+func (c *Context) getRequiredAddressFromForm(key string) (common.Address, error) {
+	addrStr, err := c.getRequiredFormParam(key)
+	if err != nil {
+		return types.NullAddress, err
+	}
+
+	if !common.IsHexAddress(addrStr) {
+		return types.NullAddress, NewInvalidFormParamError(key)
+	}
+
+	return common.HexToAddress(addrStr), nil
+}
+
+func (c *Context) getRequiredSignatureFromForm(key string) (types.Signature, error) {
+	sigStr, err := c.getRequiredFormParam(key)
+	if err != nil {
+		return types.NullSignature, err
+	}
+
+	sig, err := types.NewSignatureFromHex(sigStr)
+	if err != nil {
+		return types.NullSignature, NewInvalidFormParamError(key)
+	}
+
+	return sig, nil
+}
+
+func (c *Context) getRequiredTxFromForm(key string) (*types.Tx, error) {
+	txCoreStr, err := c.getRequiredFormParam(key)
+	if err != nil {
+		return nil, err
+	}
+
 	txCoreBytes, err := hexutil.Decode(txCoreStr)
 	if err != nil {
-		return nil, ErrInvalidTxHex
+		return nil, NewInvalidFormParamError(key)
 	}
 
 	var txc types.TxCore
 	if err := rlp.DecodeBytes(txCoreBytes, &txc); err != nil {
-		return nil, ErrInvalidTxHex
+		return nil, NewInvalidFormParamError(key)
 	}
 
 	tx := types.NewTx()
 	tx.TxCore = &txc
 
 	return tx, nil
+}
+
+func (c *Context) getRequiredFormParam(key string) (string, error) {
+	if !c.isExistFormParam(key) {
+		return "", NewRequiredFormParamError(key)
+	}
+	return c.getFormParam(key), nil
+}
+
+func (c *Context) getFormParam(key string) string {
+	return c.FormValue(key)
+}
+
+func (c *Context) isExistFormParam(key string) bool {
+	_, ok := c.Request().Form[key]
+	return ok
 }
 
 func (c *Context) JSONSuccess(result interface{}) error {

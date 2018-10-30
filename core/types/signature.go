@@ -41,6 +41,15 @@ func NewSignatureFromBytes(b []byte) (Signature, error) {
 	return sig, nil
 }
 
+func NewSignatureFromHex(s string) (Signature, error) {
+	b, err := hexutil.Decode(s)
+	if err != nil {
+		return NullSignature, err
+	}
+
+	return NewSignatureFromBytes(b)
+}
+
 func (sig Signature) Bytes() []byte {
 	return sig[:]
 }
