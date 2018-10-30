@@ -31,15 +31,15 @@ func NewBlock(txes []*Tx, blkNum uint64) *Block {
 }
 
 func (blk *Block) Hash() ([]byte, error) {
-	txInfos := make([]interface{}, len(blk.Txes))
+	txCores := make([]interface{}, len(blk.Txes))
 	for i, tx := range blk.Txes {
-		txInfos[i] = []interface{}{
+		txCores[i] = []interface{}{
 			tx.inputCores(), tx.outputCores(), tx.signatures(),
 		}
 	}
 
 	b, err := rlp.EncodeToBytes([]interface{}{
-		txInfos, blk.Number,
+		txCores, blk.Number,
 	})
 	if err != nil {
 		return nil, err
