@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"crypto/ecdsa"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -42,4 +43,15 @@ func decodePrivateKey(privKeyStr string) (*ecdsa.PrivateKey, error) {
 	}
 
 	return crypto.ToECDSA(privKeyBytes)
+}
+
+func printlnJSON(v interface{}) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(b))
+
+	return nil
 }

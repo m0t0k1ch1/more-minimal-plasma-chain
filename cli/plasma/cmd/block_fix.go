@@ -21,6 +21,8 @@ var CmdBlockFix = cli.Command{
 			return err
 		}
 
-		return printlnBlockNumber(blkNum)
+		return printlnJSON(map[string]interface{}{
+			"blknum": blkNum,
+		})
 	},
 }

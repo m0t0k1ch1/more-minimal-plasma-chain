@@ -23,6 +23,6 @@ var CmdBlockGet = cli.Command{
 			return err
 		}
 
-		return printlnBlock(blk)
+		return printlnJSON(blk)
 	},
 }
