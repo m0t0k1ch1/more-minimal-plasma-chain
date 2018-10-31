@@ -15,13 +15,15 @@ var (
 	ErrUnexpected = NewError(10000, "unexpected error")
 
 	ErrBlockNotFound                  = NewError(11001, core.ErrBlockNotFound.Error())
-	ErrTxNotFound                     = NewError(11002, core.ErrTxNotFound.Error())
-	ErrInvalidTxSignature             = NewError(11003, core.ErrInvalidTxSignature.Error())
-	ErrInvalidTxConfirmationSignature = NewError(11004, core.ErrInvalidTxConfirmationSignature.Error())
-	ErrInvalidTxBalance               = NewError(11005, core.ErrInvalidTxBalance.Error())
-	ErrTxInNotFound                   = NewError(11006, core.ErrTxInNotFound.Error())
-	ErrInvalidTxIn                    = NewError(11007, core.ErrInvalidTxIn.Error())
-	ErrTxOutAlreadySpent              = NewError(11008, core.ErrTxOutAlreadySpent.Error())
+	ErrEmptyBlock                     = NewError(11002, core.ErrEmptyBlock.Error())
+	ErrTxNotFound                     = NewError(11003, core.ErrTxNotFound.Error())
+	ErrInvalidTxSignature             = NewError(11004, core.ErrInvalidTxSignature.Error())
+	ErrInvalidTxConfirmationSignature = NewError(11005, core.ErrInvalidTxConfirmationSignature.Error())
+	ErrInvalidTxBalance               = NewError(11006, core.ErrInvalidTxBalance.Error())
+	ErrTxInNotFound                   = NewError(11007, core.ErrTxInNotFound.Error())
+	ErrInvalidTxIn                    = NewError(11008, core.ErrInvalidTxIn.Error())
+	ErrDepositTxInConfirmation        = NewError(11009, core.ErrDepositTxInConfirmation.Error())
+	ErrTxOutAlreadySpent              = NewError(11010, core.ErrTxOutAlreadySpent.Error())
 )
 
 type Error struct {

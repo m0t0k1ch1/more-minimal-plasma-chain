@@ -28,6 +28,9 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 func (cc *ChildChain) postBlockHandler(c *Context) error {
 	blkNum, err := cc.blockchain.AddBlock(cc.operator)
 	if err != nil {
+		if err == core.ErrEmptyBlock {
+			return c.JSONError(ErrEmptyBlock)
+		}
 		return c.JSONError(err)
 	}
 

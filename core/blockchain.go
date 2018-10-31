@@ -15,14 +15,16 @@ const (
 
 var (
 	ErrBlockNotFound = errors.New("block is not found")
+	ErrEmptyBlock    = errors.New("block is empty")
 
 	ErrTxNotFound                     = errors.New("tx is not found")
 	ErrInvalidTxSignature             = errors.New("tx signature is invalid")
 	ErrInvalidTxConfirmationSignature = errors.New("tx confirmation signature is invalid")
 	ErrInvalidTxBalance               = errors.New("tx balance is invalid")
 
-	ErrTxInNotFound = errors.New("txin is not found")
-	ErrInvalidTxIn  = errors.New("txin is invalid")
+	ErrTxInNotFound            = errors.New("txin is not found")
+	ErrInvalidTxIn             = errors.New("txin is invalid")
+	ErrDepositTxInConfirmation = errors.New("deposit txin cannot be confirmed")
 
 	ErrTxOutAlreadySpent = errors.New("txout is already spent")
 )
@@ -62,6 +64,10 @@ func (bc *Blockchain) GetBlock(blkNum uint64) (*types.Block, error) {
 func (bc *Blockchain) AddBlock(signer *types.Account) (uint64, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
+
+	if len(bc.currentBlock.Txes) == 0 {
+		return 0, ErrEmptyBlock
+	}
 
 	if err := bc.currentBlock.Sign(signer); err != nil {
 		return 0, err
@@ -161,6 +167,11 @@ func (bc *Blockchain) SetConfirmationSignature(blkNum, txIndex, iIndex uint64, c
 
 	tx := bc.getTx(blkNum, txIndex)
 	txIn := tx.Inputs[iIndex]
+
+	if txIn.BlockNumber == 0 {
+		return ErrDepositTxInConfirmation
+	}
+
 	inTxOut := bc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
 
 	confHashBytes, err := tx.ConfirmationHash()

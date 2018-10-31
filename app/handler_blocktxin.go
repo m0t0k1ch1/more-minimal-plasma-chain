@@ -26,6 +26,8 @@ func (cc *ChildChain) PutBlockTxInHandler(c *Context) error {
 	if err := cc.blockchain.SetConfirmationSignature(blkNum, txIndex, iIndex, confSig); err != nil {
 		if err == core.ErrTxInNotFound {
 			return c.JSONError(ErrTxInNotFound)
+		} else if err == core.ErrDepositTxInConfirmation {
+			return c.JSONError(ErrDepositTxInConfirmation)
 		} else if err == core.ErrInvalidTxConfirmationSignature {
 			return c.JSONError(ErrInvalidTxConfirmationSignature)
 		}
