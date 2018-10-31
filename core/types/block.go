@@ -10,9 +10,9 @@ import (
 )
 
 type Block struct {
-	Txes      []*Tx
-	Number    uint64
-	Signature Signature
+	Txes      []*Tx     `json:"txes"`
+	Number    uint64    `json:"blknum"`
+	Signature Signature `json:"sig"`
 }
 
 func NewBlock(txes []*Tx, blkNum uint64) *Block {
