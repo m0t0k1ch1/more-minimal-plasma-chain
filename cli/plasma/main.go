@@ -12,6 +12,7 @@ func main() {
 	app := cli.NewApp()
 	app.Commands = []cli.Command{
 		cmd.CmdTx,
+		cmd.CmdBlock,
 	}
 
 	if err := app.Run(os.Args); err != nil {

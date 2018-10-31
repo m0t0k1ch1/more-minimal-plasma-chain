@@ -8,10 +8,24 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+	"github.com/urfave/cli"
 )
 
 const (
 	NullAddressStr = "0x0000000000000000000000000000000000000000"
+)
+
+var (
+	hostFlag = cli.StringFlag{Name: "host", Value: "http://127.0.0.1:1323"}
+
+	blkNumFlag  = cli.Uint64Flag{Name: "blknum", Value: 0}
+	txIndexFlag = cli.Uint64Flag{Name: "txindex", Value: 0}
+	oIndexFlag  = cli.Uint64Flag{Name: "oindex", Value: 0}
+	ownerFlag   = cli.StringFlag{Name: "owner", Value: NullAddressStr}
+	amountFlag  = cli.Uint64Flag{Name: "amount", Value: 0}
+
+	txFlag      = cli.StringFlag{Name: "tx", Value: ""}
+	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
 )
 
 func decodeAddress(addrStr string) (common.Address, error) {

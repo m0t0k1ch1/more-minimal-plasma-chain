@@ -15,6 +15,7 @@ var CmdTx = cli.Command{
 	Subcommands: []cli.Command{
 		CmdTxCreate,
 		CmdTxSign,
+		CmdTxPost,
 		CmdTxConfirm,
 	},
 }

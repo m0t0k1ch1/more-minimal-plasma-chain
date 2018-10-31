@@ -9,8 +9,8 @@ var CmdTxSign = cli.Command{
 	Name:  "sign",
 	Usage: "sign tx",
 	Flags: []cli.Flag{
-		cli.StringFlag{Name: "tx", Value: ""},
-		cli.StringFlag{Name: "privkey", Value: ""},
+		txFlag,
+		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
 		txStr := c.String("tx")

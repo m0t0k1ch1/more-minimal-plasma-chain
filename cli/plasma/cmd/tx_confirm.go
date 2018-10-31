@@ -12,8 +12,8 @@ var CmdTxConfirm = cli.Command{
 	Name:  "confirm",
 	Usage: "confirm tx",
 	Flags: []cli.Flag{
-		cli.StringFlag{Name: "tx", Value: ""},
-		cli.StringFlag{Name: "privkey", Value: ""},
+		txFlag,
+		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
 		txStr := c.String("tx")
