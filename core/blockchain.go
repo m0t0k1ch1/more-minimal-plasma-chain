@@ -190,7 +190,7 @@ func (bc *Blockchain) ConfirmTx(txHashBytes []byte, iIndex uint64, confSig types
 
 	// check txin existence
 	if iIndex >= uint64(len(btx.Inputs)) {
-		return ErrInvalidTxIn
+		return ErrTxInNotFound
 	}
 
 	txIn := btx.Inputs[iIndex]
