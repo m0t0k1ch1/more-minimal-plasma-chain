@@ -176,11 +176,11 @@ func (bc *Blockchain) SetConfirmationSignature(blkNum, txIndex, iIndex uint64, c
 	if err != nil {
 		return err
 	}
-	confSigner, err := confSig.SignerAddress(confHashBytes)
+	confSignerAddr, err := confSig.SignerAddress(confHashBytes)
 	if err != nil {
 		return ErrInvalidTxConfirmationSignature
 	}
-	if confSigner.Hex() != inTxOut.OwnerAddress.Hex() {
+	if !bytes.Equal(confSignerAddr.Bytes(), inTxOut.OwnerAddress.Bytes()) {
 		return ErrInvalidTxConfirmationSignature
 	}
 
@@ -235,40 +235,37 @@ func (bc *Blockchain) isExistBlock(blkNum uint64) bool {
 	return ok
 }
 
-func (bc *Blockchain) getBlock(blkNum uint64) *types.Block {
-	return bc.chain[blkNum]
-}
-
 func (bc *Blockchain) isExistTx(blkNum, txIndex uint64) bool {
 	if !bc.isExistBlock(blkNum) {
 		return false
 	}
-
 	return txIndex < uint64(len(bc.chain[blkNum].Txes))
-}
-
-func (bc *Blockchain) getTx(blkNum, txIndex uint64) *types.Tx {
-	return bc.chain[blkNum].Txes[txIndex]
 }
 
 func (bc *Blockchain) isExistTxIn(blkNum, txIndex, iIndex uint64) bool {
 	if !bc.isExistTx(blkNum, txIndex) {
 		return false
 	}
-
 	return iIndex < uint64(len(bc.chain[blkNum].Txes[txIndex].Inputs))
-}
-
-func (bc *Blockchain) getTxIn(blkNum, txIndex, iIndex uint64) *types.TxIn {
-	return bc.chain[blkNum].Txes[txIndex].Inputs[iIndex]
 }
 
 func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex uint64) bool {
 	if !bc.isExistTx(blkNum, txIndex) {
 		return false
 	}
-
 	return oIndex < uint64(len(bc.chain[blkNum].Txes[txIndex].Outputs))
+}
+
+func (bc *Blockchain) getBlock(blkNum uint64) *types.Block {
+	return bc.chain[blkNum]
+}
+
+func (bc *Blockchain) getTx(blkNum, txIndex uint64) *types.Tx {
+	return bc.chain[blkNum].Txes[txIndex]
+}
+
+func (bc *Blockchain) getTxIn(blkNum, txIndex, iIndex uint64) *types.TxIn {
+	return bc.chain[blkNum].Txes[txIndex].Inputs[iIndex]
 }
 
 func (bc *Blockchain) getTxOut(blkNum, txIndex, oIndex uint64) *types.TxOut {
