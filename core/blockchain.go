@@ -121,7 +121,7 @@ func (bc *Blockchain) AddTx(tx *types.Tx) error {
 		if txIn.BlockNumber == 0 {
 			continue
 		}
-		bc.chain[txIn.BlockNumber].Txes[txIn.TxIndex].Outputs[txIn.OutputIndex].Spent()
+		bc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex).IsSpent = true
 	}
 	bc.currentBlock.Txes = append(bc.currentBlock.Txes, tx)
 
@@ -136,9 +136,7 @@ func (bc *Blockchain) GetTxProof(blkNum, txIndex uint64) ([]byte, error) {
 		return nil, ErrTxNotFound
 	}
 
-	blk := bc.getBlock(blkNum)
-
-	tree, err := blk.MerkleTree()
+	tree, err := bc.getBlock(blkNum).MerkleTree()
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +184,7 @@ func (bc *Blockchain) SetConfirmationSignature(blkNum, txIndex, iIndex uint64, c
 		return ErrInvalidTxConfirmationSignature
 	}
 
-	bc.chain[blkNum].Txes[txIndex].Inputs[iIndex].ConfirmationSignature = confSig
+	bc.getTxIn(blkNum, txIndex, iIndex).ConfirmationSignature = confSig
 
 	return nil
 }

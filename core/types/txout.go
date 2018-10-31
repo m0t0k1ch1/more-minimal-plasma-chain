@@ -23,7 +23,3 @@ func NewTxOut(ownerAddr common.Address, amount uint64) *TxOut {
 		IsSpent: false,
 	}
 }
-
-func (txOut *TxOut) Spent() {
-	txOut.IsSpent = true
-}
