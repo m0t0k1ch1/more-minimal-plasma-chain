@@ -60,15 +60,6 @@ func (tx *Tx) signatures() [TxElementsNum]Signature {
 	return sigs
 }
 
-func (tx *Tx) IsDeposit() bool {
-	for _, txIn := range tx.Inputs {
-		if txIn.BlockNumber != 0 {
-			return false
-		}
-	}
-	return true
-}
-
 func (tx *Tx) Encode() ([]byte, error) {
 	return rlp.EncodeToBytes([]interface{}{
 		tx.inputCores(), tx.outputCores(),

@@ -23,3 +23,7 @@ func NewTxIn(blkNum, txIndex, oIndex uint64) *TxIn {
 		ConfirmationSignature: NullSignature,
 	}
 }
+
+func (txIn *TxIn) IsNull() bool {
+	return txIn.BlockNumber == 0 && txIn.TxIndex == 0 && txIn.OutputIndex == 0
+}

@@ -118,7 +118,7 @@ func (bc *Blockchain) AddTx(tx *types.Tx) error {
 	}
 
 	for _, txIn := range tx.Inputs {
-		if txIn.BlockNumber == 0 {
+		if txIn.IsNull() {
 			continue
 		}
 		bc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex).IsSpent = true
@@ -166,7 +166,7 @@ func (bc *Blockchain) SetConfirmationSignature(blkNum, txIndex, iIndex uint64, c
 	tx := bc.getTx(blkNum, txIndex)
 	txIn := tx.Inputs[iIndex]
 
-	if txIn.BlockNumber == 0 {
+	if txIn.IsNull() {
 		return ErrDepositTxInConfirmation
 	}
 
@@ -190,6 +190,7 @@ func (bc *Blockchain) SetConfirmationSignature(blkNum, txIndex, iIndex uint64, c
 }
 
 func (bc *Blockchain) validateTx(tx *types.Tx) error {
+	nullTxInNum := 0
 	iAmount, oAmount := uint64(0), uint64(0)
 
 	for _, txOut := range tx.Outputs {
@@ -197,11 +198,11 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 	}
 
 	for i, txIn := range tx.Inputs {
-		if txIn.BlockNumber == 0 {
-			continue
-		}
-
 		if !bc.isExistTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex) {
+			if txIn.IsNull() {
+				nullTxInNum++
+				continue
+			}
 			return ErrInvalidTxIn
 		}
 
@@ -223,7 +224,11 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 		iAmount += inTxOut.Amount
 	}
 
-	if !tx.IsDeposit() && iAmount < oAmount {
+	if nullTxInNum == len(tx.Inputs) {
+		return ErrInvalidTxIn
+	}
+
+	if iAmount < oAmount {
 		return ErrInvalidTxBalance
 	}
 
