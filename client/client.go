@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
@@ -53,13 +54,21 @@ func (client *Client) doAPI(ctx context.Context, method, uri string, params url.
 	}
 	defer resp.Body.Close()
 
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
 	var resErr ErrorResponse
-	if err := json.NewDecoder(resp.Body).Decode(&resErr); err != nil {
+	if err := json.Unmarshal(b, &resErr); err != nil {
 		return err
 	}
 	if resErr.State == app.ResponseStateError {
-		return fmt.Errorf("API error : %s [%d]", resErr.Result.Message, resErr.Result.Code)
+		return fmt.Errorf(
+			"API error : %s [%d]",
+			resErr.Result.Message, resErr.Result.Code,
+		)
 	}
 
-	return json.NewDecoder(resp.Body).Decode(&res)
+	return json.Unmarshal(b, &res)
 }
