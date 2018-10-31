@@ -76,17 +76,17 @@ func (c *Context) GetTxFromForm() (*types.Tx, error) {
 }
 
 func (c *Context) getRequiredUint64FromForm(key string) (uint64, error) {
-	valStr, err := c.getRequiredFormParam(key)
+	iStr, err := c.getRequiredFormParam(key)
 	if err != nil {
 		return 0, err
 	}
 
-	val, err := strconv.ParseUint(valStr, 10, 64)
+	i, err := strconv.ParseUint(iStr, 10, 64)
 	if err != nil {
 		return 0, NewInvalidFormParamError(key)
 	}
 
-	return val, nil
+	return i, nil
 }
 
 func (c *Context) getRequiredAddressFromForm(key string) (common.Address, error) {
