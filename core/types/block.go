@@ -4,18 +4,10 @@ import (
 	"bytes"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	merkle "github.com/m0t0k1ch1/fixed-merkle"
 )
-
-type BlockSummary struct {
-	TxHashes  []string  `json:"txes"`
-	Number    uint64    `json:"num"`
-	Signature Signature `json:"sig"`
-	Root      string    `json:"root"`
-}
 
 type Block struct {
 	Txes      []*Tx
@@ -74,30 +66,6 @@ func (blk *Block) Root() ([]byte, error) {
 	}
 
 	return tree.Root().Bytes(), nil
-}
-
-func (blk *Block) Summary() (*BlockSummary, error) {
-	txHashes := make([]string, len(blk.Txes))
-	for i, tx := range blk.Txes {
-		b, err := tx.Hash()
-		if err != nil {
-			return nil, err
-		}
-
-		txHashes[i] = hexutil.Encode(b)
-	}
-
-	rootBytes, err := blk.Root()
-	if err != nil {
-		return nil, err
-	}
-
-	return &BlockSummary{
-		TxHashes:  txHashes,
-		Number:    blk.Number,
-		Signature: blk.Signature,
-		Root:      hexutil.Encode(rootBytes),
-	}, nil
 }
 
 func (blk *Block) Sign(signer *Account) error {

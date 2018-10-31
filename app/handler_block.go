@@ -1,6 +1,10 @@
 package app
 
-import "github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+import (
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+)
 
 func (cc *ChildChain) GetBlockHandler(c *Context) error {
 	blkNum, err := c.GetBlockNumberFromPath()
@@ -19,9 +23,11 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
+	// TODO: delete
 	if bt.IsDeposit() {
 		return cc.postDepositBlockHandler(c)
 	}
+
 	return cc.postBlockHandler(c)
 }
 
@@ -34,9 +40,12 @@ func (cc *ChildChain) postBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return cc.getBlockHandler(c, blkNum)
+	return c.JSONSuccess(map[string]interface{}{
+		"blknum": blkNum,
+	})
 }
 
+// TODO: delete
 func (cc *ChildChain) postDepositBlockHandler(c *Context) error {
 	ownerAddr, err := c.GetOwnerFromForm()
 	if err != nil {
@@ -52,7 +61,9 @@ func (cc *ChildChain) postDepositBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return cc.getBlockHandler(c, blkNum)
+	return c.JSONSuccess(map[string]interface{}{
+		"blknum": blkNum,
+	})
 }
 
 func (cc *ChildChain) getBlockHandler(c *Context, blkNum uint64) error {
@@ -64,10 +75,12 @@ func (cc *ChildChain) getBlockHandler(c *Context, blkNum uint64) error {
 		return c.JSONError(err)
 	}
 
-	blkSummary, err := blk.Summary()
+	blkBytes, err := rlp.EncodeToBytes(blk)
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(blkSummary)
+	return c.JSONSuccess(map[string]interface{}{
+		"hex": hexutil.Encode(blkBytes),
+	})
 }
