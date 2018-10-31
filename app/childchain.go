@@ -11,10 +11,6 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
-const (
-	DefaultMempoolSize = 1000
-)
-
 type HandlerFunc func(*Context) error
 
 type ChildChain struct {
