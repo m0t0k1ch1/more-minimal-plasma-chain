@@ -7,7 +7,14 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	merkle "github.com/m0t0k1ch1/fixed-merkle"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
+
+type LightBlock struct {
+	TxHashes  []string
+	Number    uint64
+	Signature Signature
+}
 
 type Block struct {
 	Txes      []*Tx     `json:"txes"`
@@ -100,4 +107,23 @@ func (blk *Block) SignerAddress() (common.Address, error) {
 	}
 
 	return blk.Signature.SignerAddress(hashBytes)
+}
+
+func (blk *Block) Lighten() (*LightBlock, error) {
+	lblk := &LightBlock{
+		TxHashes:  make([]string, len(blk.Txes)),
+		Number:    blk.Number,
+		Signature: blk.Signature,
+	}
+
+	for i, tx := range blk.Txes {
+		txHashBytes, err := tx.Hash()
+		if err != nil {
+			return nil, err
+		}
+
+		lblk.TxHashes[i] = utils.EncodeToHex(txHashBytes)
+	}
+
+	return lblk, nil
 }

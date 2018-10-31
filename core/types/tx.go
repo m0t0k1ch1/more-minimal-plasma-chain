@@ -17,6 +17,12 @@ var (
 	ErrInvalidTxInIndex = errors.New("invalid txin index")
 )
 
+type BlockTx struct {
+	*Tx
+	BlockNumber uint64
+	TxIndex     uint64
+}
+
 type Tx struct {
 	Inputs  [TxElementsNum]*TxIn  `json:"ins"`
 	Outputs [TxElementsNum]*TxOut `json:"outs"`
@@ -180,4 +186,12 @@ func (tx *Tx) signerAddress(b []byte, sig Signature) (common.Address, error) {
 	}
 
 	return sig.SignerAddress(b)
+}
+
+func (tx *Tx) InBlock(blkNum, txIndex uint64) *BlockTx {
+	return &BlockTx{
+		Tx:          tx,
+		BlockNumber: blkNum,
+		TxIndex:     txIndex,
+	}
 }
