@@ -7,20 +7,22 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdBlockFix = cli.Command{
-	Name:  "fix",
-	Usage: "fix block",
+var CmdBlockGet = cli.Command{
+	Name:  "get",
+	Usage: "get block",
 	Flags: []cli.Flag{
 		hostFlag,
+		blkNumFlag,
 	},
 	Action: func(c *cli.Context) error {
 		hostStr := c.String("host")
+		blkNum := c.Uint64("blknum")
 
-		blkNum, err := client.New(hostStr).PostBlock(context.Background())
+		blk, err := client.New(hostStr).GetBlock(context.Background(), blkNum)
 		if err != nil {
 			return err
 		}
 
-		return printlnBlockNumber(blkNum)
+		return printlnBlock(blk)
 	},
 }

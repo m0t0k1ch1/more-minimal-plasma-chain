@@ -18,14 +18,13 @@ const (
 var (
 	hostFlag = cli.StringFlag{Name: "host", Value: "http://127.0.0.1:1323"}
 
+	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
+	txFlag      = cli.StringFlag{Name: "tx", Value: ""}
 	blkNumFlag  = cli.Uint64Flag{Name: "blknum", Value: 0}
 	txIndexFlag = cli.Uint64Flag{Name: "txindex", Value: 0}
 	oIndexFlag  = cli.Uint64Flag{Name: "oindex", Value: 0}
 	ownerFlag   = cli.StringFlag{Name: "owner", Value: NullAddressStr}
 	amountFlag  = cli.Uint64Flag{Name: "amount", Value: 0}
-
-	txFlag      = cli.StringFlag{Name: "tx", Value: ""}
-	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
 )
 
 func decodeAddress(addrStr string) (common.Address, error) {
