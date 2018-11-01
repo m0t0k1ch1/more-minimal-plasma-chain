@@ -5,7 +5,7 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
-func (cc *ChildChain) GetBlockHashHandler(c *Context) error {
+func (cc *ChildChain) GetChainHandler(c *Context) error {
 	blkNum, err := c.GetBlockNumberFromPath()
 	if err != nil {
 		return c.JSONError(err)

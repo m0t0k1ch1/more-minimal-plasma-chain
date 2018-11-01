@@ -44,7 +44,7 @@ func NewChildChain(conf *Config) (*ChildChain, error) {
 
 	cc.GET("/ping", cc.PingHandler)
 
-	cc.GET("/chain/:blkNum", cc.GetBlockHashHandler)
+	cc.GET("/chain/:blkNum", cc.GetChainHandler)
 
 	cc.POST("/blocks", cc.PostBlockHandler)
 	cc.GET("/blocks/:blkHash", cc.GetBlockHandler)
