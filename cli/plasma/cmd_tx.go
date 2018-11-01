@@ -4,13 +4,13 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdTx = cli.Command{
+var cmdTx = cli.Command{
 	Name:  "tx",
 	Usage: "commands for tx",
 	Subcommands: []cli.Command{
-		CmdTxCreate,
-		CmdTxGet,
-		CmdTxPost,
-		CmdTxSign,
+		cmdTxCreate,
+		cmdTxGet,
+		cmdTxPost,
+		cmdTxSign,
 	},
 }

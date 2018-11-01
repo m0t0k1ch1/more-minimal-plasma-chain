@@ -6,7 +6,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdBlockGet = cli.Command{
+var cmdBlockGet = cli.Command{
 	Name:  "get",
 	Usage: "get block",
 	Flags: []cli.Flag{

@@ -13,7 +13,6 @@ var (
 	hashFlag    = cli.StringFlag{Name: "hash", Value: ""}
 	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
 	txFlag      = cli.StringFlag{Name: "tx", Value: ""}
-
 	blkNumFlag  = cli.Uint64Flag{Name: "blknum", Value: 0}
 	txIndexFlag = cli.Uint64Flag{Name: "txindex", Value: 0}
 	oIndexFlag  = cli.Uint64Flag{Name: "oindex", Value: 0}

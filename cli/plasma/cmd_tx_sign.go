@@ -5,7 +5,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdTxSign = cli.Command{
+var cmdTxSign = cli.Command{
 	Name:  "sign",
 	Usage: "sign tx",
 	Flags: []cli.Flag{

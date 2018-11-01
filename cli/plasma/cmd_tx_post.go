@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdTxPost = cli.Command{
+var cmdTxPost = cli.Command{
 	Name:  "post",
 	Usage: "post tx",
 	Flags: []cli.Flag{

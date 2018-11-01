@@ -6,7 +6,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdTxGet = cli.Command{
+var cmdTxGet = cli.Command{
 	Name:  "get",
 	Usage: "get tx",
 	Flags: []cli.Flag{

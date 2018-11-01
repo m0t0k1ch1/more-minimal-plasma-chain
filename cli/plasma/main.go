@@ -10,8 +10,8 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Commands = []cli.Command{
-		CmdBlock,
-		CmdTx,
+		cmdBlock,
+		cmdTx,
 	}
 
 	if err := app.Run(os.Args); err != nil {

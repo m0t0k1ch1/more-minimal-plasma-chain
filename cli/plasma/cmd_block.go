@@ -4,11 +4,11 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdBlock = cli.Command{
+var cmdBlock = cli.Command{
 	Name:  "block",
 	Usage: "commands for block",
 	Subcommands: []cli.Command{
-		CmdBlockFix,
-		CmdBlockGet,
+		cmdBlockFix,
+		cmdBlockGet,
 	},
 }

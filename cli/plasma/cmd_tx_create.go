@@ -5,7 +5,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdTxCreate = cli.Command{
+var cmdTxCreate = cli.Command{
 	Name:  "create",
 	Usage: "create tx",
 	Flags: []cli.Flag{

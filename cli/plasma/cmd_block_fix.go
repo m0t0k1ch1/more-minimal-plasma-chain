@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdBlockFix = cli.Command{
+var cmdBlockFix = cli.Command{
 	Name:  "fix",
 	Usage: "fix block",
 	Flags: []cli.Flag{
