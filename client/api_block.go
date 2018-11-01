@@ -5,51 +5,53 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 type PostBlockResponse struct {
 	State  string `json:"state"`
 	Result struct {
-		BlockNumber uint64 `json:"blknum"`
+		BlockHashStr string `json:"blkhash"`
 	} `json:"result"`
 }
 
-func (client *Client) PostBlock(ctx context.Context) (uint64, error) {
+func (client *Client) PostBlock(ctx context.Context) ([]byte, error) {
 	var resp PostBlockResponse
 	if err := client.doAPI(
 		ctx,
 		http.MethodPost,
 		"blocks",
 		nil,
-		&resp); err != nil {
-		return 0, err
+		&resp,
+	); err != nil {
+		return nil, err
 	}
 
-	return resp.Result.BlockNumber, nil
+	return utils.DecodeHex(resp.Result.BlockHashStr)
 }
 
 type GetBlockResponse struct {
 	State  string `json:"state"`
 	Result struct {
-		Hex string `json:"hex"`
+		BlockStr string `json:"blk"`
 	} `json:"result"`
 }
 
-func (client *Client) GetBlock(ctx context.Context, blkNum uint64) (*types.Block, error) {
+func (client *Client) GetBlock(ctx context.Context, blkHashBytes []byte) (*types.Block, error) {
 	var resp GetBlockResponse
 	if err := client.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("blocks/%d", blkNum),
+		fmt.Sprintf("blocks/%s", utils.EncodeToHex(blkHashBytes)),
 		nil,
-		&resp); err != nil {
+		&resp,
+	); err != nil {
 		return nil, err
 	}
 
-	blkBytes, err := hexutil.Decode(resp.Result.Hex)
+	blkBytes, err := utils.DecodeHex(resp.Result.BlockStr)
 	if err != nil {
 		return nil, err
 	}
