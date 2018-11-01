@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/client"
@@ -39,7 +38,7 @@ func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
 }
 
 func getPrivateKey(c *cli.Context, f cli.Flag) (*ecdsa.PrivateKey, error) {
-	privKeyBytes, err := hexutil.Decode(c.String(f.GetName()))
+	privKeyBytes, err := utils.DecodeHex(c.String(f.GetName()))
 	if err != nil {
 		return nil, err
 	}
