@@ -20,7 +20,7 @@ var cmdBlockFix = cli.Command{
 			return err
 		}
 
-		return printlnJSON(map[string]interface{}{
+		return printlnJSON(map[string]string{
 			"blkhash": utils.EncodeToHex(blkHashBytes),
 		})
 	},

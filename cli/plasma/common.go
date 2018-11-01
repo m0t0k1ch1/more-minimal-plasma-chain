@@ -70,7 +70,7 @@ func printlnEncodedBlock(blk *types.Block) error {
 		return err
 	}
 
-	return printlnJSON(map[string]interface{}{
+	return printlnJSON(map[string]string{
 		"blk": utils.EncodeToHex(blkBytes),
 	})
 }
@@ -81,7 +81,7 @@ func printlnEncodedTx(tx *types.Tx) error {
 		return err
 	}
 
-	return printlnJSON(map[string]interface{}{
+	return printlnJSON(map[string]string{
 		"tx": utils.EncodeToHex(txBytes),
 	})
 }
