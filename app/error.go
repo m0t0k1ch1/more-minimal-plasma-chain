@@ -22,7 +22,7 @@ var (
 	ErrInvalidTxBalance               = NewError(11006, core.ErrInvalidTxBalance.Error())
 	ErrTxInNotFound                   = NewError(11007, core.ErrTxInNotFound.Error())
 	ErrInvalidTxIn                    = NewError(11008, core.ErrInvalidTxIn.Error())
-	ErrDepositTxInConfirmation        = NewError(11009, core.ErrDepositTxInConfirmation.Error())
+	ErrNullTxInConfirmation           = NewError(11009, core.ErrNullTxInConfirmation.Error())
 	ErrTxOutAlreadySpent              = NewError(11010, core.ErrTxOutAlreadySpent.Error())
 )
 

@@ -5,10 +5,10 @@ import (
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/labstack/echo"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 type Context struct {
@@ -23,21 +23,30 @@ func (c *Context) GetBlockNumberFromPath() (uint64, error) {
 	return c.getUint64FromPath("blkNum")
 }
 
-func (c *Context) GetTxIndexFromPath() (uint64, error) {
-	return c.getUint64FromPath("txIndex")
+func (c *Context) GetBlockHashFromPath() ([]byte, error) {
+	return c.getHexBytesFromPath("blkHash")
 }
 
-func (c *Context) GetInputIndexFromPath() (uint64, error) {
-	return c.getUint64FromPath("iIndex")
+func (c *Context) GetTxHashFromPath() ([]byte, error) {
+	return c.getHexBytesFromPath("txHash")
 }
 
 func (c *Context) getUint64FromPath(key string) (uint64, error) {
-	val, err := strconv.ParseUint(c.getPathParam(key), 10, 64)
+	i, err := strconv.ParseUint(c.getPathParam(key), 10, 64)
 	if err != nil {
 		return 0, NewInvalidPathParamError(key)
 	}
 
-	return val, nil
+	return i, nil
+}
+
+func (c *Context) getHexBytesFromPath(key string) ([]byte, error) {
+	b, err := utils.DecodeHex(c.getPathParam(key))
+	if err != nil {
+		return nil, NewInvalidPathParamError(key)
+	}
+
+	return b, nil
 }
 
 func (c *Context) getPathParam(key string) string {
@@ -65,6 +74,10 @@ func (c *Context) GetOwnerFromForm() (common.Address, error) {
 
 func (c *Context) GetAmountFromForm() (uint64, error) {
 	return c.getRequiredUint64FromForm("amount")
+}
+
+func (c *Context) GetInputIndexFromForm() (uint64, error) {
+	return c.getRequiredUint64FromForm("index")
 }
 
 func (c *Context) GetConfirmationSignatureFromForm() (types.Signature, error) {
@@ -122,7 +135,7 @@ func (c *Context) getRequiredTxFromForm(key string) (*types.Tx, error) {
 		return nil, err
 	}
 
-	txBytes, err := hexutil.Decode(txStr)
+	txBytes, err := utils.DecodeHex(txStr)
 	if err != nil {
 		return nil, NewInvalidFormParamError(key)
 	}

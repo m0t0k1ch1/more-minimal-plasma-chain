@@ -43,12 +43,16 @@ func NewChildChain(conf *Config) (*ChildChain, error) {
 	cc.e.HTTPErrorHandler = cc.httpErrorHandler
 
 	cc.GET("/ping", cc.PingHandler)
+
+	cc.GET("/chain/:blkNum", cc.GetBlockHashHandler)
+
 	cc.POST("/blocks", cc.PostBlockHandler)
-	cc.GET("/blocks/:blkNum", cc.GetBlockHandler)
-	cc.GET("/blocks/:blkNum/txes/:txIndex", cc.GetBlockTxHandler)
-	cc.GET("/blocks/:blkNum/txes/:txIndex/proof", cc.GetBlockTxProofHandler)
-	cc.PUT("/blocks/:blkNum/txes/:txIndex/inputs/:iIndex", cc.PutBlockTxInHandler)
+	cc.GET("/blocks/:blkHash", cc.GetBlockHandler)
+
 	cc.POST("/txes", cc.PostTxHandler)
+	cc.GET("/txes/:txHash", cc.GetTxHandler)
+	cc.GET("/txes/:txHash/proof", cc.GetTxProofHandler)
+	cc.PUT("/txes/:txHash", cc.PutTxHandler)
 
 	return cc, nil
 }
