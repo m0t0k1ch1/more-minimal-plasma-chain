@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"

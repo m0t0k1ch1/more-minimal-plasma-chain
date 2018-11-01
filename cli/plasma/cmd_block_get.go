@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"context"
@@ -6,25 +6,25 @@ import (
 	"github.com/urfave/cli"
 )
 
-var CmdTxGet = cli.Command{
+var CmdBlockGet = cli.Command{
 	Name:  "get",
-	Usage: "get tx",
+	Usage: "get block",
 	Flags: []cli.Flag{
 		hostFlag,
 		portFlag,
 		hashFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txHashBytes, err := getHexBytes(c, hashFlag)
+		blkHashBytes, err := getHexBytes(c, hashFlag)
 		if err != nil {
 			return err
 		}
 
-		tx, err := newClient(c).GetTx(context.Background(), txHashBytes)
+		blk, err := newClient(c).GetBlock(context.Background(), blkHashBytes)
 		if err != nil {
 			return err
 		}
 
-		return printlnJSON(tx)
+		return printlnJSON(blk)
 	},
 }
