@@ -11,6 +11,7 @@ var cmdTx = cli.Command{
 		cmdTxCreate,
 		cmdTxGet,
 		cmdTxPost,
+		cmdTxProof,
 		cmdTxSign,
 	},
 }
