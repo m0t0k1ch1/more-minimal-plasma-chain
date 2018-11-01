@@ -26,7 +26,7 @@ var cmdTxProof = cli.Command{
 			return err
 		}
 
-		return printlnJSON(map[string]interface{}{
+		return printlnJSON(map[string]string{
 			"proof": utils.EncodeToHex(proofBytes),
 		})
 	},

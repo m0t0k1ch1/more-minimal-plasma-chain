@@ -41,7 +41,7 @@ var cmdTxConfirm = cli.Command{
 			return err
 		}
 
-		return printlnJSON(map[string]interface{}{
+		return printlnJSON(map[string]string{
 			"txhash": utils.EncodeToHex(txHashBytes),
 		})
 	},
