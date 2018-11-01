@@ -72,3 +72,25 @@ func (client *Client) GetTx(ctx context.Context, txHashBytes []byte) (*types.Tx,
 
 	return &tx, nil
 }
+
+type GetTxProofResponse struct {
+	State  string `json:"state"`
+	Result struct {
+		ProofStr string `json:"proof"`
+	} `json:"result"`
+}
+
+func (client *Client) GetTxProof(ctx context.Context, txHashBytes []byte) ([]byte, error) {
+	var resp GetTxProofResponse
+	if err := client.doAPI(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("txes/%s/proof", utils.EncodeToHex(txHashBytes)),
+		nil,
+		&resp,
+	); err != nil {
+		return nil, err
+	}
+
+	return utils.DecodeHex(resp.Result.ProofStr)
+}
