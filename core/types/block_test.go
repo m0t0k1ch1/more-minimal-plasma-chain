@@ -3,8 +3,8 @@ package types
 import (
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,7 +54,7 @@ func TestBlock_Hash(t *testing.T) {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.hashHex, hexutil.Encode(hashBytes))
+				assert.Equal(t, out.hashHex, utils.EncodeToHex(hashBytes))
 			}
 		})
 	}
@@ -97,7 +97,7 @@ func TestBlock_Root(t *testing.T) {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.rootHex, hexutil.Encode(rootBytes))
+				assert.Equal(t, out.rootHex, utils.EncodeToHex(rootBytes))
 			}
 		})
 	}

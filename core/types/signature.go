@@ -1,11 +1,12 @@
 package types
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 const (
@@ -42,7 +43,7 @@ func NewSignatureFromBytes(b []byte) (Signature, error) {
 }
 
 func NewSignatureFromHex(s string) (Signature, error) {
-	b, err := hexutil.Decode(s)
+	b, err := utils.DecodeHex(s)
 	if err != nil {
 		return NullSignature, err
 	}
@@ -55,7 +56,11 @@ func (sig Signature) Bytes() []byte {
 }
 
 func (sig Signature) MarshalText() ([]byte, error) {
-	return hexutil.Bytes(sig[:]).MarshalText()
+	b := make([]byte, len(sig[:])*2+2)
+	copy(b, `0x`)
+	hex.Encode(b[2:], sig[:])
+
+	return b, nil
 }
 
 func (sig Signature) SignerAddress(b []byte) (common.Address, error) {
