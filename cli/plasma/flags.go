@@ -18,4 +18,5 @@ var (
 	oIndexFlag  = cli.Uint64Flag{Name: "oindex", Value: 0}
 	ownerFlag   = cli.StringFlag{Name: "owner", Value: nullAddressStr}
 	amountFlag  = cli.Uint64Flag{Name: "amount", Value: 0}
+	encodedFlag = cli.BoolFlag{Name: "encoded"}
 )

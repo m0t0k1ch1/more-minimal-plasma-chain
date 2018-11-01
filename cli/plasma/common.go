@@ -21,6 +21,10 @@ func newClient(c *cli.Context) *client.Client {
 	))
 }
 
+func getBool(c *cli.Context, f cli.Flag) bool {
+	return c.Bool(f.GetName())
+}
+
 func getUint64(c *cli.Context, f cli.Flag) uint64 {
 	return c.Uint64(f.GetName())
 }
@@ -58,6 +62,17 @@ func getTx(c *cli.Context, f cli.Flag) (*types.Tx, error) {
 	}
 
 	return &tx, nil
+}
+
+func printlnEncodedBlock(blk *types.Block) error {
+	blkBytes, err := rlp.EncodeToBytes(blk)
+	if err != nil {
+		return err
+	}
+
+	return printlnJSON(map[string]interface{}{
+		"blk": utils.EncodeToHex(blkBytes),
+	})
 }
 
 func printlnEncodedTx(tx *types.Tx) error {

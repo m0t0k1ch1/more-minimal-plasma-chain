@@ -13,6 +13,7 @@ var cmdBlockGet = cli.Command{
 		hostFlag,
 		portFlag,
 		hashFlag,
+		encodedFlag,
 	},
 	Action: func(c *cli.Context) error {
 		blkHashBytes, err := getHexBytes(c, hashFlag)
@@ -25,6 +26,9 @@ var cmdBlockGet = cli.Command{
 			return err
 		}
 
+		if getBool(c, encodedFlag) {
+			return printlnEncodedBlock(blk)
+		}
 		return printlnJSON(blk)
 	},
 }
