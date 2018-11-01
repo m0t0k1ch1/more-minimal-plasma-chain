@@ -61,7 +61,7 @@ func (bc *Blockchain) GetBlockHash(blkNum uint64) ([]byte, error) {
 }
 
 func (bc *Blockchain) GetBlock(blkHashBytes []byte) (*types.Block, error) {
-	bc.mu.RUnlock()
+	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
 	blkHashStr := utils.EncodeToHex(blkHashBytes)
@@ -141,17 +141,6 @@ func (bc *Blockchain) GetTx(txHashBytes []byte) (*types.Tx, error) {
 	return btx.Tx, nil
 }
 
-func (bc *Blockchain) AddTx(tx *types.Tx) ([]byte, error) {
-	bc.mu.Lock()
-	defer bc.mu.Unlock()
-
-	if err := bc.validateTx(tx); err != nil {
-		return nil, err
-	}
-
-	return bc.addTx(tx)
-}
-
 func (bc *Blockchain) GetTxProof(txHashBytes []byte) ([]byte, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
@@ -174,6 +163,17 @@ func (bc *Blockchain) GetTxProof(txHashBytes []byte) ([]byte, error) {
 
 	// create proof
 	return tree.CreateMembershipProof(btx.TxIndex)
+}
+
+func (bc *Blockchain) AddTxToMempool(tx *types.Tx) ([]byte, error) {
+	bc.mu.Lock()
+	defer bc.mu.Unlock()
+
+	if err := bc.validateTx(tx); err != nil {
+		return nil, err
+	}
+
+	return bc.addTxToMempool(tx)
 }
 
 func (bc *Blockchain) ConfirmTx(txHashBytes []byte, iIndex uint64, confSig types.Signature) error {
@@ -314,7 +314,7 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 	return nil
 }
 
-func (bc *Blockchain) addTx(tx *types.Tx) ([]byte, error) {
+func (bc *Blockchain) addTxToMempool(tx *types.Tx) ([]byte, error) {
 	txHashBytes, err := tx.Hash()
 	if err != nil {
 		return nil, err
