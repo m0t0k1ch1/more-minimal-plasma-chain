@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/client"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 	"github.com/urfave/cli"
 )
 
@@ -12,21 +12,22 @@ var CmdTxPost = cli.Command{
 	Usage: "post tx",
 	Flags: []cli.Flag{
 		hostFlag,
+		portFlag,
 		txFlag,
 	},
 	Action: func(c *cli.Context) error {
-		hostStr := c.String("host")
-		txStr := c.String("tx")
-
-		tx, err := decodeTx(txStr)
+		tx, err := getTx(c, txFlag)
 		if err != nil {
 			return err
 		}
 
-		if _, err := client.New(hostStr).PostTx(context.Background(), tx); err != nil {
+		txHashBytes, err := newClient(c).PostTx(context.Background(), tx)
+		if err != nil {
 			return err
 		}
 
-		return nil
+		return printlnJSON(map[string]interface{}{
+			"txhash": utils.EncodeToHex(txHashBytes),
+		})
 	},
 }

@@ -16,13 +16,12 @@ var CmdTxCreate = cli.Command{
 		amountFlag,
 	},
 	Action: func(c *cli.Context) error {
-		blkNum := c.Uint64("blknum")
-		txIndex := c.Uint64("txindex")
-		oIndex := c.Uint64("oindex")
-		ownerAddrStr := c.String("owner")
-		amount := c.Uint64("amount")
+		blkNum := getUint64(c, blkNumFlag)
+		txIndex := getUint64(c, txIndexFlag)
+		oIndex := getUint64(c, oIndexFlag)
+		amount := getUint64(c, amountFlag)
 
-		ownerAddr, err := decodeAddress(ownerAddrStr)
+		ownerAddr, err := getAddress(c, ownerFlag)
 		if err != nil {
 			return err
 		}
@@ -31,6 +30,6 @@ var CmdTxCreate = cli.Command{
 		tx.Inputs[0] = types.NewTxIn(blkNum, txIndex, oIndex)
 		tx.Outputs[0] = types.NewTxOut(ownerAddr, amount)
 
-		return printlnTx(tx)
+		return printlnEncodedTx(tx)
 	},
 }

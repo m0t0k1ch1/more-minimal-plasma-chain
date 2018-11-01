@@ -13,24 +13,20 @@ var CmdTxSign = cli.Command{
 		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txStr := c.String("tx")
-		privKeyStr := c.String("privkey")
-
-		tx, err := decodeTx(txStr)
+		tx, err := getTx(c, txFlag)
 		if err != nil {
 			return err
 		}
 
-		privKey, err := decodePrivateKey(privKeyStr)
+		privKey, err := getPrivateKey(c, privKeyFlag)
 		if err != nil {
 			return err
 		}
-		signer := types.NewAccount(privKey)
 
-		if err := tx.Sign(0, signer); err != nil {
+		if err := tx.Sign(0, types.NewAccount(privKey)); err != nil {
 			return err
 		}
 
-		return printlnTx(tx)
+		return printlnEncodedTx(tx)
 	},
 }
