@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
@@ -93,4 +94,30 @@ func (client *Client) GetTxProof(ctx context.Context, txHashBytes []byte) ([]byt
 	}
 
 	return utils.DecodeHex(resp.Result.ProofStr)
+}
+
+type PutTxResponse struct {
+	State  string `json:"state"`
+	Result struct {
+		TxHashStr string `json:"txhash"`
+	} `json:"result"`
+}
+
+func (client *Client) PutTx(ctx context.Context, txHashBytes []byte, iIndex uint64, confSig types.Signature) ([]byte, error) {
+	v := url.Values{}
+	v.Set("index", strconv.FormatUint(iIndex, 10))
+	v.Set("confsig", utils.EncodeToHex(confSig.Bytes()))
+
+	var resp PutTxResponse
+	if err := client.doAPI(
+		ctx,
+		http.MethodPut,
+		fmt.Sprintf("txes/%s", utils.EncodeToHex(txHashBytes)),
+		v,
+		&resp,
+	); err != nil {
+		return nil, err
+	}
+
+	return utils.DecodeHex(resp.Result.TxHashStr)
 }
