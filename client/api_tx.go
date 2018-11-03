@@ -20,7 +20,7 @@ type PostTxResponse struct {
 	} `json:"result"`
 }
 
-func (client *Client) PostTx(ctx context.Context, tx *types.Tx) ([]byte, error) {
+func (c *Client) PostTx(ctx context.Context, tx *types.Tx) ([]byte, error) {
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (client *Client) PostTx(ctx context.Context, tx *types.Tx) ([]byte, error) 
 	v.Set("tx", utils.EncodeToHex(txBytes))
 
 	var resp PostTxResponse
-	if err := client.doAPI(
+	if err := c.doAPI(
 		ctx,
 		http.MethodPost,
 		"txes",
@@ -50,9 +50,9 @@ type GetTxResponse struct {
 	} `json:"result"`
 }
 
-func (client *Client) GetTx(ctx context.Context, txHash common.Hash) (*types.Tx, error) {
+func (c *Client) GetTx(ctx context.Context, txHash common.Hash) (*types.Tx, error) {
 	var resp GetTxResponse
-	if err := client.doAPI(
+	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("txes/%s", utils.EncodeToHex(txHash.Bytes())),
@@ -82,9 +82,9 @@ type GetTxProofResponse struct {
 	} `json:"result"`
 }
 
-func (client *Client) GetTxProof(ctx context.Context, txHash common.Hash) ([]byte, error) {
+func (c *Client) GetTxProof(ctx context.Context, txHash common.Hash) ([]byte, error) {
 	var resp GetTxProofResponse
-	if err := client.doAPI(
+	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("txes/%s/proof", utils.EncodeToHex(txHash.Bytes())),
@@ -104,13 +104,13 @@ type PutTxResponse struct {
 	} `json:"result"`
 }
 
-func (client *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) ([]byte, error) {
+func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) ([]byte, error) {
 	v := url.Values{}
 	v.Set("index", iIndex.String())
 	v.Set("confsig", utils.EncodeToHex(confSig.Bytes()))
 
 	var resp PutTxResponse
-	if err := client.doAPI(
+	if err := c.doAPI(
 		ctx,
 		http.MethodPut,
 		fmt.Sprintf("txes/%s", utils.EncodeToHex(txHash.Bytes())),

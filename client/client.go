@@ -26,8 +26,8 @@ func New(baseURI string) *Client {
 	}
 }
 
-func (client *Client) doAPI(ctx context.Context, method, uri string, params url.Values, res interface{}) error {
-	u, err := url.Parse(client.baseURI)
+func (c *Client) doAPI(ctx context.Context, method, uri string, params url.Values, res interface{}) error {
+	u, err := url.Parse(c.baseURI)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (client *Client) doAPI(ctx context.Context, method, uri string, params url.
 	req.WithContext(ctx)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := client.Do(req)
+	resp, err := c.Do(req)
 	if err != nil {
 		return err
 	}

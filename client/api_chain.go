@@ -16,9 +16,9 @@ type GetChainResponse struct {
 	} `json:"result"`
 }
 
-func (client *Client) GetChain(ctx context.Context, blkNum *big.Int) ([]byte, error) {
+func (c *Client) GetChain(ctx context.Context, blkNum *big.Int) ([]byte, error) {
 	var resp GetChainResponse
-	if err := client.doAPI(
+	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
 		fmt.Sprintf("chain/%s", blkNum.String()),
