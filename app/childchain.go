@@ -129,7 +129,7 @@ func (cc *ChildChain) watchRootChain() error {
 	go func() {
 		defer sub.Unsubscribe()
 		for log := range sink {
-			blkHash, err := cc.blockchain.AddDepositBlock(log.Owner, log.Amount.Uint64(), cc.operator)
+			blkHash, err := cc.blockchain.AddDepositBlock(log.Owner, log.Amount, cc.operator)
 			if err != nil {
 				cc.Logger().Error(err)
 			} else {

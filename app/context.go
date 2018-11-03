@@ -1,8 +1,8 @@
 package app
 
 import (
+	"math/big"
 	"net/http"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -19,8 +19,8 @@ func NewContext(c echo.Context) *Context {
 	return &Context{c}
 }
 
-func (c *Context) GetBlockNumberFromPath() (uint64, error) {
-	return c.getUint64FromPath("blkNum")
+func (c *Context) GetBlockNumberFromPath() (*big.Int, error) {
+	return c.getBigIntFromPath("blkNum")
 }
 
 func (c *Context) GetBlockHashFromPath() (common.Hash, error) {
@@ -31,10 +31,10 @@ func (c *Context) GetTxHashFromPath() (common.Hash, error) {
 	return c.getHashFromPath("txHash")
 }
 
-func (c *Context) getUint64FromPath(key string) (uint64, error) {
-	i, err := strconv.ParseUint(c.getPathParam(key), 10, 64)
-	if err != nil {
-		return 0, NewInvalidPathParamError(key)
+func (c *Context) getBigIntFromPath(key string) (*big.Int, error) {
+	i, ok := new(big.Int).SetString(c.getPathParam(key), 10)
+	if !ok {
+		return big.NewInt(0), NewInvalidPathParamError(key)
 	}
 
 	return i, nil
@@ -56,8 +56,8 @@ func (c *Context) getPathParam(key string) string {
 	return c.Param(key)
 }
 
-func (c *Context) GetInputIndexFromForm() (uint64, error) {
-	return c.getRequiredUint64FromForm("index")
+func (c *Context) GetInputIndexFromForm() (*big.Int, error) {
+	return c.getRequiredBigIntFromForm("index")
 }
 
 func (c *Context) GetConfirmationSignatureFromForm() (types.Signature, error) {
@@ -68,15 +68,15 @@ func (c *Context) GetTxFromForm() (*types.Tx, error) {
 	return c.getRequiredTxFromForm("tx")
 }
 
-func (c *Context) getRequiredUint64FromForm(key string) (uint64, error) {
+func (c *Context) getRequiredBigIntFromForm(key string) (*big.Int, error) {
 	iStr, err := c.getRequiredFormParam(key)
 	if err != nil {
-		return 0, err
+		return big.NewInt(0), err
 	}
 
-	i, err := strconv.ParseUint(iStr, 10, 64)
-	if err != nil {
-		return 0, NewInvalidFormParamError(key)
+	i, ok := new(big.Int).SetString(iStr, 10)
+	if !ok {
+		return big.NewInt(0), NewInvalidFormParamError(key)
 	}
 
 	return i, nil
