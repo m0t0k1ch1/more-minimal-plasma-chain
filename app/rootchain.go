@@ -18,12 +18,12 @@ import (
 )
 
 type RootChain struct {
-	config     *RootChainConfig
-	address    common.Address
-	abi        abi.ABI
-	httpClient *ethclient.Client
-	wsClient   *rpc.Client
-	contract   *bind.BoundContract
+	config    *RootChainConfig
+	address   common.Address
+	abi       abi.ABI
+	rpcClient *ethclient.Client
+	wsClient  *rpc.Client
+	contract  *bind.BoundContract
 }
 
 func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
@@ -37,7 +37,7 @@ func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
 	if err := rc.initABI(); err != nil {
 		return nil, err
 	}
-	if err := rc.initHTTPClient(); err != nil {
+	if err := rc.initRPCClient(); err != nil {
 		return nil, err
 	}
 	if err := rc.initWSClient(); err != nil {
@@ -65,17 +65,17 @@ func (rc *RootChain) initABI() error {
 	return nil
 }
 
-func (rc *RootChain) initHTTPClient() error {
-	httpClient, err := ethclient.Dial(rc.config.RPC.HTTP)
+func (rc *RootChain) initRPCClient() error {
+	rpcClient, err := ethclient.Dial(rc.config.RPC)
 	if err != nil {
 		return err
 	}
-	rc.httpClient = httpClient
+	rc.rpcClient = rpcClient
 	return nil
 }
 
 func (rc *RootChain) initWSClient() error {
-	wsClient, err := rpc.Dial(rc.config.RPC.WS)
+	wsClient, err := rpc.Dial(rc.config.WS)
 	if err != nil {
 		return err
 	}
@@ -87,9 +87,9 @@ func (rc *RootChain) initContract() {
 	rc.contract = bind.NewBoundContract(
 		rc.address,
 		rc.abi,
-		rc.httpClient,
-		rc.httpClient,
-		rc.httpClient,
+		rc.rpcClient,
+		rc.rpcClient,
+		rc.rpcClient,
 	)
 }
 
