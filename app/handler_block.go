@@ -6,18 +6,18 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
-func (cc *ChildChain) PostBlockHandler(c *Context) error {
+func (p *Plasma) PostBlockHandler(c *Context) error {
 	c.Request().ParseForm()
 
-	blkNum, err := cc.rootChain.CurrentPlasmaBlockNumber()
+	blkNum, err := p.rootChain.CurrentPlasmaBlockNumber()
 	if err != nil {
 		return c.JSONError(err)
 	}
-	if blkNum.Cmp(cc.blockchain.CurrentBlockNumber()) != 0 {
+	if blkNum.Cmp(p.childChain.CurrentBlockNumber()) != 0 {
 		return c.JSONError(ErrBlockchainNotSynchronized)
 	}
 
-	blkHash, err := cc.blockchain.AddBlock(cc.operator)
+	blkHash, err := p.childChain.AddBlock(p.operator)
 	if err != nil {
 		if err == core.ErrEmptyBlock {
 			return c.JSONError(ErrEmptyBlock)
@@ -25,7 +25,7 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	blk, err := cc.blockchain.GetBlock(blkHash)
+	blk, err := p.childChain.GetBlock(blkHash)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)
@@ -38,23 +38,23 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	if _, err := cc.rootChain.CommitPlasmaBlockRoot(cc.operator, rootHash); err != nil {
+	if _, err := p.rootChain.CommitPlasmaBlockRoot(p.operator, rootHash); err != nil {
 		return c.JSONError(err)
 	}
-	cc.Logger().Infof("[COMMIT] root: %s", utils.EncodeToHex(rootHash[:]))
+	p.Logger().Infof("[COMMIT] root: %s", utils.EncodeToHex(rootHash[:]))
 
 	return c.JSONSuccess(map[string]interface{}{
 		"blkhash": utils.EncodeToHex(blkHash.Bytes()),
 	})
 }
 
-func (cc *ChildChain) GetBlockHandler(c *Context) error {
+func (p *Plasma) GetBlockHandler(c *Context) error {
 	blkHash, err := c.GetBlockHashFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	blk, err := cc.blockchain.GetBlock(blkHash)
+	blk, err := p.childChain.GetBlock(blkHash)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)

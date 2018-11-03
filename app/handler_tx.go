@@ -6,7 +6,7 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
-func (cc *ChildChain) PostTxHandler(c *Context) error {
+func (p *Plasma) PostTxHandler(c *Context) error {
 	c.Request().ParseForm()
 
 	tx, err := c.GetTxFromForm()
@@ -14,7 +14,7 @@ func (cc *ChildChain) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	txHash, err := cc.blockchain.AddTxToMempool(tx)
+	txHash, err := p.childChain.AddTxToMempool(tx)
 	if err != nil {
 		if err == core.ErrInvalidTxSignature {
 			return c.JSONError(ErrInvalidTxSignature)
@@ -33,13 +33,13 @@ func (cc *ChildChain) PostTxHandler(c *Context) error {
 	})
 }
 
-func (cc *ChildChain) GetTxHandler(c *Context) error {
+func (p *Plasma) GetTxHandler(c *Context) error {
 	txHash, err := c.GetTxHashFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	tx, err := cc.blockchain.GetTx(txHash)
+	tx, err := p.childChain.GetTx(txHash)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
@@ -57,13 +57,13 @@ func (cc *ChildChain) GetTxHandler(c *Context) error {
 	})
 }
 
-func (cc *ChildChain) GetTxProofHandler(c *Context) error {
+func (p *Plasma) GetTxProofHandler(c *Context) error {
 	txHash, err := c.GetTxHashFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	proofBytes, err := cc.blockchain.GetTxProof(txHash)
+	proofBytes, err := p.childChain.GetTxProof(txHash)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
@@ -76,7 +76,7 @@ func (cc *ChildChain) GetTxProofHandler(c *Context) error {
 	})
 }
 
-func (cc *ChildChain) PutTxHandler(c *Context) error {
+func (p *Plasma) PutTxHandler(c *Context) error {
 	c.Request().ParseForm()
 
 	txHash, err := c.GetTxHashFromPath()
@@ -93,7 +93,7 @@ func (cc *ChildChain) PutTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	if err := cc.blockchain.ConfirmTx(txHash, iIndex, confSig); err != nil {
+	if err := p.childChain.ConfirmTx(txHash, iIndex, confSig); err != nil {
 		if err == core.ErrInvalidTxConfirmationSignature {
 			return c.JSONError(ErrInvalidTxConfirmationSignature)
 		} else if err == core.ErrTxInNotFound {
