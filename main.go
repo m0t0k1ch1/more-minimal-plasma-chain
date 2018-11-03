@@ -35,10 +35,10 @@ func main() {
 		panic(err)
 	}
 
-	cc, err := app.NewChildChain(conf)
+	p, err := app.NewPlasma(conf)
 	if err != nil {
 		panic(err)
 	}
 
-	cc.Logger().Fatal(cc.Start())
+	p.Logger().Fatal(p.Start())
 }
