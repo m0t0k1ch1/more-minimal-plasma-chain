@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -16,21 +17,18 @@ import (
 )
 
 func newClient(c *cli.Context) *client.Client {
-	return client.New(fmt.Sprintf(
-		"http://%s:%d",
-		c.String(hostFlag.GetName()), c.Uint64(portFlag.GetName()),
-	))
+	return client.New(getString(c, apiFlag))
 }
 
 func newRootChain(c *cli.Context) (*app.RootChain, error) {
-	addr, err := getAddress(c, addrFlag)
+	addr, err := getAddress(c, contractFlag)
 	if err != nil {
 		return nil, err
 	}
 
 	return app.NewRootChain(&app.RootChainConfig{
-		RPC:     c.String(rpcFlag.GetName()),
-		WS:      c.String(wsFlag.GetName()),
+		RPC:     getString(c, rpcFlag),
+		WS:      getString(c, wsFlag),
 		Address: utils.EncodeToHex(addr.Bytes()),
 	})
 }
@@ -39,16 +37,21 @@ func getBool(c *cli.Context, f cli.Flag) bool {
 	return c.Bool(f.GetName())
 }
 
-func getUint64(c *cli.Context, f cli.Flag) uint64 {
-	return c.Uint64(f.GetName())
+func getString(c *cli.Context, f cli.Flag) string {
+	return c.String(f.GetName())
 }
 
-func getHexBytes(c *cli.Context, f cli.Flag) ([]byte, error) {
-	return utils.DecodeHex(c.String(f.GetName()))
+func getBigInt(c *cli.Context, f cli.Flag) (*big.Int, error) {
+	i, ok := new(big.Int).SetString(getString(c, f), 10)
+	if !ok {
+		return nil, fmt.Errorf("invalid int")
+	}
+
+	return i, nil
 }
 
 func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
-	addrStr := c.String(f.GetName())
+	addrStr := getString(c, f)
 
 	if !common.IsHexAddress(addrStr) {
 		return types.NullAddress, fmt.Errorf("invalid address hex")
@@ -58,7 +61,7 @@ func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
 }
 
 func getHash(c *cli.Context, f cli.Flag) (common.Hash, error) {
-	hashStr := c.String(f.GetName())
+	hashStr := getString(c, f)
 
 	hashBytes, err := utils.DecodeHex(hashStr)
 	if err != nil {
@@ -72,7 +75,7 @@ func getHash(c *cli.Context, f cli.Flag) (common.Hash, error) {
 }
 
 func getPrivateKey(c *cli.Context, f cli.Flag) (*ecdsa.PrivateKey, error) {
-	privKeyBytes, err := utils.DecodeHex(c.String(f.GetName()))
+	privKeyBytes, err := utils.DecodeHex(getString(c, f))
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +84,7 @@ func getPrivateKey(c *cli.Context, f cli.Flag) (*ecdsa.PrivateKey, error) {
 }
 
 func getTx(c *cli.Context, f cli.Flag) (*types.Tx, error) {
-	txBytes, err := utils.DecodeHex(c.String(f.GetName()))
+	txBytes, err := utils.DecodeHex(getString(c, f))
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -15,12 +16,12 @@ type GetChainResponse struct {
 	} `json:"result"`
 }
 
-func (client *Client) GetChain(ctx context.Context, blkNum uint64) ([]byte, error) {
+func (client *Client) GetChain(ctx context.Context, blkNum *big.Int) ([]byte, error) {
 	var resp GetChainResponse
 	if err := client.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("chain/%d", blkNum),
+		fmt.Sprintf("chain/%s", blkNum.String()),
 		nil,
 		&resp,
 	); err != nil {

@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"errors"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -14,13 +15,17 @@ const (
 )
 
 var (
+	TxElementsNumBig = big.NewInt(TxElementsNum)
+)
+
+var (
 	ErrInvalidTxInIndex = errors.New("invalid txin index")
 )
 
 type BlockTx struct {
 	*Tx
-	BlockNumber uint64
-	TxIndex     uint64
+	BlockNumber *big.Int
+	TxIndex     *big.Int
 }
 
 type Tx struct {
@@ -35,8 +40,8 @@ func NewTx() *Tx {
 	}
 
 	for i := 0; i < TxElementsNum; i++ {
-		tx.Inputs[i] = NewTxIn(0, 0, 0)
-		tx.Outputs[i] = NewTxOut(NullAddress, 0)
+		tx.Inputs[i] = NewTxIn(big.NewInt(0), big.NewInt(0), big.NewInt(0))
+		tx.Outputs[i] = NewTxOut(NullAddress, big.NewInt(0))
 	}
 
 	return tx
@@ -72,22 +77,22 @@ func (tx *Tx) Encode() ([]byte, error) {
 	})
 }
 
-func (tx *Tx) Hash() ([]byte, error) {
+func (tx *Tx) Hash() (common.Hash, error) {
 	b, err := tx.Encode()
 	if err != nil {
-		return nil, err
+		return NullHash, err
 	}
 
-	return crypto.Keccak256(b), nil
+	return common.BytesToHash(crypto.Keccak256(b)), nil
 }
 
-func (tx *Tx) ConfirmationHash() ([]byte, error) {
-	hashBytes, err := tx.Hash()
+func (tx *Tx) ConfirmationHash() (common.Hash, error) {
+	h, err := tx.Hash()
 	if err != nil {
-		return nil, err
+		return NullHash, err
 	}
 
-	return crypto.Keccak256(hashBytes), nil
+	return common.BytesToHash(crypto.Keccak256(h.Bytes())), nil
 }
 
 func (tx *Tx) MerkleLeaf() ([]byte, error) {
@@ -106,17 +111,17 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (tx *Tx) Sign(iIndex uint64, signer *Account) error {
-	if iIndex >= uint64(len(tx.Inputs)) {
+func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
+	if iIndex.Cmp(TxElementsNumBig) >= 0 {
 		return ErrInvalidTxInIndex
 	}
 
-	hashBytes, err := tx.Hash()
+	h, err := tx.Hash()
 	if err != nil {
 		return err
 	}
 
-	sigBytes, err := signer.Sign(hashBytes)
+	sigBytes, err := signer.Sign(h)
 	if err != nil {
 		return err
 	}
@@ -125,70 +130,70 @@ func (tx *Tx) Sign(iIndex uint64, signer *Account) error {
 		return err
 	}
 
-	tx.Inputs[iIndex].Signature = sig
+	tx.Inputs[iIndex.Uint64()].Signature = sig
 
 	return nil
 }
 
-func (tx *Tx) Confirm(iIndex uint64, signer *Account) error {
-	if iIndex >= uint64(len(tx.Inputs)) {
+func (tx *Tx) Confirm(iIndex *big.Int, signer *Account) error {
+	if iIndex.Cmp(TxElementsNumBig) >= 0 {
 		return ErrInvalidTxInIndex
 	}
 
-	confHashBytes, err := tx.ConfirmationHash()
+	h, err := tx.ConfirmationHash()
 	if err != nil {
 		return err
 	}
 
-	confSigBytes, err := signer.Sign(confHashBytes)
+	sigBytes, err := signer.Sign(h)
 	if err != nil {
 		return err
 	}
-	confSig, err := NewSignatureFromBytes(confSigBytes)
+	sig, err := NewSignatureFromBytes(sigBytes)
 	if err != nil {
 		return err
 	}
 
-	tx.Inputs[iIndex].ConfirmationSignature = confSig
+	tx.Inputs[iIndex.Uint64()].ConfirmationSignature = sig
 
 	return nil
 }
 
-func (tx *Tx) SignerAddress(iIndex uint64) (common.Address, error) {
-	if iIndex >= uint64(len(tx.Inputs)) {
+func (tx *Tx) SignerAddress(iIndex *big.Int) (common.Address, error) {
+	if iIndex.Cmp(TxElementsNumBig) >= 0 {
 		return NullAddress, ErrInvalidTxInIndex
 	}
 
-	hashBytes, err := tx.Hash()
+	h, err := tx.Hash()
 	if err != nil {
 		return NullAddress, err
 	}
 
-	return tx.signerAddress(hashBytes, tx.Inputs[iIndex].Signature)
+	return tx.signerAddress(h, tx.Inputs[iIndex.Uint64()].Signature)
 }
 
-func (tx *Tx) ConfirmationSignerAddress(iIndex uint64) (common.Address, error) {
-	if iIndex >= uint64(len(tx.Inputs)) {
+func (tx *Tx) ConfirmationSignerAddress(iIndex *big.Int) (common.Address, error) {
+	if iIndex.Cmp(TxElementsNumBig) >= 0 {
 		return NullAddress, ErrInvalidTxInIndex
 	}
 
-	confHashBytes, err := tx.ConfirmationHash()
+	h, err := tx.ConfirmationHash()
 	if err != nil {
 		return NullAddress, err
 	}
 
-	return tx.signerAddress(confHashBytes, tx.Inputs[iIndex].ConfirmationSignature)
+	return tx.signerAddress(h, tx.Inputs[iIndex.Uint64()].ConfirmationSignature)
 }
 
-func (tx *Tx) signerAddress(b []byte, sig Signature) (common.Address, error) {
+func (tx *Tx) signerAddress(h common.Hash, sig Signature) (common.Address, error) {
 	if bytes.Equal(sig.Bytes(), NullSignature.Bytes()) {
 		return NullAddress, nil
 	}
 
-	return sig.SignerAddress(b)
+	return sig.SignerAddress(h)
 }
 
-func (tx *Tx) InBlock(blkNum, txIndex uint64) *BlockTx {
+func (tx *Tx) InBlock(blkNum, txIndex *big.Int) *BlockTx {
 	return &BlockTx{
 		Tx:          tx,
 		BlockNumber: blkNum,

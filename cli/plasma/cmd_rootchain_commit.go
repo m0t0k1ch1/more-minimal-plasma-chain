@@ -9,9 +9,7 @@ var cmdRootChainCommit = cli.Command{
 	Name:  "commit",
 	Usage: "commit block root",
 	Flags: []cli.Flag{
-		rpcFlag,
-		wsFlag,
-		addrFlag,
+		rpcFlag, wsFlag, contractFlag,
 		privKeyFlag,
 		rootFlag,
 	},

@@ -13,11 +13,11 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 	if err != nil {
 		return c.JSONError(err)
 	}
-	if blkNum.Uint64() != cc.blockchain.CurrentBlockNumber() {
-		return c.JSONError(ErrRootChainNotSynchronized)
+	if blkNum.Cmp(cc.blockchain.CurrentBlockNumber()) != 0 {
+		return c.JSONError(ErrBlockchainNotSynchronized)
 	}
 
-	blkHashBytes, err := cc.blockchain.AddBlock(cc.operator)
+	blkHash, err := cc.blockchain.AddBlock(cc.operator)
 	if err != nil {
 		if err == core.ErrEmptyBlock {
 			return c.JSONError(ErrEmptyBlock)
@@ -25,7 +25,7 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	blk, err := cc.blockchain.GetBlock(blkHashBytes)
+	blk, err := cc.blockchain.GetBlock(blkHash)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)
@@ -44,17 +44,17 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 	cc.Logger().Infof("[COMMIT] root: %s", utils.EncodeToHex(rootHash[:]))
 
 	return c.JSONSuccess(map[string]interface{}{
-		"blkhash": utils.EncodeToHex(blkHashBytes),
+		"blkhash": utils.EncodeToHex(blkHash.Bytes()),
 	})
 }
 
 func (cc *ChildChain) GetBlockHandler(c *Context) error {
-	blkHashBytes, err := c.GetBlockHashFromPath()
+	blkHash, err := c.GetBlockHashFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	blk, err := cc.blockchain.GetBlock(blkHashBytes)
+	blk, err := cc.blockchain.GetBlock(blkHash)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)

@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"errors"
+	"math/big"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -33,7 +34,7 @@ var (
 type Blockchain struct {
 	mu           *sync.RWMutex
 	currentBlock *types.Block
-	chain        map[uint64]string
+	chain        map[string]string
 	lightBlocks  map[string]*types.LightBlock
 	blockTxes    map[string]*types.BlockTx
 }
@@ -41,22 +42,22 @@ type Blockchain struct {
 func NewBlockchain() *Blockchain {
 	return &Blockchain{
 		mu:           &sync.RWMutex{},
-		currentBlock: types.NewBlock(nil, DefaultBlockNumber),
-		chain:        map[uint64]string{},
+		currentBlock: types.NewBlock(nil, big.NewInt(DefaultBlockNumber)),
+		chain:        map[string]string{},
 		lightBlocks:  map[string]*types.LightBlock{},
 		blockTxes:    map[string]*types.BlockTx{},
 	}
 }
 
-func (bc *Blockchain) CurrentBlockNumber() uint64 {
+func (bc *Blockchain) CurrentBlockNumber() *big.Int {
 	return bc.currentBlock.Number
 }
 
-func (bc *Blockchain) GetBlockHash(blkNum uint64) ([]byte, error) {
+func (bc *Blockchain) GetBlockHash(blkNum *big.Int) ([]byte, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	blkHashStr, ok := bc.chain[blkNum]
+	blkHashStr, ok := bc.chain[blkNum.String()]
 	if !ok {
 		return nil, ErrBlockNotFound
 	}
@@ -64,11 +65,11 @@ func (bc *Blockchain) GetBlockHash(blkNum uint64) ([]byte, error) {
 	return utils.DecodeHex(blkHashStr)
 }
 
-func (bc *Blockchain) GetBlock(blkHashBytes []byte) (*types.Block, error) {
+func (bc *Blockchain) GetBlock(blkHash common.Hash) (*types.Block, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	blkHashStr := utils.EncodeToHex(blkHashBytes)
+	blkHashStr := utils.EncodeToHex(blkHash.Bytes())
 
 	if _, ok := bc.lightBlocks[blkHashStr]; !ok {
 		return nil, ErrBlockNotFound
@@ -77,7 +78,7 @@ func (bc *Blockchain) GetBlock(blkHashBytes []byte) (*types.Block, error) {
 	return bc.getBlock(blkHashStr), nil
 }
 
-func (bc *Blockchain) AddBlock(signer *types.Account) ([]byte, error) {
+func (bc *Blockchain) AddBlock(signer *types.Account) (common.Hash, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
@@ -85,27 +86,27 @@ func (bc *Blockchain) AddBlock(signer *types.Account) ([]byte, error) {
 
 	// check block validity
 	if len(blk.Txes) == 0 {
-		return nil, ErrEmptyBlock
+		return types.NullHash, ErrEmptyBlock
 	}
 
 	// sign block
 	if err := blk.Sign(signer); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	// add block
-	blkHashBytes, err := bc.addBlock(blk)
+	blkHash, err := bc.addBlock(blk)
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	// reset current block
-	bc.currentBlock = types.NewBlock(nil, blk.Number+1)
+	bc.currentBlock = types.NewBlock(nil, blk.Number.Add(blk.Number, big.NewInt(1)))
 
-	return blkHashBytes, nil
+	return blkHash, nil
 }
 
-func (bc *Blockchain) AddDepositBlock(ownerAddr common.Address, amount uint64, signer *types.Account) ([]byte, error) {
+func (bc *Blockchain) AddDepositBlock(ownerAddr common.Address, amount *big.Int, signer *types.Account) (common.Hash, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
@@ -116,26 +117,26 @@ func (bc *Blockchain) AddDepositBlock(ownerAddr common.Address, amount uint64, s
 
 	// sign block
 	if err := blk.Sign(signer); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	// add block
-	blkHashBytes, err := bc.addBlock(blk)
+	blkHash, err := bc.addBlock(blk)
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	// increment current block number
-	bc.currentBlock.Number++
+	bc.currentBlock.Number.Add(bc.currentBlock.Number, big.NewInt(1))
 
-	return blkHashBytes, nil
+	return blkHash, nil
 }
 
-func (bc *Blockchain) GetTx(txHashBytes []byte) (*types.Tx, error) {
+func (bc *Blockchain) GetTx(txHash common.Hash) (*types.Tx, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	txHashStr := utils.EncodeToHex(txHashBytes)
+	txHashStr := utils.EncodeToHex(txHash.Bytes())
 
 	btx, ok := bc.blockTxes[txHashStr]
 	if !ok {
@@ -145,11 +146,11 @@ func (bc *Blockchain) GetTx(txHashBytes []byte) (*types.Tx, error) {
 	return btx.Tx, nil
 }
 
-func (bc *Blockchain) GetTxProof(txHashBytes []byte) ([]byte, error) {
+func (bc *Blockchain) GetTxProof(txHash common.Hash) ([]byte, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	txHashStr := utils.EncodeToHex(txHashBytes)
+	txHashStr := utils.EncodeToHex(txHash.Bytes())
 
 	// check tx existence
 	btx, ok := bc.blockTxes[txHashStr]
@@ -157,7 +158,7 @@ func (bc *Blockchain) GetTxProof(txHashBytes []byte) ([]byte, error) {
 		return nil, ErrTxNotFound
 	}
 
-	blk := bc.getBlock(bc.chain[btx.BlockNumber])
+	blk := bc.getBlock(bc.chain[btx.BlockNumber.String()])
 
 	// build tx Merkle tree
 	tree, err := blk.MerkleTree()
@@ -166,25 +167,25 @@ func (bc *Blockchain) GetTxProof(txHashBytes []byte) ([]byte, error) {
 	}
 
 	// create proof
-	return tree.CreateMembershipProof(btx.TxIndex)
+	return tree.CreateMembershipProof(btx.TxIndex.Uint64())
 }
 
-func (bc *Blockchain) AddTxToMempool(tx *types.Tx) ([]byte, error) {
+func (bc *Blockchain) AddTxToMempool(tx *types.Tx) (common.Hash, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
 	if err := bc.validateTx(tx); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	return bc.addTxToMempool(tx)
 }
 
-func (bc *Blockchain) ConfirmTx(txHashBytes []byte, iIndex uint64, confSig types.Signature) error {
+func (bc *Blockchain) ConfirmTx(txHash common.Hash, iIndex *big.Int, confSig types.Signature) error {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
-	txHashStr := utils.EncodeToHex(txHashBytes)
+	txHashStr := utils.EncodeToHex(txHash.Bytes())
 
 	// check tx existence
 	btx, ok := bc.blockTxes[txHashStr]
@@ -193,11 +194,11 @@ func (bc *Blockchain) ConfirmTx(txHashBytes []byte, iIndex uint64, confSig types
 	}
 
 	// check txin existence
-	if iIndex >= uint64(len(btx.Inputs)) {
+	if iIndex.Cmp(types.TxElementsNumBig) >= 0 {
 		return ErrTxInNotFound
 	}
 
-	txIn := btx.Inputs[iIndex]
+	txIn := btx.Inputs[iIndex.Uint64()]
 
 	// check txin validity
 	if txIn.IsNull() {
@@ -207,20 +208,20 @@ func (bc *Blockchain) ConfirmTx(txHashBytes []byte, iIndex uint64, confSig types
 	inTxOut := bc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
 
 	// verify confirmation signature
-	confHashBytes, err := btx.ConfirmationHash()
+	h, err := btx.ConfirmationHash()
 	if err != nil {
 		return err
 	}
-	confSignerAddr, err := confSig.SignerAddress(confHashBytes)
+	signerAddr, err := confSig.SignerAddress(h)
 	if err != nil {
 		return ErrInvalidTxConfirmationSignature
 	}
-	if !bytes.Equal(confSignerAddr.Bytes(), inTxOut.OwnerAddress.Bytes()) {
+	if !bytes.Equal(signerAddr.Bytes(), inTxOut.OwnerAddress.Bytes()) {
 		return ErrInvalidTxConfirmationSignature
 	}
 
 	// update confirmation signature
-	bc.blockTxes[txHashStr].Inputs[iIndex].ConfirmationSignature = confSig
+	bc.blockTxes[txHashStr].Inputs[iIndex.Uint64()].ConfirmationSignature = confSig
 
 	return nil
 }
@@ -241,38 +242,38 @@ func (bc *Blockchain) getBlock(blkHashStr string) *types.Block {
 	return blk
 }
 
-func (bc *Blockchain) addBlock(blk *types.Block) ([]byte, error) {
+func (bc *Blockchain) addBlock(blk *types.Block) (common.Hash, error) {
 	lblk, err := blk.Lighten()
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
-	blkHashBytes, err := blk.Hash()
+	blkHash, err := blk.Hash()
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
-	blkHashStr := utils.EncodeToHex(blkHashBytes)
+	blkHashStr := utils.EncodeToHex(blkHash.Bytes())
 
 	// update chain
-	bc.chain[blk.Number] = blkHashStr
+	bc.chain[blk.Number.String()] = blkHashStr
 
 	// store block
 	bc.lightBlocks[blkHashStr] = lblk
 
 	// store txes
 	for i, tx := range blk.Txes {
-		bc.blockTxes[lblk.TxHashes[i]] = tx.InBlock(blk.Number, uint64(i))
+		bc.blockTxes[lblk.TxHashes[i]] = tx.InBlock(blk.Number, big.NewInt(int64(i)))
 	}
 
-	return blkHashBytes, nil
+	return blkHash, nil
 }
 
 func (bc *Blockchain) validateTx(tx *types.Tx) error {
 	nullTxInNum := 0
-	iAmount, oAmount := uint64(0), uint64(0)
+	iAmount, oAmount := big.NewInt(0), big.NewInt(0)
 
 	for _, txOut := range tx.Outputs {
-		oAmount += txOut.Amount
+		oAmount.Add(oAmount, txOut.Amount)
 	}
 
 	for i, txIn := range tx.Inputs {
@@ -293,7 +294,7 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 		}
 
 		// verify signature
-		signerAddr, err := tx.SignerAddress(uint64(i))
+		signerAddr, err := tx.SignerAddress(big.NewInt(int64(i)))
 		if err != nil {
 			return ErrInvalidTxSignature
 		}
@@ -302,7 +303,7 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 			return ErrInvalidTxSignature
 		}
 
-		iAmount += inTxOut.Amount
+		iAmount.Add(iAmount, inTxOut.Amount)
 	}
 
 	// check txins validity
@@ -311,17 +312,17 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 	}
 
 	// check in/out balance
-	if iAmount < oAmount {
+	if iAmount.Cmp(oAmount) < 0 {
 		return ErrInvalidTxBalance
 	}
 
 	return nil
 }
 
-func (bc *Blockchain) addTxToMempool(tx *types.Tx) ([]byte, error) {
-	txHashBytes, err := tx.Hash()
+func (bc *Blockchain) addTxToMempool(tx *types.Tx) (common.Hash, error) {
+	txHash, err := tx.Hash()
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	for _, txIn := range tx.Inputs {
@@ -336,11 +337,11 @@ func (bc *Blockchain) addTxToMempool(tx *types.Tx) ([]byte, error) {
 	// add tx to current block
 	bc.currentBlock.Txes = append(bc.currentBlock.Txes, tx)
 
-	return txHashBytes, nil
+	return txHash, nil
 }
 
-func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex uint64) bool {
-	blkHashStr, ok := bc.chain[blkNum]
+func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
+	blkHashStr, ok := bc.chain[blkNum.String()]
 	if !ok {
 		return false
 	}
@@ -350,23 +351,17 @@ func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex uint64) bool {
 		return false
 	}
 
-	if txIndex >= uint64(len(lblk.TxHashes)) {
-		return false
-	}
-	txHashStr := lblk.TxHashes[txIndex]
-
-	btx, ok := bc.blockTxes[txHashStr]
-	if !ok {
+	if txIndex.Cmp(big.NewInt(int64(len(lblk.TxHashes)))) >= 0 {
 		return false
 	}
 
-	if oIndex >= uint64(len(btx.Outputs)) {
+	if oIndex.Cmp(types.TxElementsNumBig) >= 0 {
 		return false
 	}
 
 	return true
 }
 
-func (bc *Blockchain) getTxOut(blkNum, txIndex, oIndex uint64) *types.TxOut {
-	return bc.blockTxes[bc.lightBlocks[bc.chain[blkNum]].TxHashes[txIndex]].Outputs[oIndex]
+func (bc *Blockchain) getTxOut(blkNum, txIndex, oIndex *big.Int) *types.TxOut {
+	return bc.blockTxes[bc.lightBlocks[bc.chain[blkNum.String()]].TxHashes[txIndex.Uint64()]].Outputs[oIndex.Uint64()]
 }

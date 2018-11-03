@@ -11,17 +11,19 @@ var cmdTxProof = cli.Command{
 	Name:  "proof",
 	Usage: "get tx proof",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		hashFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txHashBytes, err := getHexBytes(c, hashFlag)
+		txHash, err := getHash(c, hashFlag)
 		if err != nil {
 			return err
 		}
 
-		proofBytes, err := newClient(c).GetTxProof(context.Background(), txHashBytes)
+		proofBytes, err := newClient(c).GetTxProof(
+			context.Background(),
+			txHash,
+		)
 		if err != nil {
 			return err
 		}

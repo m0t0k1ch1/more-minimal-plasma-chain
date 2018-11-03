@@ -10,18 +10,20 @@ var cmdTxGet = cli.Command{
 	Name:  "get",
 	Usage: "get tx",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		hashFlag,
 		encodedFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txHashBytes, err := getHexBytes(c, hashFlag)
+		txHash, err := getHash(c, hashFlag)
 		if err != nil {
 			return err
 		}
 
-		tx, err := newClient(c).GetTx(context.Background(), txHashBytes)
+		tx, err := newClient(c).GetTx(
+			context.Background(),
+			txHash,
+		)
 		if err != nil {
 			return err
 		}

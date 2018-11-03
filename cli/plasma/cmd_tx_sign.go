@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math/big"
+
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/urfave/cli"
 )
@@ -23,7 +25,7 @@ var cmdTxSign = cli.Command{
 			return err
 		}
 
-		if err := tx.Sign(0, types.NewAccount(privKey)); err != nil {
+		if err := tx.Sign(big.NewInt(0), types.NewAccount(privKey)); err != nil {
 			return err
 		}
 

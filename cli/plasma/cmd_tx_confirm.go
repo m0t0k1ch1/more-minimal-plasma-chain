@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -12,13 +13,12 @@ var cmdTxConfirm = cli.Command{
 	Name:  "confirm",
 	Usage: "confirm tx",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		hashFlag,
 		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txHashBytes, err := getHexBytes(c, hashFlag)
+		txHash, err := getHash(c, hashFlag)
 		if err != nil {
 			return err
 		}
@@ -28,21 +28,33 @@ var cmdTxConfirm = cli.Command{
 			return err
 		}
 
-		tx, err := newClient(c).GetTx(context.Background(), txHashBytes)
+		ctx := context.Background()
+		zero := big.NewInt(0)
+
+		// get tx
+		tx, err := newClient(c).GetTx(
+			ctx,
+			txHash,
+		)
 		if err != nil {
 			return err
 		}
 
-		if err := tx.Confirm(0, types.NewAccount(privKey)); err != nil {
+		// confirm tx
+		if err := tx.Confirm(zero, types.NewAccount(privKey)); err != nil {
 			return err
 		}
 
-		if _, err := newClient(c).PutTx(context.Background(), txHashBytes, 0, tx.Inputs[0].ConfirmationSignature); err != nil {
+		// update confirmation signature
+		if _, err := newClient(c).PutTx(
+			ctx,
+			txHash, zero, tx.Inputs[0].ConfirmationSignature,
+		); err != nil {
 			return err
 		}
 
 		return printlnJSON(map[string]string{
-			"txhash": utils.EncodeToHex(txHashBytes),
+			"txhash": utils.EncodeToHex(txHash.Bytes()),
 		})
 	},
 }

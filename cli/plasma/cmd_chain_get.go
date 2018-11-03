@@ -11,14 +11,19 @@ var cmdChainGet = cli.Command{
 	Name:  "get",
 	Usage: "get chain",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		blkNumFlag,
 	},
 	Action: func(c *cli.Context) error {
-		blkNum := getUint64(c, blkNumFlag)
+		blkNum, err := getBigInt(c, blkNumFlag)
+		if err != nil {
+			return err
+		}
 
-		blkHashBytes, err := newClient(c).GetChain(context.Background(), blkNum)
+		blkHashBytes, err := newClient(c).GetChain(
+			context.Background(),
+			blkNum,
+		)
 		if err != nil {
 			return err
 		}

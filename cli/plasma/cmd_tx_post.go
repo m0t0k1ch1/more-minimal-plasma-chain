@@ -11,8 +11,7 @@ var cmdTxPost = cli.Command{
 	Name:  "post",
 	Usage: "post tx",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		txFlag,
 	},
 	Action: func(c *cli.Context) error {
@@ -21,7 +20,10 @@ var cmdTxPost = cli.Command{
 			return err
 		}
 
-		txHashBytes, err := newClient(c).PostTx(context.Background(), tx)
+		txHashBytes, err := newClient(c).PostTx(
+			context.Background(),
+			tx,
+		)
 		if err != nil {
 			return err
 		}

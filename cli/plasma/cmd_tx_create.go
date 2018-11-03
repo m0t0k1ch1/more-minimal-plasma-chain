@@ -16,12 +16,24 @@ var cmdTxCreate = cli.Command{
 		amountFlag,
 	},
 	Action: func(c *cli.Context) error {
-		blkNum := getUint64(c, blkNumFlag)
-		txIndex := getUint64(c, txIndexFlag)
-		oIndex := getUint64(c, oIndexFlag)
-		amount := getUint64(c, amountFlag)
+		blkNum, err := getBigInt(c, blkNumFlag)
+		if err != nil {
+			return err
+		}
+		txIndex, err := getBigInt(c, txIndexFlag)
+		if err != nil {
+			return err
+		}
+		oIndex, err := getBigInt(c, oIndexFlag)
+		if err != nil {
+			return err
+		}
 
 		ownerAddr, err := getAddress(c, ownerFlag)
+		if err != nil {
+			return err
+		}
+		amount, err := getBigInt(c, amountFlag)
 		if err != nil {
 			return err
 		}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -39,12 +40,12 @@ type GetBlockResponse struct {
 	} `json:"result"`
 }
 
-func (client *Client) GetBlock(ctx context.Context, blkHashBytes []byte) (*types.Block, error) {
+func (client *Client) GetBlock(ctx context.Context, blkHash common.Hash) (*types.Block, error) {
 	var resp GetBlockResponse
 	if err := client.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("blocks/%s", utils.EncodeToHex(blkHashBytes)),
+		fmt.Sprintf("blocks/%s", utils.EncodeToHex(blkHash.Bytes())),
 		nil,
 		&resp,
 	); err != nil {
