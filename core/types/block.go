@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -12,17 +13,17 @@ import (
 
 type LightBlock struct {
 	TxHashes  []string
-	Number    uint64
+	Number    *big.Int
 	Signature Signature
 }
 
 type Block struct {
 	Txes      []*Tx     `json:"txes"`
-	Number    uint64    `json:"blknum"`
+	Number    *big.Int  `json:"blknum"`
 	Signature Signature `json:"sig"`
 }
 
-func NewBlock(txes []*Tx, blkNum uint64) *Block {
+func NewBlock(txes []*Tx, blkNum *big.Int) *Block {
 	return &Block{
 		Txes:      txes,
 		Number:    blkNum,

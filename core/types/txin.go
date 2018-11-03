@@ -1,9 +1,11 @@
 package types
 
+import "math/big"
+
 type TxInCore struct {
-	BlockNumber uint64 `json:"blknum"`
-	TxIndex     uint64 `json:"txindex"`
-	OutputIndex uint64 `json:"oindex"`
+	BlockNumber *big.Int `json:"blknum"`
+	TxIndex     *big.Int `json:"txindex"`
+	OutputIndex *big.Int `json:"oindex"`
 }
 
 type TxIn struct {
@@ -12,7 +14,7 @@ type TxIn struct {
 	ConfirmationSignature Signature `json:"confsig"`
 }
 
-func NewTxIn(blkNum, txIndex, oIndex uint64) *TxIn {
+func NewTxIn(blkNum, txIndex, oIndex *big.Int) *TxIn {
 	return &TxIn{
 		TxInCore: &TxInCore{
 			BlockNumber: blkNum,
@@ -25,5 +27,8 @@ func NewTxIn(blkNum, txIndex, oIndex uint64) *TxIn {
 }
 
 func (txIn *TxIn) IsNull() bool {
-	return txIn.BlockNumber == 0 && txIn.TxIndex == 0 && txIn.OutputIndex == 0
+	zero := big.NewInt(0)
+	return txIn.BlockNumber.Cmp(zero) == 0 &&
+		txIn.TxIndex.Cmp(zero) == 0 &&
+		txIn.OutputIndex.Cmp(zero) == 0
 }
