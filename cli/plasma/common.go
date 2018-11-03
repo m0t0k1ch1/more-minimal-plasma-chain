@@ -9,8 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/app"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/client"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 	"github.com/urfave/cli"
@@ -20,13 +20,13 @@ func newClient(c *cli.Context) *client.Client {
 	return client.New(getString(c, apiFlag))
 }
 
-func newRootChain(c *cli.Context) (*app.RootChain, error) {
+func newRootChain(c *cli.Context) (*core.RootChain, error) {
 	addr, err := getAddress(c, contractFlag)
 	if err != nil {
 		return nil, err
 	}
 
-	return app.NewRootChain(&app.RootChainConfig{
+	return core.NewRootChain(&core.RootChainConfig{
 		RPC:     getString(c, rpcFlag),
 		WS:      getString(c, wsFlag),
 		Address: utils.EncodeToHex(addr.Bytes()),
