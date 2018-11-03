@@ -34,7 +34,7 @@ var (
 type Blockchain struct {
 	mu           *sync.RWMutex
 	currentBlock *types.Block
-	chain        map[*big.Int]string
+	chain        map[string]string
 	lightBlocks  map[string]*types.LightBlock
 	blockTxes    map[string]*types.BlockTx
 }
@@ -43,7 +43,7 @@ func NewBlockchain() *Blockchain {
 	return &Blockchain{
 		mu:           &sync.RWMutex{},
 		currentBlock: types.NewBlock(nil, big.NewInt(DefaultBlockNumber)),
-		chain:        map[*big.Int]string{},
+		chain:        map[string]string{},
 		lightBlocks:  map[string]*types.LightBlock{},
 		blockTxes:    map[string]*types.BlockTx{},
 	}
@@ -57,7 +57,7 @@ func (bc *Blockchain) GetBlockHash(blkNum *big.Int) ([]byte, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	blkHashStr, ok := bc.chain[blkNum]
+	blkHashStr, ok := bc.chain[blkNum.String()]
 	if !ok {
 		return nil, ErrBlockNotFound
 	}
@@ -158,7 +158,7 @@ func (bc *Blockchain) GetTxProof(txHash common.Hash) ([]byte, error) {
 		return nil, ErrTxNotFound
 	}
 
-	blk := bc.getBlock(bc.chain[btx.BlockNumber])
+	blk := bc.getBlock(bc.chain[btx.BlockNumber.String()])
 
 	// build tx Merkle tree
 	tree, err := blk.MerkleTree()
@@ -255,7 +255,7 @@ func (bc *Blockchain) addBlock(blk *types.Block) (common.Hash, error) {
 	blkHashStr := utils.EncodeToHex(blkHash.Bytes())
 
 	// update chain
-	bc.chain[blk.Number] = blkHashStr
+	bc.chain[blk.Number.String()] = blkHashStr
 
 	// store block
 	bc.lightBlocks[blkHashStr] = lblk
@@ -341,7 +341,7 @@ func (bc *Blockchain) addTxToMempool(tx *types.Tx) (common.Hash, error) {
 }
 
 func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
-	blkHashStr, ok := bc.chain[blkNum]
+	blkHashStr, ok := bc.chain[blkNum.String()]
 	if !ok {
 		return false
 	}
@@ -363,5 +363,5 @@ func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
 }
 
 func (bc *Blockchain) getTxOut(blkNum, txIndex, oIndex *big.Int) *types.TxOut {
-	return bc.blockTxes[bc.lightBlocks[bc.chain[blkNum]].TxHashes[txIndex.Uint64()]].Outputs[oIndex.Uint64()]
+	return bc.blockTxes[bc.lightBlocks[bc.chain[blkNum.String()]].TxHashes[txIndex.Uint64()]].Outputs[oIndex.Uint64()]
 }
