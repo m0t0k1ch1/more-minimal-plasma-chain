@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/app"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/client"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -19,6 +20,19 @@ func newClient(c *cli.Context) *client.Client {
 		"http://%s:%d",
 		c.String(hostFlag.GetName()), c.Uint64(portFlag.GetName()),
 	))
+}
+
+func newRootChain(c *cli.Context) (*app.RootChain, error) {
+	addr, err := getAddress(c, addrFlag)
+	if err != nil {
+		return nil, err
+	}
+
+	return app.NewRootChain(&app.RootChainConfig{
+		RPC:     c.String(rpcFlag.GetName()),
+		WS:      c.String(wsFlag.GetName()),
+		Address: utils.EncodeToHex(addr.Bytes()),
+	})
 }
 
 func getBool(c *cli.Context, f cli.Flag) bool {
@@ -34,11 +48,27 @@ func getHexBytes(c *cli.Context, f cli.Flag) ([]byte, error) {
 }
 
 func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
-	if !common.IsHexAddress(c.String(f.GetName())) {
+	addrStr := c.String(f.GetName())
+
+	if !common.IsHexAddress(addrStr) {
 		return types.NullAddress, fmt.Errorf("invalid address hex")
 	}
 
-	return common.HexToAddress(c.String(f.GetName())), nil
+	return common.HexToAddress(addrStr), nil
+}
+
+func getHash(c *cli.Context, f cli.Flag) (common.Hash, error) {
+	hashStr := c.String(f.GetName())
+
+	hashBytes, err := utils.DecodeHex(hashStr)
+	if err != nil {
+		return types.NullHash, err
+	}
+	if len(hashBytes) != common.HashLength {
+		return types.NullHash, fmt.Errorf("invalid hash hex")
+	}
+
+	return common.BytesToHash(hashBytes), nil
 }
 
 func getPrivateKey(c *cli.Context, f cli.Flag) (*ecdsa.PrivateKey, error) {
