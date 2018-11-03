@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
@@ -16,12 +19,18 @@ type HandlerFunc func(*Context) error
 type ChildChain struct {
 	e          *echo.Echo
 	config     *Config
+	rootChain  *contract.RootChain
 	operator   *types.Account
 	blockchain *core.Blockchain
 }
 
 func NewChildChain(conf *Config) (*ChildChain, error) {
-	privKey, err := crypto.HexToECDSA(conf.Operator.PrivateKey)
+	rc, err := newRootChain(conf.RootChain)
+	if err != nil {
+		return nil, err
+	}
+
+	op, err := newOperator(conf.Operator)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +38,8 @@ func NewChildChain(conf *Config) (*ChildChain, error) {
 	cc := &ChildChain{
 		e:          echo.New(),
 		config:     conf,
-		operator:   types.NewAccount(privKey),
+		rootChain:  rc,
+		operator:   op,
 		blockchain: core.NewBlockchain(),
 	}
 
@@ -99,4 +109,27 @@ func (cc *ChildChain) httpErrorHandler(err error, c echo.Context) {
 	if err := c.JSON(appErr.Code, NewErrorResponse(appErr)); err != nil {
 		cc.e.Logger.Error(err)
 	}
+}
+
+func newOperator(conf *OperatorConfig) (*types.Account, error) {
+	privKey, err := crypto.HexToECDSA(conf.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return types.NewAccount(privKey), nil
+}
+
+func newRootChain(conf *RootChainConfig) (*contract.RootChain, error) {
+	if ok := common.IsHexAddress(conf.Address); !ok {
+		return nil, fmt.Errorf("invalid root chain address")
+	}
+	rcAddr := common.HexToAddress(conf.Address)
+
+	conn, err := ethclient.Dial(conf.RPC)
+	if err != nil {
+		return nil, err
+	}
+
+	return contract.NewRootChain(rcAddr, conn)
 }
