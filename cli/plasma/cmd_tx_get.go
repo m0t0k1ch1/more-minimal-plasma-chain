@@ -20,7 +20,10 @@ var cmdTxGet = cli.Command{
 			return err
 		}
 
-		tx, err := newClient(c).GetTx(context.Background(), txHash)
+		tx, err := newClient(c).GetTx(
+			context.Background(),
+			txHash,
+		)
 		if err != nil {
 			return err
 		}

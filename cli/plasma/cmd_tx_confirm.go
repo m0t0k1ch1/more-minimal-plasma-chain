@@ -28,19 +28,26 @@ var cmdTxConfirm = cli.Command{
 			return err
 		}
 
+		ctx := context.Background()
 		zero := big.NewInt(0)
 
-		tx, err := newClient(c).GetTx(context.Background(), txHash)
+		// get tx
+		tx, err := newClient(c).GetTx(
+			ctx,
+			txHash,
+		)
 		if err != nil {
 			return err
 		}
 
+		// confirm tx
 		if err := tx.Confirm(zero, types.NewAccount(privKey)); err != nil {
 			return err
 		}
 
+		// update confirmation signature
 		if _, err := newClient(c).PutTx(
-			context.Background(),
+			ctx,
 			txHash, zero, tx.Inputs[0].ConfirmationSignature,
 		); err != nil {
 			return err

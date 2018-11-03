@@ -20,7 +20,10 @@ var cmdChainGet = cli.Command{
 			return err
 		}
 
-		blkHashBytes, err := newClient(c).GetChain(context.Background(), blkNum)
+		blkHashBytes, err := newClient(c).GetChain(
+			context.Background(),
+			blkNum,
+		)
 		if err != nil {
 			return err
 		}
