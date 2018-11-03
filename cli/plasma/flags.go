@@ -16,11 +16,11 @@ var (
 
 	rootFlag    = cli.StringFlag{Name: "root", Value: nullHashStr}
 	txFlag      = cli.StringFlag{Name: "tx", Value: ""}
-	blkNumFlag  = cli.Uint64Flag{Name: "blknum", Value: 0}
-	txIndexFlag = cli.Uint64Flag{Name: "txindex", Value: 0}
-	oIndexFlag  = cli.Uint64Flag{Name: "oindex", Value: 0}
+	blkNumFlag  = cli.StringFlag{Name: "blknum", Value: "0"}
+	txIndexFlag = cli.StringFlag{Name: "txindex", Value: "0"}
+	oIndexFlag  = cli.StringFlag{Name: "oindex", Value: "0"}
 	ownerFlag   = cli.StringFlag{Name: "owner", Value: nullAddressStr}
-	amountFlag  = cli.Uint64Flag{Name: "amount", Value: 0}
+	amountFlag  = cli.StringFlag{Name: "amount", Value: "0"}
 
 	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
 	hashFlag    = cli.StringFlag{Name: "hash", Value: nullHashStr}

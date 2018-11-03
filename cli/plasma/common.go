@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -40,8 +41,13 @@ func getString(c *cli.Context, f cli.Flag) string {
 	return c.String(f.GetName())
 }
 
-func getUint64(c *cli.Context, f cli.Flag) uint64 {
-	return c.Uint64(f.GetName())
+func getBigInt(c *cli.Context, f cli.Flag) (*big.Int, error) {
+	i, ok := new(big.Int).SetString(getString(c, f), 10)
+	if !ok {
+		return nil, fmt.Errorf("invalid int")
+	}
+
+	return i, nil
 }
 
 func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {

@@ -15,7 +15,10 @@ var cmdChainGet = cli.Command{
 		blkNumFlag,
 	},
 	Action: func(c *cli.Context) error {
-		blkNum := getUint64(c, blkNumFlag)
+		blkNum, err := getBigInt(c, blkNumFlag)
+		if err != nil {
+			return err
+		}
 
 		blkHashBytes, err := newClient(c).GetChain(context.Background(), blkNum)
 		if err != nil {

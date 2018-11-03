@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -27,16 +28,21 @@ var cmdTxConfirm = cli.Command{
 			return err
 		}
 
+		zero := big.NewInt(0)
+
 		tx, err := newClient(c).GetTx(context.Background(), txHash)
 		if err != nil {
 			return err
 		}
 
-		if err := tx.Confirm(0, types.NewAccount(privKey)); err != nil {
+		if err := tx.Confirm(zero, types.NewAccount(privKey)); err != nil {
 			return err
 		}
 
-		if _, err := newClient(c).PutTx(context.Background(), txHash, 0, tx.Inputs[0].ConfirmationSignature); err != nil {
+		if _, err := newClient(c).PutTx(
+			context.Background(),
+			txHash, zero, tx.Inputs[0].ConfirmationSignature,
+		); err != nil {
 			return err
 		}
 
