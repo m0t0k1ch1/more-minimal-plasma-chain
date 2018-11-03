@@ -48,6 +48,10 @@ func NewBlockchain() *Blockchain {
 	}
 }
 
+func (bc *Blockchain) CurrentBlockNumber() uint64 {
+	return bc.currentBlock.Number
+}
+
 func (bc *Blockchain) GetBlockHash(blkNum uint64) ([]byte, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
