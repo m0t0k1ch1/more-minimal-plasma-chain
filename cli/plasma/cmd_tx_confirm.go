@@ -12,8 +12,7 @@ var cmdTxConfirm = cli.Command{
 	Name:  "confirm",
 	Usage: "confirm tx",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		hashFlag,
 		privKeyFlag,
 	},

@@ -11,8 +11,7 @@ var cmdBlockFix = cli.Command{
 	Name:  "fix",
 	Usage: "fix block",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 	},
 	Action: func(c *cli.Context) error {
 		blkHashBytes, err := newClient(c).PostBlock(context.Background())

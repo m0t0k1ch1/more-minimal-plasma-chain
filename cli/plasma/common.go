@@ -16,10 +16,7 @@ import (
 )
 
 func newClient(c *cli.Context) *client.Client {
-	return client.New(fmt.Sprintf(
-		"http://%s:%d",
-		getString(c, hostFlag), getUint64(c, portFlag),
-	))
+	return client.New(getString(c, apiFlag))
 }
 
 func newRootChain(c *cli.Context) (*app.RootChain, error) {

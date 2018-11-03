@@ -11,8 +11,7 @@ var cmdChainGet = cli.Command{
 	Name:  "get",
 	Usage: "get chain",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		blkNumFlag,
 	},
 	Action: func(c *cli.Context) error {

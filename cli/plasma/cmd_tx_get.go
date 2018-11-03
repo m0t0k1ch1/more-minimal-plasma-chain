@@ -10,8 +10,7 @@ var cmdTxGet = cli.Command{
 	Name:  "get",
 	Usage: "get tx",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		hashFlag,
 		encodedFlag,
 	},

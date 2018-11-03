@@ -11,8 +11,7 @@ var cmdTxPost = cli.Command{
 	Name:  "post",
 	Usage: "post tx",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		txFlag,
 	},
 	Action: func(c *cli.Context) error {

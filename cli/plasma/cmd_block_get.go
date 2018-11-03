@@ -10,8 +10,7 @@ var cmdBlockGet = cli.Command{
 	Name:  "get",
 	Usage: "get block",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		hashFlag,
 		encodedFlag,
 	},

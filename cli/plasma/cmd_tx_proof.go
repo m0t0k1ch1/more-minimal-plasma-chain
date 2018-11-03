@@ -11,8 +11,7 @@ var cmdTxProof = cli.Command{
 	Name:  "proof",
 	Usage: "get tx proof",
 	Flags: []cli.Flag{
-		hostFlag,
-		portFlag,
+		apiFlag,
 		hashFlag,
 	},
 	Action: func(c *cli.Context) error {
