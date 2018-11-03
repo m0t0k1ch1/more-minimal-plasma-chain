@@ -25,16 +25,16 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	rootBytes, err := blk.Root()
+	rootHash, err := blk.Root()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
 	// TODO: check currentPlasmaBlockNumber in root chain contract
-	if _, err := cc.rootChain.CommitPlasmaBlockRoot(cc.operator, rootBytes); err != nil {
+	if _, err := cc.rootChain.CommitPlasmaBlockRoot(cc.operator, rootHash); err != nil {
 		return c.JSONError(err)
 	}
-	cc.Logger().Infof("[COMMIT] root: %s", utils.EncodeToHex(rootBytes[:]))
+	cc.Logger().Infof("[COMMIT] root: %s", utils.EncodeToHex(rootHash[:]))
 
 	return c.JSONSuccess(map[string]interface{}{
 		"blkhash": utils.EncodeToHex(blkHashBytes),

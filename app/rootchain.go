@@ -92,8 +92,8 @@ func (rc *RootChain) initContract() {
 	)
 }
 
-func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootBytes [32]byte) (*gethtypes.Transaction, error) {
-	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootBytes)
+func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootHash common.Hash) (*gethtypes.Transaction, error) {
+	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootHash)
 }
 
 // NOTICE:
