@@ -3,25 +3,27 @@ package app
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
+	mmpctypes "github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 type RootChain struct {
-	config     *RootChainConfig
-	address    common.Address
-	abi        abi.ABI
-	httpClient *ethclient.Client
-	wsClient   *rpc.Client
-	contract   *bind.BoundContract
+	config    *RootChainConfig
+	address   common.Address
+	abi       abi.ABI
+	rpcClient *ethclient.Client
+	wsClient  *rpc.Client
+	contract  *bind.BoundContract
 }
 
 func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
@@ -35,7 +37,7 @@ func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
 	if err := rc.initABI(); err != nil {
 		return nil, err
 	}
-	if err := rc.initHTTPClient(); err != nil {
+	if err := rc.initRPCClient(); err != nil {
 		return nil, err
 	}
 	if err := rc.initWSClient(); err != nil {
@@ -63,17 +65,17 @@ func (rc *RootChain) initABI() error {
 	return nil
 }
 
-func (rc *RootChain) initHTTPClient() error {
-	httpClient, err := ethclient.Dial(rc.config.RPC.HTTP)
+func (rc *RootChain) initRPCClient() error {
+	rpcClient, err := ethclient.Dial(rc.config.RPC)
 	if err != nil {
 		return err
 	}
-	rc.httpClient = httpClient
+	rc.rpcClient = rpcClient
 	return nil
 }
 
 func (rc *RootChain) initWSClient() error {
-	wsClient, err := rpc.Dial(rc.config.RPC.WS)
+	wsClient, err := rpc.Dial(rc.config.WS)
 	if err != nil {
 		return err
 	}
@@ -85,17 +87,29 @@ func (rc *RootChain) initContract() {
 	rc.contract = bind.NewBoundContract(
 		rc.address,
 		rc.abi,
-		rc.httpClient,
-		rc.httpClient,
-		rc.httpClient,
+		rc.rpcClient,
+		rc.rpcClient,
+		rc.rpcClient,
 	)
+}
+
+func (rc *RootChain) CurrentPlasmaBlockNumber() (*big.Int, error) {
+	blkNum := new(*big.Int)
+	if err := rc.contract.Call(nil, blkNum, "currentPlasmaBlockNumber"); err != nil {
+		return nil, err
+	}
+	return *blkNum, nil
+}
+
+func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootHash common.Hash) (*gethtypes.Transaction, error) {
+	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootHash)
 }
 
 // NOTICE:
 // By right, we should use contract.RootChain.WatchDepositCreated() instead of this func,
 // but we use this func because ganache cannot parse web3.eth.subscribe request created by contract.RootChain.
 func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *contract.RootChainDepositCreated) (event.Subscription, error) {
-	logs := make(chan types.Log)
+	logs := make(chan gethtypes.Log)
 	arg := map[string]interface{}{
 		"fromBlock": "0x0",
 		"toBlock":   "latest",

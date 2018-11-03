@@ -92,12 +92,12 @@ func TestBlock_Root(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			blk, out := tc.blk, tc.out
 
-			rootBytes, err := blk.Root()
+			rootHash, err := blk.Root()
 			if out.err != nil {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.rootHex, utils.EncodeToHex(rootBytes))
+				assert.Equal(t, out.rootHex, utils.EncodeToHex(rootHash[:]))
 			}
 		})
 	}

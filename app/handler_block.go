@@ -9,6 +9,14 @@ import (
 func (cc *ChildChain) PostBlockHandler(c *Context) error {
 	c.Request().ParseForm()
 
+	blkNum, err := cc.rootChain.CurrentPlasmaBlockNumber()
+	if err != nil {
+		return c.JSONError(err)
+	}
+	if blkNum.Uint64() != cc.blockchain.CurrentBlockNumber() {
+		return c.JSONError(ErrRootChainNotSynchronized)
+	}
+
 	blkHashBytes, err := cc.blockchain.AddBlock(cc.operator)
 	if err != nil {
 		if err == core.ErrEmptyBlock {
@@ -16,6 +24,24 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 		}
 		return c.JSONError(err)
 	}
+
+	blk, err := cc.blockchain.GetBlock(blkHashBytes)
+	if err != nil {
+		if err == core.ErrBlockNotFound {
+			return c.JSONError(ErrBlockNotFound)
+		}
+		return c.JSONError(err)
+	}
+
+	rootHash, err := blk.Root()
+	if err != nil {
+		return c.JSONError(err)
+	}
+
+	if _, err := cc.rootChain.CommitPlasmaBlockRoot(cc.operator, rootHash); err != nil {
+		return c.JSONError(err)
+	}
+	cc.Logger().Infof("[COMMIT] root: %s", utils.EncodeToHex(rootHash[:]))
 
 	return c.JSONSuccess(map[string]interface{}{
 		"blkhash": utils.EncodeToHex(blkHashBytes),

@@ -11,11 +11,7 @@ type OperatorConfig struct {
 }
 
 type RootChainConfig struct {
-	RPC     *RootChainRPCConfig `json:"rpc"`
-	Address string              `json:"address"`
-}
-
-type RootChainRPCConfig struct {
-	HTTP string `json:"http"`
-	WS   string `json:"ws"`
+	RPC     string `json:"rpc"`
+	WS      string `json:"ws"`
+	Address string `json:"address"`
 }
