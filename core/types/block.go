@@ -66,13 +66,17 @@ func (blk *Block) MerkleTree() (*merkle.Tree, error) {
 	return merkle.NewTree(merkleConfig(), leaves)
 }
 
-func (blk *Block) Root() ([]byte, error) {
+func (blk *Block) Root() ([32]byte, error) {
+	rootBytes := [32]byte{}
+
 	tree, err := blk.MerkleTree()
 	if err != nil {
-		return nil, err
+		return rootBytes, err
 	}
 
-	return tree.Root().Bytes(), nil
+	copy(rootBytes[:], tree.Root().Bytes()[:])
+
+	return rootBytes, nil
 }
 
 func (blk *Block) Sign(signer *Account) error {

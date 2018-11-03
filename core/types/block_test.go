@@ -97,7 +97,7 @@ func TestBlock_Root(t *testing.T) {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.rootHex, utils.EncodeToHex(rootBytes))
+				assert.Equal(t, out.rootHex, utils.EncodeToHex(rootBytes[:]))
 			}
 		})
 	}
