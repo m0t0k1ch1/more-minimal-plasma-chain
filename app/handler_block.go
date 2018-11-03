@@ -9,6 +9,14 @@ import (
 func (cc *ChildChain) PostBlockHandler(c *Context) error {
 	c.Request().ParseForm()
 
+	blkNum, err := cc.rootChain.CurrentPlasmaBlockNumber()
+	if err != nil {
+		return c.JSONError(err)
+	}
+	if blkNum.Uint64() != cc.blockchain.CurrentBlockNumber() {
+		return c.JSONError(ErrRootChainNotSynchronized)
+	}
+
 	blkHashBytes, err := cc.blockchain.AddBlock(cc.operator)
 	if err != nil {
 		if err == core.ErrEmptyBlock {
@@ -30,7 +38,6 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	// TODO: check currentPlasmaBlockNumber in root chain contract
 	if _, err := cc.rootChain.CommitPlasmaBlockRoot(cc.operator, rootHash); err != nil {
 		return c.JSONError(err)
 	}

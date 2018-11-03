@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -90,6 +91,14 @@ func (rc *RootChain) initContract() {
 		rc.httpClient,
 		rc.httpClient,
 	)
+}
+
+func (rc *RootChain) CurrentPlasmaBlockNumber() (*big.Int, error) {
+	blkNum := new(*big.Int)
+	if err := rc.contract.Call(nil, blkNum, "currentPlasmaBlockNumber"); err != nil {
+		return nil, err
+	}
+	return *blkNum, nil
 }
 
 func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootHash common.Hash) (*gethtypes.Transaction, error) {
