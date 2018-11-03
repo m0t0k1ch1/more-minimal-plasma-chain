@@ -13,8 +13,8 @@ func (cc *ChildChain) PostBlockHandler(c *Context) error {
 	if err != nil {
 		return c.JSONError(err)
 	}
-	if blkNum.Uint64() != cc.blockchain.CurrentBlockNumber() {
-		return c.JSONError(ErrRootChainNotSynchronized)
+	if blkNum.Cmp(cc.blockchain.CurrentBlockNumber()) != 0 {
+		return c.JSONError(ErrBlockchainNotSynchronized)
 	}
 
 	blkHash, err := cc.blockchain.AddBlock(cc.operator)

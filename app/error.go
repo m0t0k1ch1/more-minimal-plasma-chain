@@ -14,7 +14,7 @@ const (
 var (
 	ErrUnexpected = NewError(10000, "unexpected error")
 
-	ErrRootChainNotSynchronized = NewError(10001, "root chain is not synchronized")
+	ErrBlockchainNotSynchronized = NewError(10001, "blockchain is not synchronized")
 
 	ErrBlockNotFound                  = NewError(11001, core.ErrBlockNotFound.Error())
 	ErrEmptyBlock                     = NewError(11002, core.ErrEmptyBlock.Error())
