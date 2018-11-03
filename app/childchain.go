@@ -1,60 +1,92 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 type HandlerFunc func(*Context) error
 
 type ChildChain struct {
-	e          *echo.Echo
 	config     *Config
+	server     *echo.Echo
+	rootChain  *RootChain
 	operator   *types.Account
 	blockchain *core.Blockchain
 }
 
 func NewChildChain(conf *Config) (*ChildChain, error) {
-	privKey, err := crypto.HexToECDSA(conf.Operator.PrivateKey)
-	if err != nil {
+	cc := &ChildChain{
+		config: conf,
+	}
+
+	cc.initServer()
+	if err := cc.initRootChain(); err != nil {
 		return nil, err
 	}
-
-	cc := &ChildChain{
-		e:          echo.New(),
-		config:     conf,
-		operator:   types.NewAccount(privKey),
-		blockchain: core.NewBlockchain(),
+	if err := cc.initOperator(); err != nil {
+		return nil, err
 	}
+	cc.initBlockchain()
 
-	cc.e.Use(middleware.Logger())
-	cc.e.Use(middleware.Recover())
-	cc.e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
+	return cc, nil
+}
+
+func (cc *ChildChain) initServer() {
+	cc.server = echo.New()
+	cc.server.Use(middleware.Logger())
+	cc.server.Use(middleware.Recover())
+	cc.server.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			return h(&Context{c})
 		}
 	})
-	cc.e.HTTPErrorHandler = cc.httpErrorHandler
+	cc.server.HTTPErrorHandler = cc.httpErrorHandler
+	cc.server.Logger.SetLevel(log.INFO)
+	cc.initRoutes()
+}
 
+func (cc *ChildChain) initRoutes() {
 	cc.GET("/ping", cc.PingHandler)
-
 	cc.GET("/chain/:blkNum", cc.GetChainHandler)
-
 	cc.POST("/blocks", cc.PostBlockHandler)
 	cc.GET("/blocks/:blkHash", cc.GetBlockHandler)
-
 	cc.POST("/txes", cc.PostTxHandler)
 	cc.GET("/txes/:txHash", cc.GetTxHandler)
 	cc.GET("/txes/:txHash/proof", cc.GetTxProofHandler)
 	cc.PUT("/txes/:txHash", cc.PutTxHandler)
+}
 
-	return cc, nil
+func (cc *ChildChain) initRootChain() error {
+	rc, err := NewRootChain(cc.config.RootChain)
+	if err != nil {
+		return err
+	}
+	cc.rootChain = rc
+	return nil
+}
+
+func (cc *ChildChain) initOperator() error {
+	privKey, err := crypto.HexToECDSA(cc.config.Operator.PrivateKey)
+	if err != nil {
+		return err
+	}
+	cc.operator = types.NewAccount(privKey)
+	return nil
+}
+
+func (cc *ChildChain) initBlockchain() {
+	cc.blockchain = core.NewBlockchain()
 }
 
 func (cc *ChildChain) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
@@ -70,21 +102,52 @@ func (cc *ChildChain) PUT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) 
 }
 
 func (cc *ChildChain) Add(method, path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
-	cc.e.Add(method, path, func(c echo.Context) error {
+	cc.server.Add(method, path, func(c echo.Context) error {
 		return h(NewContext(c))
 	})
 }
 
 func (cc *ChildChain) Logger() echo.Logger {
-	return cc.e.Logger
+	return cc.server.Logger
 }
 
 func (cc *ChildChain) Start() error {
-	return cc.e.Start(fmt.Sprintf(":%d", cc.config.Port))
+	if err := cc.watchRootChain(); err != nil {
+		return err
+	}
+
+	return cc.server.Start(fmt.Sprintf(":%d", cc.config.Port))
+}
+
+func (cc *ChildChain) watchRootChain() error {
+	sink := make(chan *contract.RootChainDepositCreated)
+	sub, err := cc.rootChain.WatchDepositCreated(context.Background(), sink)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		defer sub.Unsubscribe()
+		for log := range sink {
+			blkHashBytes, err := cc.blockchain.AddDepositBlock(log.Owner, log.Amount.Uint64(), cc.operator)
+			if err != nil {
+				cc.Logger().Error(err)
+			} else {
+				cc.Logger().Infof(
+					"[DEPOSIT] blkhash: %s, owner: %s: amount: %d",
+					utils.EncodeToHex(blkHashBytes),
+					utils.EncodeToHex(log.Owner.Bytes()),
+					log.Amount.Uint64(),
+				)
+			}
+		}
+	}()
+
+	return nil
 }
 
 func (cc *ChildChain) httpErrorHandler(err error, c echo.Context) {
-	cc.e.Logger.Error(err)
+	cc.Logger().Error(err)
 
 	code := http.StatusInternalServerError
 	msg := http.StatusText(code)
@@ -97,6 +160,6 @@ func (cc *ChildChain) httpErrorHandler(err error, c echo.Context) {
 	appErr := NewError(code, msg)
 
 	if err := c.JSON(appErr.Code, NewErrorResponse(appErr)); err != nil {
-		cc.e.Logger.Error(err)
+		cc.Logger().Error(err)
 	}
 }

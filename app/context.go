@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/labstack/echo"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
@@ -53,29 +52,6 @@ func (c *Context) getPathParam(key string) string {
 	return c.Param(key)
 }
 
-func (c *Context) GetBlockTypeFromForm() (BlockType, error) {
-	key := "type"
-
-	if !c.isExistFormParam(key) {
-		return BlockTypeNormal, nil
-	}
-
-	bt := BlockType(c.getFormParam(key))
-	if !bt.IsValid() {
-		return "", NewInvalidFormParamError(key)
-	}
-
-	return bt, nil
-}
-
-func (c *Context) GetOwnerFromForm() (common.Address, error) {
-	return c.getRequiredAddressFromForm("owner")
-}
-
-func (c *Context) GetAmountFromForm() (uint64, error) {
-	return c.getRequiredUint64FromForm("amount")
-}
-
 func (c *Context) GetInputIndexFromForm() (uint64, error) {
 	return c.getRequiredUint64FromForm("index")
 }
@@ -100,19 +76,6 @@ func (c *Context) getRequiredUint64FromForm(key string) (uint64, error) {
 	}
 
 	return i, nil
-}
-
-func (c *Context) getRequiredAddressFromForm(key string) (common.Address, error) {
-	addrStr, err := c.getRequiredFormParam(key)
-	if err != nil {
-		return types.NullAddress, err
-	}
-
-	if !common.IsHexAddress(addrStr) {
-		return types.NullAddress, NewInvalidFormParamError(key)
-	}
-
-	return common.HexToAddress(addrStr), nil
 }
 
 func (c *Context) getRequiredSignatureFromForm(key string) (types.Signature, error) {
