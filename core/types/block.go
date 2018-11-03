@@ -43,13 +43,13 @@ func (blk *Block) Encode() ([]byte, error) {
 	})
 }
 
-func (blk *Block) Hash() ([]byte, error) {
+func (blk *Block) Hash() (common.Hash, error) {
 	b, err := blk.Encode()
 	if err != nil {
-		return nil, err
+		return NullHash, err
 	}
 
-	return crypto.Keccak256(b), nil
+	return common.BytesToHash(crypto.Keccak256(b)), nil
 }
 
 func (blk *Block) MerkleTree() (*merkle.Tree, error) {
@@ -80,16 +80,15 @@ func (blk *Block) Root() (common.Hash, error) {
 }
 
 func (blk *Block) Sign(signer *Account) error {
-	hashBytes, err := blk.Hash()
+	h, err := blk.Hash()
 	if err != nil {
 		return err
 	}
 
-	sigBytes, err := signer.Sign(hashBytes)
+	sigBytes, err := signer.Sign(h)
 	if err != nil {
 		return err
 	}
-
 	sig, err := NewSignatureFromBytes(sigBytes)
 	if err != nil {
 		return err
@@ -101,7 +100,7 @@ func (blk *Block) Sign(signer *Account) error {
 }
 
 func (blk *Block) SignerAddress() (common.Address, error) {
-	hashBytes, err := blk.Hash()
+	h, err := blk.Hash()
 	if err != nil {
 		return NullAddress, err
 	}
@@ -110,7 +109,7 @@ func (blk *Block) SignerAddress() (common.Address, error) {
 		return NullAddress, nil
 	}
 
-	return blk.Signature.SignerAddress(hashBytes)
+	return blk.Signature.SignerAddress(h)
 }
 
 func (blk *Block) Lighten() (*LightBlock, error) {
@@ -121,12 +120,12 @@ func (blk *Block) Lighten() (*LightBlock, error) {
 	}
 
 	for i, tx := range blk.Txes {
-		txHashBytes, err := tx.Hash()
+		txHash, err := tx.Hash()
 		if err != nil {
 			return nil, err
 		}
 
-		lblk.TxHashes[i] = utils.EncodeToHex(txHashBytes)
+		lblk.TxHashes[i] = utils.EncodeToHex(txHash.Bytes())
 	}
 
 	return lblk, nil

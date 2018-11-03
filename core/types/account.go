@@ -26,6 +26,6 @@ func (a *Account) TransactOpts() *bind.TransactOpts {
 	return bind.NewKeyedTransactor(a.privateKey)
 }
 
-func (a *Account) Sign(b []byte) ([]byte, error) {
-	return crypto.Sign(b, a.privateKey)
+func (a *Account) Sign(h common.Hash) ([]byte, error) {
+	return crypto.Sign(h.Bytes(), a.privateKey)
 }

@@ -63,8 +63,8 @@ func (sig Signature) MarshalText() ([]byte, error) {
 	return b, nil
 }
 
-func (sig Signature) SignerAddress(b []byte) (common.Address, error) {
-	pubKey, err := crypto.SigToPub(b, sig.Bytes())
+func (sig Signature) SignerAddress(h common.Hash) (common.Address, error) {
+	pubKey, err := crypto.SigToPub(h.Bytes(), sig.Bytes())
 	if err != nil {
 		return NullAddress, err
 	}

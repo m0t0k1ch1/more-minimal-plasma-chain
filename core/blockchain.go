@@ -64,11 +64,11 @@ func (bc *Blockchain) GetBlockHash(blkNum uint64) ([]byte, error) {
 	return utils.DecodeHex(blkHashStr)
 }
 
-func (bc *Blockchain) GetBlock(blkHashBytes []byte) (*types.Block, error) {
+func (bc *Blockchain) GetBlock(blkHash common.Hash) (*types.Block, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	blkHashStr := utils.EncodeToHex(blkHashBytes)
+	blkHashStr := utils.EncodeToHex(blkHash.Bytes())
 
 	if _, ok := bc.lightBlocks[blkHashStr]; !ok {
 		return nil, ErrBlockNotFound
@@ -77,7 +77,7 @@ func (bc *Blockchain) GetBlock(blkHashBytes []byte) (*types.Block, error) {
 	return bc.getBlock(blkHashStr), nil
 }
 
-func (bc *Blockchain) AddBlock(signer *types.Account) ([]byte, error) {
+func (bc *Blockchain) AddBlock(signer *types.Account) (common.Hash, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
@@ -85,27 +85,27 @@ func (bc *Blockchain) AddBlock(signer *types.Account) ([]byte, error) {
 
 	// check block validity
 	if len(blk.Txes) == 0 {
-		return nil, ErrEmptyBlock
+		return types.NullHash, ErrEmptyBlock
 	}
 
 	// sign block
 	if err := blk.Sign(signer); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	// add block
-	blkHashBytes, err := bc.addBlock(blk)
+	blkHash, err := bc.addBlock(blk)
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	// reset current block
 	bc.currentBlock = types.NewBlock(nil, blk.Number+1)
 
-	return blkHashBytes, nil
+	return blkHash, nil
 }
 
-func (bc *Blockchain) AddDepositBlock(ownerAddr common.Address, amount uint64, signer *types.Account) ([]byte, error) {
+func (bc *Blockchain) AddDepositBlock(ownerAddr common.Address, amount uint64, signer *types.Account) (common.Hash, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
@@ -116,26 +116,26 @@ func (bc *Blockchain) AddDepositBlock(ownerAddr common.Address, amount uint64, s
 
 	// sign block
 	if err := blk.Sign(signer); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	// add block
-	blkHashBytes, err := bc.addBlock(blk)
+	blkHash, err := bc.addBlock(blk)
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	// increment current block number
 	bc.currentBlock.Number++
 
-	return blkHashBytes, nil
+	return blkHash, nil
 }
 
-func (bc *Blockchain) GetTx(txHashBytes []byte) (*types.Tx, error) {
+func (bc *Blockchain) GetTx(txHash common.Hash) (*types.Tx, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	txHashStr := utils.EncodeToHex(txHashBytes)
+	txHashStr := utils.EncodeToHex(txHash.Bytes())
 
 	btx, ok := bc.blockTxes[txHashStr]
 	if !ok {
@@ -145,11 +145,11 @@ func (bc *Blockchain) GetTx(txHashBytes []byte) (*types.Tx, error) {
 	return btx.Tx, nil
 }
 
-func (bc *Blockchain) GetTxProof(txHashBytes []byte) ([]byte, error) {
+func (bc *Blockchain) GetTxProof(txHash common.Hash) ([]byte, error) {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	txHashStr := utils.EncodeToHex(txHashBytes)
+	txHashStr := utils.EncodeToHex(txHash.Bytes())
 
 	// check tx existence
 	btx, ok := bc.blockTxes[txHashStr]
@@ -169,22 +169,22 @@ func (bc *Blockchain) GetTxProof(txHashBytes []byte) ([]byte, error) {
 	return tree.CreateMembershipProof(btx.TxIndex)
 }
 
-func (bc *Blockchain) AddTxToMempool(tx *types.Tx) ([]byte, error) {
+func (bc *Blockchain) AddTxToMempool(tx *types.Tx) (common.Hash, error) {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
 	if err := bc.validateTx(tx); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	return bc.addTxToMempool(tx)
 }
 
-func (bc *Blockchain) ConfirmTx(txHashBytes []byte, iIndex uint64, confSig types.Signature) error {
+func (bc *Blockchain) ConfirmTx(txHash common.Hash, iIndex uint64, confSig types.Signature) error {
 	bc.mu.Lock()
 	defer bc.mu.Unlock()
 
-	txHashStr := utils.EncodeToHex(txHashBytes)
+	txHashStr := utils.EncodeToHex(txHash.Bytes())
 
 	// check tx existence
 	btx, ok := bc.blockTxes[txHashStr]
@@ -207,15 +207,15 @@ func (bc *Blockchain) ConfirmTx(txHashBytes []byte, iIndex uint64, confSig types
 	inTxOut := bc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
 
 	// verify confirmation signature
-	confHashBytes, err := btx.ConfirmationHash()
+	h, err := btx.ConfirmationHash()
 	if err != nil {
 		return err
 	}
-	confSignerAddr, err := confSig.SignerAddress(confHashBytes)
+	signerAddr, err := confSig.SignerAddress(h)
 	if err != nil {
 		return ErrInvalidTxConfirmationSignature
 	}
-	if !bytes.Equal(confSignerAddr.Bytes(), inTxOut.OwnerAddress.Bytes()) {
+	if !bytes.Equal(signerAddr.Bytes(), inTxOut.OwnerAddress.Bytes()) {
 		return ErrInvalidTxConfirmationSignature
 	}
 
@@ -241,17 +241,17 @@ func (bc *Blockchain) getBlock(blkHashStr string) *types.Block {
 	return blk
 }
 
-func (bc *Blockchain) addBlock(blk *types.Block) ([]byte, error) {
+func (bc *Blockchain) addBlock(blk *types.Block) (common.Hash, error) {
 	lblk, err := blk.Lighten()
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
-	blkHashBytes, err := blk.Hash()
+	blkHash, err := blk.Hash()
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
-	blkHashStr := utils.EncodeToHex(blkHashBytes)
+	blkHashStr := utils.EncodeToHex(blkHash.Bytes())
 
 	// update chain
 	bc.chain[blk.Number] = blkHashStr
@@ -264,7 +264,7 @@ func (bc *Blockchain) addBlock(blk *types.Block) ([]byte, error) {
 		bc.blockTxes[lblk.TxHashes[i]] = tx.InBlock(blk.Number, uint64(i))
 	}
 
-	return blkHashBytes, nil
+	return blkHash, nil
 }
 
 func (bc *Blockchain) validateTx(tx *types.Tx) error {
@@ -318,10 +318,10 @@ func (bc *Blockchain) validateTx(tx *types.Tx) error {
 	return nil
 }
 
-func (bc *Blockchain) addTxToMempool(tx *types.Tx) ([]byte, error) {
-	txHashBytes, err := tx.Hash()
+func (bc *Blockchain) addTxToMempool(tx *types.Tx) (common.Hash, error) {
+	txHash, err := tx.Hash()
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	for _, txIn := range tx.Inputs {
@@ -336,7 +336,7 @@ func (bc *Blockchain) addTxToMempool(tx *types.Tx) ([]byte, error) {
 	// add tx to current block
 	bc.currentBlock.Txes = append(bc.currentBlock.Txes, tx)
 
-	return txHashBytes, nil
+	return txHash, nil
 }
 
 func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex uint64) bool {
