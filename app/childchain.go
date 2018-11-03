@@ -12,6 +12,7 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 type HandlerFunc func(*Context) error
@@ -128,8 +129,17 @@ func (cc *ChildChain) watchRootChain() error {
 	go func() {
 		defer sub.Unsubscribe()
 		for log := range sink {
-			// TODO: add deposit block
-			cc.Logger().Infof("[DEPOSIT] %s: %d", log.Owner.Hex(), log.Amount.Uint64())
+			blkHashBytes, err := cc.blockchain.AddDepositBlock(log.Owner, log.Amount.Uint64(), cc.operator)
+			if err != nil {
+				cc.Logger().Error(err)
+			} else {
+				cc.Logger().Infof(
+					"[DEPOSIT] blkhash: %s, owner: %s: amount: %d",
+					utils.EncodeToHex(blkHashBytes),
+					utils.EncodeToHex(log.Owner.Bytes()),
+					log.Amount.Uint64(),
+				)
+			}
 		}
 	}()
 
