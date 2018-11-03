@@ -8,11 +8,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
+	mmpctypes "github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 type RootChain struct {
@@ -91,11 +92,15 @@ func (rc *RootChain) initContract() {
 	)
 }
 
+func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootBytes [32]byte) (*gethtypes.Transaction, error) {
+	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootBytes)
+}
+
 // NOTICE:
 // By right, we should use contract.RootChain.WatchDepositCreated() instead of this func,
 // but we use this func because ganache cannot parse web3.eth.subscribe request created by contract.RootChain.
 func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *contract.RootChainDepositCreated) (event.Subscription, error) {
-	logs := make(chan types.Log)
+	logs := make(chan gethtypes.Log)
 	arg := map[string]interface{}{
 		"fromBlock": "0x0",
 		"toBlock":   "latest",
