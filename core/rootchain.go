@@ -1,4 +1,4 @@
-package app
+package core
 
 import (
 	"context"
@@ -16,6 +16,12 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
 	mmpctypes "github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
+
+type RootChainConfig struct {
+	RPC     string `json:"rpc"`
+	WS      string `json:"ws"`
+	Address string `json:"address"`
+}
 
 type RootChain struct {
 	config    *RootChainConfig

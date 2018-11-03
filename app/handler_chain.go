@@ -5,13 +5,13 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
-func (cc *ChildChain) GetChainHandler(c *Context) error {
+func (p *Plasma) GetChainHandler(c *Context) error {
 	blkNum, err := c.GetBlockNumberFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	blkHashBytes, err := cc.blockchain.GetBlockHash(blkNum)
+	blkHashBytes, err := p.childChain.GetBlockHash(blkNum)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)

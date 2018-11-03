@@ -1,5 +1,5 @@
 package app
 
-func (cc *ChildChain) PingHandler(c *Context) error {
+func (p *Plasma) PingHandler(c *Context) error {
 	return c.JSONSuccess(nil)
 }
