@@ -25,36 +25,70 @@ type RootChain struct {
 }
 
 func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
-	if ok := common.IsHexAddress(conf.Address); !ok {
-		return nil, fmt.Errorf("invalid root chain address")
+	rc := &RootChain{
+		config: conf,
 	}
-	addr := common.HexToAddress(conf.Address)
 
+	if err := rc.initAddress(); err != nil {
+		return nil, err
+	}
+	if err := rc.initABI(); err != nil {
+		return nil, err
+	}
+	if err := rc.initHTTPClient(); err != nil {
+		return nil, err
+	}
+	if err := rc.initWSClient(); err != nil {
+		return nil, err
+	}
+	rc.initContract()
+
+	return rc, nil
+}
+
+func (rc *RootChain) initAddress() error {
+	if ok := common.IsHexAddress(rc.config.Address); !ok {
+		return fmt.Errorf("invalid root chain address")
+	}
+	rc.address = common.HexToAddress(rc.config.Address)
+	return nil
+}
+
+func (rc *RootChain) initABI() error {
 	abi, err := abi.JSON(strings.NewReader(contract.RootChainABI))
 	if err != nil {
-		return nil, err
+		return err
 	}
+	rc.abi = abi
+	return nil
+}
 
-	httpClient, err := ethclient.Dial(conf.RPC.HTTP)
+func (rc *RootChain) initHTTPClient() error {
+	httpClient, err := ethclient.Dial(rc.config.RPC.HTTP)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	rc.httpClient = httpClient
+	return nil
+}
 
-	wsClient, err := rpc.Dial(conf.RPC.WS)
+func (rc *RootChain) initWSClient() error {
+	wsClient, err := rpc.Dial(rc.config.RPC.WS)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	rc.wsClient = wsClient
+	return nil
+}
 
-	c := bind.NewBoundContract(addr, abi, httpClient, httpClient, httpClient)
-
-	return &RootChain{
-		config:     conf,
-		address:    addr,
-		abi:        abi,
-		httpClient: httpClient,
-		wsClient:   wsClient,
-		contract:   c,
-	}, nil
+func (rc *RootChain) initContract() {
+	rc.contract = bind.NewBoundContract(
+		rc.address,
+		rc.abi,
+		rc.httpClient,
+		rc.httpClient,
+		rc.httpClient,
+	)
 }
 
 // NOTICE:
