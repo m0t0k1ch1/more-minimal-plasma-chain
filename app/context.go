@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/labstack/echo"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
@@ -22,12 +23,12 @@ func (c *Context) GetBlockNumberFromPath() (uint64, error) {
 	return c.getUint64FromPath("blkNum")
 }
 
-func (c *Context) GetBlockHashFromPath() ([]byte, error) {
-	return c.getHexBytesFromPath("blkHash")
+func (c *Context) GetBlockHashFromPath() (common.Hash, error) {
+	return c.getHashFromPath("blkHash")
 }
 
-func (c *Context) GetTxHashFromPath() ([]byte, error) {
-	return c.getHexBytesFromPath("txHash")
+func (c *Context) GetTxHashFromPath() (common.Hash, error) {
+	return c.getHashFromPath("txHash")
 }
 
 func (c *Context) getUint64FromPath(key string) (uint64, error) {
@@ -39,13 +40,16 @@ func (c *Context) getUint64FromPath(key string) (uint64, error) {
 	return i, nil
 }
 
-func (c *Context) getHexBytesFromPath(key string) ([]byte, error) {
+func (c *Context) getHashFromPath(key string) (common.Hash, error) {
 	b, err := utils.DecodeHex(c.getPathParam(key))
 	if err != nil {
-		return nil, NewInvalidPathParamError(key)
+		return types.NullHash, NewInvalidPathParamError(key)
+	}
+	if len(b) != common.HashLength {
+		return types.NullHash, NewInvalidFormParamError(key)
 	}
 
-	return b, nil
+	return common.BytesToHash(b), nil
 }
 
 func (c *Context) getPathParam(key string) string {

@@ -14,7 +14,7 @@ func (cc *ChildChain) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	txHashBytes, err := cc.blockchain.AddTxToMempool(tx)
+	txHash, err := cc.blockchain.AddTxToMempool(tx)
 	if err != nil {
 		if err == core.ErrInvalidTxSignature {
 			return c.JSONError(ErrInvalidTxSignature)
@@ -29,17 +29,17 @@ func (cc *ChildChain) PostTxHandler(c *Context) error {
 	}
 
 	return c.JSONSuccess(map[string]interface{}{
-		"txhash": utils.EncodeToHex(txHashBytes),
+		"txhash": utils.EncodeToHex(txHash.Bytes()),
 	})
 }
 
 func (cc *ChildChain) GetTxHandler(c *Context) error {
-	txHashBytes, err := c.GetTxHashFromPath()
+	txHash, err := c.GetTxHashFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	tx, err := cc.blockchain.GetTx(txHashBytes)
+	tx, err := cc.blockchain.GetTx(txHash)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
@@ -58,12 +58,12 @@ func (cc *ChildChain) GetTxHandler(c *Context) error {
 }
 
 func (cc *ChildChain) GetTxProofHandler(c *Context) error {
-	txHashBytes, err := c.GetTxHashFromPath()
+	txHash, err := c.GetTxHashFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	proofBytes, err := cc.blockchain.GetTxProof(txHashBytes)
+	proofBytes, err := cc.blockchain.GetTxProof(txHash)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
@@ -79,7 +79,7 @@ func (cc *ChildChain) GetTxProofHandler(c *Context) error {
 func (cc *ChildChain) PutTxHandler(c *Context) error {
 	c.Request().ParseForm()
 
-	txHashBytes, err := c.GetTxHashFromPath()
+	txHash, err := c.GetTxHashFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
@@ -93,7 +93,7 @@ func (cc *ChildChain) PutTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	if err := cc.blockchain.ConfirmTx(txHashBytes, iIndex, confSig); err != nil {
+	if err := cc.blockchain.ConfirmTx(txHash, iIndex, confSig); err != nil {
 		if err == core.ErrInvalidTxConfirmationSignature {
 			return c.JSONError(ErrInvalidTxConfirmationSignature)
 		} else if err == core.ErrTxInNotFound {
@@ -105,6 +105,6 @@ func (cc *ChildChain) PutTxHandler(c *Context) error {
 	}
 
 	return c.JSONSuccess(map[string]interface{}{
-		"txhash": utils.EncodeToHex(txHashBytes),
+		"txhash": utils.EncodeToHex(txHash.Bytes()),
 	})
 }
