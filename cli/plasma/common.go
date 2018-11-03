@@ -20,7 +20,7 @@ func newClient(c *cli.Context) *client.Client {
 }
 
 func newRootChain(c *cli.Context) (*app.RootChain, error) {
-	addr, err := getAddress(c, addrFlag)
+	addr, err := getAddress(c, contractFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -42,10 +42,6 @@ func getString(c *cli.Context, f cli.Flag) string {
 
 func getUint64(c *cli.Context, f cli.Flag) uint64 {
 	return c.Uint64(f.GetName())
-}
-
-func getHexBytes(c *cli.Context, f cli.Flag) ([]byte, error) {
-	return utils.DecodeHex(getString(c, f))
 }
 
 func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {

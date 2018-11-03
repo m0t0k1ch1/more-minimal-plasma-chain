@@ -15,12 +15,12 @@ var cmdTxGet = cli.Command{
 		encodedFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txHashBytes, err := getHexBytes(c, hashFlag)
+		txHash, err := getHash(c, hashFlag)
 		if err != nil {
 			return err
 		}
 
-		tx, err := newClient(c).GetTx(context.Background(), txHashBytes)
+		tx, err := newClient(c).GetTx(context.Background(), txHash)
 		if err != nil {
 			return err
 		}

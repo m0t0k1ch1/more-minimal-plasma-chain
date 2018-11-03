@@ -17,7 +17,7 @@ var cmdTxConfirm = cli.Command{
 		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txHashBytes, err := getHexBytes(c, hashFlag)
+		txHash, err := getHash(c, hashFlag)
 		if err != nil {
 			return err
 		}
@@ -27,7 +27,7 @@ var cmdTxConfirm = cli.Command{
 			return err
 		}
 
-		tx, err := newClient(c).GetTx(context.Background(), txHashBytes)
+		tx, err := newClient(c).GetTx(context.Background(), txHash)
 		if err != nil {
 			return err
 		}
@@ -36,12 +36,12 @@ var cmdTxConfirm = cli.Command{
 			return err
 		}
 
-		if _, err := newClient(c).PutTx(context.Background(), txHashBytes, 0, tx.Inputs[0].ConfirmationSignature); err != nil {
+		if _, err := newClient(c).PutTx(context.Background(), txHash, 0, tx.Inputs[0].ConfirmationSignature); err != nil {
 			return err
 		}
 
 		return printlnJSON(map[string]string{
-			"txhash": utils.EncodeToHex(txHashBytes),
+			"txhash": utils.EncodeToHex(txHash.Bytes()),
 		})
 	},
 }

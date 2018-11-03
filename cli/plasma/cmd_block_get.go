@@ -15,12 +15,12 @@ var cmdBlockGet = cli.Command{
 		encodedFlag,
 	},
 	Action: func(c *cli.Context) error {
-		blkHashBytes, err := getHexBytes(c, hashFlag)
+		blkHash, err := getHash(c, hashFlag)
 		if err != nil {
 			return err
 		}
 
-		blk, err := newClient(c).GetBlock(context.Background(), blkHashBytes)
+		blk, err := newClient(c).GetBlock(context.Background(), blkHash)
 		if err != nil {
 			return err
 		}

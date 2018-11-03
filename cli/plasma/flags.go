@@ -8,8 +8,10 @@ const (
 )
 
 var (
-	rpcFlag = cli.StringFlag{Name: "rpc", Value: "http://127.0.0.1:7545"}
-	wsFlag  = cli.StringFlag{Name: "ws", Value: "ws://127.0.0.1:7545"}
+	rpcFlag      = cli.StringFlag{Name: "rpc", Value: "http://127.0.0.1:7545"}
+	wsFlag       = cli.StringFlag{Name: "ws", Value: "ws://127.0.0.1:7545"}
+	contractFlag = cli.StringFlag{Name: "contract", Value: nullAddressStr}
+
 	apiFlag = cli.StringFlag{Name: "api", Value: "http://127.0.0.1:1323"}
 
 	rootFlag    = cli.StringFlag{Name: "root", Value: nullHashStr}
@@ -21,7 +23,6 @@ var (
 	amountFlag  = cli.Uint64Flag{Name: "amount", Value: 0}
 
 	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
-	addrFlag    = cli.StringFlag{Name: "addr", Value: nullAddressStr}
-	hashFlag    = cli.StringFlag{Name: "hash", Value: ""}
+	hashFlag    = cli.StringFlag{Name: "hash", Value: nullHashStr}
 	encodedFlag = cli.BoolFlag{Name: "encoded"}
 )
