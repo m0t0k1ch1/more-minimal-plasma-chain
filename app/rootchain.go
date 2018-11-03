@@ -58,8 +58,8 @@ func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
 }
 
 // NOTICE:
-// By right, we should use rc.contract.WatchDepositCreated() instead of this func,
-// but we use this func because ganache cannot parse web3.eth.subscribe request created by rc.contract.
+// By right, we should use contract.RootChain.WatchDepositCreated() instead of this func,
+// but we use this func because ganache cannot parse web3.eth.subscribe request created by contract.RootChain.
 func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *contract.RootChainDepositCreated) (event.Subscription, error) {
 	logs := make(chan types.Log)
 	arg := map[string]interface{}{
