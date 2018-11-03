@@ -3,9 +3,9 @@ package client
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -104,9 +104,9 @@ type PutTxResponse struct {
 	} `json:"result"`
 }
 
-func (client *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex uint64, confSig types.Signature) ([]byte, error) {
+func (client *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) ([]byte, error) {
 	v := url.Values{}
-	v.Set("index", strconv.FormatUint(iIndex, 10))
+	v.Set("index", iIndex.String())
 	v.Set("confsig", utils.EncodeToHex(confSig.Bytes()))
 
 	var resp PutTxResponse
