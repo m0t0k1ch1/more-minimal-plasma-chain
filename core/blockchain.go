@@ -198,7 +198,7 @@ func (bc *Blockchain) ConfirmTx(txHash common.Hash, iIndex *big.Int, confSig typ
 		return ErrTxInNotFound
 	}
 
-	txIn := btx.Inputs[iIndex.Int64()]
+	txIn := btx.Inputs[iIndex.Uint64()]
 
 	// check txin validity
 	if txIn.IsNull() {
@@ -221,7 +221,7 @@ func (bc *Blockchain) ConfirmTx(txHash common.Hash, iIndex *big.Int, confSig typ
 	}
 
 	// update confirmation signature
-	bc.blockTxes[txHashStr].Inputs[iIndex.Int64()].ConfirmationSignature = confSig
+	bc.blockTxes[txHashStr].Inputs[iIndex.Uint64()].ConfirmationSignature = confSig
 
 	return nil
 }
@@ -363,5 +363,5 @@ func (bc *Blockchain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
 }
 
 func (bc *Blockchain) getTxOut(blkNum, txIndex, oIndex *big.Int) *types.TxOut {
-	return bc.blockTxes[bc.lightBlocks[bc.chain[blkNum]].TxHashes[txIndex.Int64()]].Outputs[oIndex.Int64()]
+	return bc.blockTxes[bc.lightBlocks[bc.chain[blkNum]].TxHashes[txIndex.Uint64()]].Outputs[oIndex.Uint64()]
 }

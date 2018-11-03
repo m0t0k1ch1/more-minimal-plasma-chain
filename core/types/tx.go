@@ -130,7 +130,7 @@ func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
 		return err
 	}
 
-	tx.Inputs[iIndex.Int64()].Signature = sig
+	tx.Inputs[iIndex.Uint64()].Signature = sig
 
 	return nil
 }
@@ -154,7 +154,7 @@ func (tx *Tx) Confirm(iIndex *big.Int, signer *Account) error {
 		return err
 	}
 
-	tx.Inputs[iIndex.Int64()].ConfirmationSignature = sig
+	tx.Inputs[iIndex.Uint64()].ConfirmationSignature = sig
 
 	return nil
 }
@@ -169,7 +169,7 @@ func (tx *Tx) SignerAddress(iIndex *big.Int) (common.Address, error) {
 		return NullAddress, err
 	}
 
-	return tx.signerAddress(h, tx.Inputs[iIndex.Int64()].Signature)
+	return tx.signerAddress(h, tx.Inputs[iIndex.Uint64()].Signature)
 }
 
 func (tx *Tx) ConfirmationSignerAddress(iIndex *big.Int) (common.Address, error) {
@@ -182,7 +182,7 @@ func (tx *Tx) ConfirmationSignerAddress(iIndex *big.Int) (common.Address, error)
 		return NullAddress, err
 	}
 
-	return tx.signerAddress(h, tx.Inputs[iIndex.Int64()].ConfirmationSignature)
+	return tx.signerAddress(h, tx.Inputs[iIndex.Uint64()].ConfirmationSignature)
 }
 
 func (tx *Tx) signerAddress(h common.Hash, sig Signature) (common.Address, error) {
