@@ -374,8 +374,14 @@ func (cc *ChildChain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
 	if !lblk.IsExistTx(txIndex) {
 		return false
 	}
+	txHashStr := lblk.TxHashes[txIndex.Int64()]
 
-	if oIndex.Cmp(types.TxElementsNumBig) >= 0 {
+	tx, ok := cc.blockTxes[txHashStr]
+	if !ok {
+		return false
+	}
+
+	if !tx.IsExistOutput(oIndex) {
 		return false
 	}
 

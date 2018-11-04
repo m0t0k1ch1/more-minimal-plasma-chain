@@ -204,3 +204,7 @@ func (tx *Tx) InBlock(blkNum, txIndex *big.Int) *BlockTx {
 func (tx *Tx) IsExistInput(iIndex *big.Int) bool {
 	return iIndex.Cmp(TxElementsNumBig) < 0
 }
+
+func (tx *Tx) IsExistOutput(oIndex *big.Int) bool {
+	return oIndex.Cmp(TxElementsNumBig) < 0
+}
