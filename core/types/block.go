@@ -27,7 +27,7 @@ type LightBlock struct {
 }
 
 func (lblk *LightBlock) IsExistTx(txIndex *big.Int) bool {
-	return txIndex.Cmp(big.NewInt(int64(len(lblk.TxHashes)))) >= 0
+	return txIndex.Cmp(big.NewInt(int64(len(lblk.TxHashes)))) < 0
 }
 
 type Block struct {
