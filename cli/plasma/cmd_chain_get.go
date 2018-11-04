@@ -20,7 +20,7 @@ var cmdChainGet = cli.Command{
 			return err
 		}
 
-		blkHashBytes, err := newClient(c).GetChain(
+		blkHash, err := newClient(c).GetChain(
 			context.Background(),
 			blkNum,
 		)
