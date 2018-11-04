@@ -112,7 +112,7 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (tx *Tx) GetTxIn(iIndex *big.Int) (*TxIn, error) {
+func (tx *Tx) GetInput(iIndex *big.Int) (*TxIn, error) {
 	if !tx.IsExistInput(iIndex) {
 		return nil, ErrInvalidTxInIndex
 	}
@@ -120,7 +120,7 @@ func (tx *Tx) GetTxIn(iIndex *big.Int) (*TxIn, error) {
 	return tx.Inputs[iIndex.Uint64()], nil
 }
 
-func (tx *Tx) SetTxIn(iIndex *big.Int, txIn *TxIn) error {
+func (tx *Tx) SetInput(iIndex *big.Int, txIn *TxIn) error {
 	if !tx.IsExistInput(iIndex) {
 		return ErrInvalidTxInIndex
 	}
@@ -134,7 +134,7 @@ func (tx *Tx) IsExistInput(iIndex *big.Int) bool {
 	return iIndex.Cmp(TxElementsNumBig) < 0
 }
 
-func (tx *Tx) GetTxOut(oIndex *big.Int) (*TxOut, error) {
+func (tx *Tx) GetOutput(oIndex *big.Int) (*TxOut, error) {
 	if !tx.IsExistOutput(oIndex) {
 		return nil, ErrInvalidTxOutIndex
 	}
@@ -142,7 +142,7 @@ func (tx *Tx) GetTxOut(oIndex *big.Int) (*TxOut, error) {
 	return tx.Outputs[oIndex.Uint64()], nil
 }
 
-func (tx *Tx) SetTxOut(oIndex *big.Int, txOut *TxOut) error {
+func (tx *Tx) SetOutput(oIndex *big.Int, txOut *TxOut) error {
 	if !tx.IsExistOutput(oIndex) {
 		return ErrInvalidTxOutIndex
 	}
