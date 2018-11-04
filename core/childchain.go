@@ -211,18 +211,24 @@ func (cc *ChildChain) ConfirmTx(txHash common.Hash, iIndex *big.Int, confSig typ
 	}
 
 	// check txin existence
-	if iIndex.Cmp(types.TxElementsNumBig) >= 0 {
+	if !btx.IsExistInput(iIndex) {
 		return ErrTxInNotFound
 	}
 
-	txIn := btx.Inputs[iIndex.Uint64()]
+	txIn, err := btx.GetInput(iIndex)
+	if err != nil {
+		return err
+	}
 
 	// check txin validity
 	if txIn.IsNull() {
 		return ErrNullTxInConfirmation
 	}
 
-	inTxOut := cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+	inTxOut, err := cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+	if err != nil {
+		return err
+	}
 
 	// verify confirmation signature
 	h, err := btx.ConfirmationHash()
@@ -238,7 +244,9 @@ func (cc *ChildChain) ConfirmTx(txHash common.Hash, iIndex *big.Int, confSig typ
 	}
 
 	// update confirmation signature
-	cc.blockTxes[txHashStr].Inputs[iIndex.Uint64()].ConfirmationSignature = confSig
+	if err := cc.blockTxes[txHashStr].SetConfirmationSignature(iIndex, confSig); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -298,7 +306,11 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 
 	for i, txIn := range tx.Inputs {
 		// check spending txout existence
-		if !cc.isExistTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex) {
+		ok, err := cc.isExistTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+		if err != nil {
+			return err
+		}
+		if !ok {
 			if txIn.IsNull() {
 				nullTxInNum++
 				continue
@@ -306,7 +318,10 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 			return ErrInvalidTxIn
 		}
 
-		inTxOut := cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+		inTxOut, err := cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+		if err != nil {
+			return err
+		}
 
 		// check double spent
 		if inTxOut.IsSpent {
@@ -350,8 +365,13 @@ func (cc *ChildChain) addTxToMempool(tx *types.Tx) (common.Hash, error) {
 			continue
 		}
 
+		inTxHashStr, err := cc.getTxHash(txIn.BlockNumber, txIn.TxIndex)
+		if err != nil {
+			return types.NullHash, err
+		}
+
 		// spend utxo
-		cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex).IsSpent = true
+		cc.blockTxes[inTxHashStr].SpendOutput(txIn.OutputIndex)
 	}
 
 	// add tx to current block
@@ -362,34 +382,77 @@ func (cc *ChildChain) addTxToMempool(tx *types.Tx) (common.Hash, error) {
 	return txHash, nil
 }
 
-func (cc *ChildChain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
+func (cc *ChildChain) getLightBlock(blkNum *big.Int) *types.LightBlock {
+	return cc.lightBlocks[cc.chain[blkNum.String()]]
+}
+
+func (cc *ChildChain) isExistLightBlock(blkNum *big.Int) bool {
 	blkHashStr, ok := cc.chain[blkNum.String()]
 	if !ok {
 		return false
 	}
 
-	lblk, ok := cc.lightBlocks[blkHashStr]
-	if !ok {
-		return false
-	}
+	_, ok = cc.lightBlocks[blkHashStr]
 
-	if !lblk.IsExistTxHash(txIndex) {
-		return false
-	}
-	txHashStr := lblk.TxHashes[txIndex.Uint64()]
-
-	tx, ok := cc.blockTxes[txHashStr]
-	if !ok {
-		return false
-	}
-
-	if !tx.IsExistOutput(oIndex) {
-		return false
-	}
-
-	return true
+	return ok
 }
 
-func (cc *ChildChain) getTxOut(blkNum, txIndex, oIndex *big.Int) *types.TxOut {
-	return cc.blockTxes[cc.lightBlocks[cc.chain[blkNum.String()]].TxHashes[txIndex.Uint64()]].Outputs[oIndex.Uint64()]
+func (cc *ChildChain) getTxHash(blkNum, txIndex *big.Int) (string, error) {
+	return cc.getLightBlock(blkNum).GetTxHash(txIndex)
+}
+
+func (cc *ChildChain) getBlockTx(blkNum, txIndex *big.Int) (*types.BlockTx, error) {
+	txHashStr, err := cc.getTxHash(blkNum, txIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	return cc.blockTxes[txHashStr], nil
+}
+
+func (cc *ChildChain) isExistBlockTx(blkNum, txIndex *big.Int) (bool, error) {
+	if !cc.isExistLightBlock(blkNum) {
+		return false, nil
+	}
+
+	lblk := cc.getLightBlock(blkNum)
+
+	if !lblk.IsExistTxHash(txIndex) {
+		return false, nil
+	}
+
+	txHashStr, err := lblk.GetTxHash(txIndex)
+	if err != nil {
+		return false, err
+	}
+
+	_, ok := cc.blockTxes[txHashStr]
+
+	return ok, nil
+}
+
+func (cc *ChildChain) getTxOut(blkNum, txIndex, oIndex *big.Int) (*types.TxOut, error) {
+	btx, err := cc.getBlockTx(blkNum, txIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	return btx.GetOutput(oIndex)
+}
+
+func (cc *ChildChain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) (bool, error) {
+	ok, err := cc.isExistBlockTx(blkNum, txIndex)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+
+	btx, err := cc.getBlockTx(blkNum, txIndex)
+	if err != nil {
+		return false, err
+	}
+
+	return btx.IsExistOutput(oIndex), nil
 }
