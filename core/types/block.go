@@ -97,6 +97,16 @@ func (blk *Block) Root() (common.Hash, error) {
 	return rootHash, nil
 }
 
+func (blk *Block) AddTx(tx *Tx) error {
+	if len(blk.Txes) >= MaxBlockTxesNum {
+		return ErrBlockTxesNumExceedsLimit
+	}
+
+	blk.Txes = append(blk.Txes, tx)
+
+	return nil
+}
+
 func (blk *Block) Sign(signer *Account) error {
 	h, err := blk.Hash()
 	if err != nil {
@@ -147,14 +157,4 @@ func (blk *Block) Lighten() (*LightBlock, error) {
 	}
 
 	return lblk, nil
-}
-
-func (blk *Block) AddTx(tx *Tx) error {
-	if len(blk.Txes) >= MaxBlockTxesNum {
-		return ErrBlockTxesNumExceedsLimit
-	}
-
-	blk.Txes = append(blk.Txes, tx)
-
-	return nil
 }

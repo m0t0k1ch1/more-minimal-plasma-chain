@@ -19,7 +19,8 @@ var (
 )
 
 var (
-	ErrInvalidTxInIndex = errors.New("invalid txin index")
+	ErrInvalidTxInIndex  = errors.New("invalid txin index")
+	ErrInvalidTxOutIndex = errors.New("invalid txout index")
 )
 
 type BlockTx struct {
@@ -111,6 +112,50 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (tx *Tx) GetTxIn(iIndex *big.Int) (*TxIn, error) {
+	if !tx.IsExistInput(iIndex) {
+		return nil, ErrInvalidTxInIndex
+	}
+
+	return tx.Inputs[iIndex.Uint64()], nil
+}
+
+func (tx *Tx) SetTxIn(iIndex *big.Int, txIn *TxIn) error {
+	if !tx.IsExistInput(iIndex) {
+		return ErrInvalidTxInIndex
+	}
+
+	tx.Inputs[iIndex.Uint64()] = txIn
+
+	return nil
+}
+
+func (tx *Tx) IsExistInput(iIndex *big.Int) bool {
+	return iIndex.Cmp(TxElementsNumBig) < 0
+}
+
+func (tx *Tx) GetTxOut(oIndex *big.Int) (*TxOut, error) {
+	if !tx.IsExistOutput(oIndex) {
+		return nil, ErrInvalidTxOutIndex
+	}
+
+	return tx.Outputs[oIndex.Uint64()], nil
+}
+
+func (tx *Tx) SetTxOut(oIndex *big.Int, txOut *TxOut) error {
+	if !tx.IsExistOutput(oIndex) {
+		return ErrInvalidTxOutIndex
+	}
+
+	tx.Outputs[oIndex.Uint64()] = txOut
+
+	return nil
+}
+
+func (tx *Tx) IsExistOutput(oIndex *big.Int) bool {
+	return oIndex.Cmp(TxElementsNumBig) < 0
+}
+
 func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
 	if !tx.IsExistInput(iIndex) {
 		return ErrInvalidTxInIndex
@@ -199,12 +244,4 @@ func (tx *Tx) InBlock(blkNum, txIndex *big.Int) *BlockTx {
 		BlockNumber: blkNum,
 		TxIndex:     txIndex,
 	}
-}
-
-func (tx *Tx) IsExistInput(iIndex *big.Int) bool {
-	return iIndex.Cmp(TxElementsNumBig) < 0
-}
-
-func (tx *Tx) IsExistOutput(oIndex *big.Int) bool {
-	return oIndex.Cmp(TxElementsNumBig) < 0
 }
