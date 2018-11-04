@@ -11,7 +11,7 @@ func (p *Plasma) GetChainHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	blkHashBytes, err := p.childChain.GetBlockHash(blkNum)
+	blkHash, err := p.childChain.GetBlockHash(blkNum)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)
