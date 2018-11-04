@@ -20,10 +20,10 @@ type PostTxResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) PostTx(ctx context.Context, tx *types.Tx) ([]byte, error) {
+func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (common.Hash, error) {
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	v := url.Values{}
@@ -37,10 +37,10 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) ([]byte, error) {
 		v,
 		&resp,
 	); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
-	return utils.DecodeHex(resp.Result.TxHashStr)
+	return utils.HexToHash(resp.Result.TxHashStr), nil
 }
 
 type GetTxResponse struct {
@@ -55,7 +55,7 @@ func (c *Client) GetTx(ctx context.Context, txHash common.Hash) (*types.Tx, erro
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("txes/%s", utils.EncodeToHex(txHash.Bytes())),
+		fmt.Sprintf("txes/%s", utils.HashToHex(txHash)),
 		nil,
 		&resp,
 	); err != nil {
@@ -87,7 +87,7 @@ func (c *Client) GetTxProof(ctx context.Context, txHash common.Hash) ([]byte, er
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("txes/%s/proof", utils.EncodeToHex(txHash.Bytes())),
+		fmt.Sprintf("txes/%s/proof", utils.HashToHex(txHash)),
 		nil,
 		&resp,
 	); err != nil {
@@ -104,21 +104,21 @@ type PutTxResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) ([]byte, error) {
+func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) (common.Hash, error) {
 	v := url.Values{}
 	v.Set("index", iIndex.String())
-	v.Set("confsig", utils.EncodeToHex(confSig.Bytes()))
+	v.Set("confsig", confSig.Hex())
 
 	var resp PutTxResponse
 	if err := c.doAPI(
 		ctx,
 		http.MethodPut,
-		fmt.Sprintf("txes/%s", utils.EncodeToHex(txHash.Bytes())),
+		fmt.Sprintf("txes/%s", utils.HashToHex(txHash)),
 		v,
 		&resp,
 	); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
-	return utils.DecodeHex(resp.Result.TxHashStr)
+	return utils.HexToHash(resp.Result.TxHashStr), nil
 }

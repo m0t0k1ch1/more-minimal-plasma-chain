@@ -2,19 +2,40 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	merkle "github.com/m0t0k1ch1/fixed-merkle"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
+)
+
+const (
+	MaxBlockTxesNum = 99999
+)
+
+var (
+	ErrInvalidTxIndex           = errors.New("tx index is invalid")
+	ErrBlockTxesNumExceedsLimit = errors.New("block txes num exceeds the limit")
 )
 
 type LightBlock struct {
-	TxHashes  []string
+	TxHashes  []common.Hash
 	Number    *big.Int
 	Signature Signature
+}
+
+func (lblk *LightBlock) GetTxHash(txIndex *big.Int) common.Hash {
+	if !lblk.IsExistTxHash(txIndex) {
+		return NullHash
+	}
+
+	return lblk.TxHashes[txIndex.Uint64()]
+}
+
+func (lblk *LightBlock) IsExistTxHash(txIndex *big.Int) bool {
+	return txIndex.Cmp(big.NewInt(int64(len(lblk.TxHashes)))) < 0
 }
 
 type Block struct {
@@ -23,12 +44,16 @@ type Block struct {
 	Signature Signature `json:"sig"`
 }
 
-func NewBlock(txes []*Tx, blkNum *big.Int) *Block {
+func NewBlock(txes []*Tx, blkNum *big.Int) (*Block, error) {
+	if len(txes) >= MaxBlockTxesNum {
+		return nil, ErrBlockTxesNumExceedsLimit
+	}
+
 	return &Block{
 		Txes:      txes,
 		Number:    blkNum,
 		Signature: NullSignature,
-	}
+	}, nil
 }
 
 func (blk *Block) Encode() ([]byte, error) {
@@ -80,6 +105,16 @@ func (blk *Block) Root() (common.Hash, error) {
 	return rootHash, nil
 }
 
+func (blk *Block) AddTx(tx *Tx) error {
+	if len(blk.Txes) >= MaxBlockTxesNum {
+		return ErrBlockTxesNumExceedsLimit
+	}
+
+	blk.Txes = append(blk.Txes, tx)
+
+	return nil
+}
+
 func (blk *Block) Sign(signer *Account) error {
 	h, err := blk.Hash()
 	if err != nil {
@@ -90,7 +125,7 @@ func (blk *Block) Sign(signer *Account) error {
 	if err != nil {
 		return err
 	}
-	sig, err := NewSignatureFromBytes(sigBytes)
+	sig, err := BytesToSignature(sigBytes)
 	if err != nil {
 		return err
 	}
@@ -115,7 +150,7 @@ func (blk *Block) SignerAddress() (common.Address, error) {
 
 func (blk *Block) Lighten() (*LightBlock, error) {
 	lblk := &LightBlock{
-		TxHashes:  make([]string, len(blk.Txes)),
+		TxHashes:  make([]common.Hash, len(blk.Txes)),
 		Number:    blk.Number,
 		Signature: blk.Signature,
 	}
@@ -126,7 +161,7 @@ func (blk *Block) Lighten() (*LightBlock, error) {
 			return nil, err
 		}
 
-		lblk.TxHashes[i] = utils.EncodeToHex(txHash.Bytes())
+		lblk.TxHashes[i] = txHash
 	}
 
 	return lblk, nil

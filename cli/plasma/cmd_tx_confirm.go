@@ -54,7 +54,7 @@ var cmdTxConfirm = cli.Command{
 		}
 
 		return printlnJSON(map[string]string{
-			"txhash": utils.EncodeToHex(txHash.Bytes()),
+			"txhash": utils.HashToHex(txHash),
 		})
 	},
 }

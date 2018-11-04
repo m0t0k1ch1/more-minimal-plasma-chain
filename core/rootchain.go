@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
 	mmpctypes "github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 type RootChainConfig struct {
@@ -55,10 +56,10 @@ func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
 }
 
 func (rc *RootChain) initAddress() error {
-	if ok := common.IsHexAddress(rc.config.Address); !ok {
+	if ok := utils.IsHexAddress(rc.config.Address); !ok {
 		return fmt.Errorf("invalid root chain address")
 	}
-	rc.address = common.HexToAddress(rc.config.Address)
+	rc.address = utils.HexToAddress(rc.config.Address)
 	return nil
 }
 

@@ -11,7 +11,7 @@ func (p *Plasma) GetChainHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	blkHashBytes, err := p.childChain.GetBlockHash(blkNum)
+	blkHash, err := p.childChain.GetBlockHash(blkNum)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)
@@ -20,6 +20,6 @@ func (p *Plasma) GetChainHandler(c *Context) error {
 	}
 
 	return c.JSONSuccess(map[string]interface{}{
-		"blkhash": utils.EncodeToHex(blkHashBytes),
+		"blkhash": utils.HashToHex(blkHash),
 	})
 }

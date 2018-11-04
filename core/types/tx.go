@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 const (
@@ -19,7 +20,8 @@ var (
 )
 
 var (
-	ErrInvalidTxInIndex = errors.New("invalid txin index")
+	ErrInvalidTxInIndex  = errors.New("tx input index is invalid")
+	ErrInvalidTxOutIndex = errors.New("tx ouptut index is invalid")
 )
 
 type BlockTx struct {
@@ -83,7 +85,7 @@ func (tx *Tx) Hash() (common.Hash, error) {
 		return NullHash, err
 	}
 
-	return common.BytesToHash(crypto.Keccak256(b)), nil
+	return utils.BytesToHash(crypto.Keccak256(b)), nil
 }
 
 func (tx *Tx) ConfirmationHash() (common.Hash, error) {
@@ -92,7 +94,7 @@ func (tx *Tx) ConfirmationHash() (common.Hash, error) {
 		return NullHash, err
 	}
 
-	return common.BytesToHash(crypto.Keccak256(h.Bytes())), nil
+	return utils.BytesToHash(crypto.Keccak256(h.Bytes())), nil
 }
 
 func (tx *Tx) MerkleLeaf() ([]byte, error) {
@@ -111,8 +113,62 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (tx *Tx) GetInput(iIndex *big.Int) *TxIn {
+	if !tx.IsExistInput(iIndex) {
+		return nil
+	}
+
+	return tx.Inputs[iIndex.Uint64()]
+}
+
+func (tx *Tx) SetInput(iIndex *big.Int, txIn *TxIn) error {
+	if !tx.IsExistInput(iIndex) {
+		return ErrInvalidTxInIndex
+	}
+
+	tx.Inputs[iIndex.Uint64()] = txIn
+
+	return nil
+}
+
+func (tx *Tx) IsExistInput(iIndex *big.Int) bool {
+	return iIndex.Cmp(TxElementsNumBig) < 0
+}
+
+func (tx *Tx) GetOutput(oIndex *big.Int) *TxOut {
+	if !tx.IsExistOutput(oIndex) {
+		return nil
+	}
+
+	return tx.Outputs[oIndex.Uint64()]
+}
+
+func (tx *Tx) SetOutput(oIndex *big.Int, txOut *TxOut) error {
+	if !tx.IsExistOutput(oIndex) {
+		return ErrInvalidTxOutIndex
+	}
+
+	tx.Outputs[oIndex.Uint64()] = txOut
+
+	return nil
+}
+
+func (tx *Tx) SpendOutput(oIndex *big.Int) error {
+	if !tx.IsExistOutput(oIndex) {
+		return ErrInvalidTxOutIndex
+	}
+
+	tx.Outputs[oIndex.Uint64()].IsSpent = true
+
+	return nil
+}
+
+func (tx *Tx) IsExistOutput(oIndex *big.Int) bool {
+	return oIndex.Cmp(TxElementsNumBig) < 0
+}
+
 func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
-	if iIndex.Cmp(TxElementsNumBig) >= 0 {
+	if !tx.IsExistInput(iIndex) {
 		return ErrInvalidTxInIndex
 	}
 
@@ -125,7 +181,7 @@ func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
 	if err != nil {
 		return err
 	}
-	sig, err := NewSignatureFromBytes(sigBytes)
+	sig, err := BytesToSignature(sigBytes)
 	if err != nil {
 		return err
 	}
@@ -136,7 +192,7 @@ func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
 }
 
 func (tx *Tx) Confirm(iIndex *big.Int, signer *Account) error {
-	if iIndex.Cmp(TxElementsNumBig) >= 0 {
+	if !tx.IsExistInput(iIndex) {
 		return ErrInvalidTxInIndex
 	}
 
@@ -149,7 +205,7 @@ func (tx *Tx) Confirm(iIndex *big.Int, signer *Account) error {
 	if err != nil {
 		return err
 	}
-	sig, err := NewSignatureFromBytes(sigBytes)
+	sig, err := BytesToSignature(sigBytes)
 	if err != nil {
 		return err
 	}
@@ -160,7 +216,7 @@ func (tx *Tx) Confirm(iIndex *big.Int, signer *Account) error {
 }
 
 func (tx *Tx) SignerAddress(iIndex *big.Int) (common.Address, error) {
-	if iIndex.Cmp(TxElementsNumBig) >= 0 {
+	if !tx.IsExistInput(iIndex) {
 		return NullAddress, ErrInvalidTxInIndex
 	}
 
@@ -173,7 +229,7 @@ func (tx *Tx) SignerAddress(iIndex *big.Int) (common.Address, error) {
 }
 
 func (tx *Tx) ConfirmationSignerAddress(iIndex *big.Int) (common.Address, error) {
-	if iIndex.Cmp(TxElementsNumBig) >= 0 {
+	if !tx.IsExistInput(iIndex) {
 		return NullAddress, ErrInvalidTxInIndex
 	}
 
@@ -191,6 +247,16 @@ func (tx *Tx) signerAddress(h common.Hash, sig Signature) (common.Address, error
 	}
 
 	return sig.SignerAddress(h)
+}
+
+func (tx *Tx) SetConfirmationSignature(iIndex *big.Int, confSig Signature) error {
+	if !tx.IsExistInput(iIndex) {
+		return ErrInvalidTxInIndex
+	}
+
+	tx.Inputs[iIndex.Uint64()].ConfirmationSignature = confSig
+
+	return nil
 }
 
 func (tx *Tx) InBlock(blkNum, txIndex *big.Int) *BlockTx {

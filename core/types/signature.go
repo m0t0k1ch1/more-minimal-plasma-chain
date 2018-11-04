@@ -31,7 +31,7 @@ var (
 
 type Signature [SignatureSize]byte
 
-func NewSignatureFromBytes(b []byte) (Signature, error) {
+func BytesToSignature(b []byte) (Signature, error) {
 	if len(b) != SignatureSize {
 		return NullSignature, ErrInvalidSignatureSize
 	}
@@ -42,17 +42,21 @@ func NewSignatureFromBytes(b []byte) (Signature, error) {
 	return sig, nil
 }
 
-func NewSignatureFromHex(s string) (Signature, error) {
+func HexToSignature(s string) (Signature, error) {
 	b, err := utils.DecodeHex(s)
 	if err != nil {
 		return NullSignature, err
 	}
 
-	return NewSignatureFromBytes(b)
+	return BytesToSignature(b)
 }
 
 func (sig Signature) Bytes() []byte {
 	return sig[:]
+}
+
+func (sig Signature) Hex() string {
+	return utils.EncodeToHex(sig.Bytes())
 }
 
 func (sig Signature) MarshalText() ([]byte, error) {

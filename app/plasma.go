@@ -85,8 +85,13 @@ func (p *Plasma) initOperator() error {
 	return nil
 }
 
-func (p *Plasma) initChildChain() {
-	p.childChain = core.NewChildChain()
+func (p *Plasma) initChildChain() error {
+	cc, err := core.NewChildChain()
+	if err != nil {
+		return err
+	}
+	p.childChain = cc
+	return nil
 }
 
 func (p *Plasma) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
@@ -134,10 +139,10 @@ func (p *Plasma) watchRootChain() error {
 				p.Logger().Error(err)
 			} else {
 				p.Logger().Infof(
-					"[DEPOSIT] blkhash: %s, owner: %s: amount: %d",
-					utils.EncodeToHex(blkHash.Bytes()),
-					utils.EncodeToHex(log.Owner.Bytes()),
-					log.Amount.Uint64(),
+					"[DEPOSIT] blkhash: %s, owner: %s: amount: %s",
+					utils.HashToHex(blkHash),
+					utils.AddressToHex(log.Owner),
+					log.Amount.String(),
 				)
 			}
 		}

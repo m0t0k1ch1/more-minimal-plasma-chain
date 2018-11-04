@@ -18,7 +18,7 @@ type PostBlockResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) PostBlock(ctx context.Context) ([]byte, error) {
+func (c *Client) PostBlock(ctx context.Context) (common.Hash, error) {
 	var resp PostBlockResponse
 	if err := c.doAPI(
 		ctx,
@@ -27,10 +27,10 @@ func (c *Client) PostBlock(ctx context.Context) ([]byte, error) {
 		nil,
 		&resp,
 	); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
-	return utils.DecodeHex(resp.Result.BlockHashStr)
+	return utils.HexToHash(resp.Result.BlockHashStr), nil
 }
 
 type GetBlockResponse struct {
@@ -45,7 +45,7 @@ func (c *Client) GetBlock(ctx context.Context, blkHash common.Hash) (*types.Bloc
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("blocks/%s", utils.EncodeToHex(blkHash.Bytes())),
+		fmt.Sprintf("blocks/%s", utils.HashToHex(blkHash)),
 		nil,
 		&resp,
 	); err != nil {
