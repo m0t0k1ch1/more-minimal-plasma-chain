@@ -353,7 +353,9 @@ func (cc *ChildChain) addTxToMempool(tx *types.Tx) (common.Hash, error) {
 	}
 
 	// add tx to current block
-	cc.currentBlock.Txes = append(cc.currentBlock.Txes, tx)
+	if err := cc.currentBlock.AddTx(tx); err != nil {
+		return types.NullHash, err
+	}
 
 	return txHash, nil
 }
