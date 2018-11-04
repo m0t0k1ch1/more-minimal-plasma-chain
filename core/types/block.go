@@ -26,6 +26,10 @@ type LightBlock struct {
 	Signature Signature
 }
 
+func (lblk *LightBlock) IsExistTx(txIndex *big.Int) bool {
+	return txIndex.Cmp(big.NewInt(int64(len(lblk.TxHashes)))) >= 0
+}
+
 type Block struct {
 	Txes      []*Tx     `json:"txes"`
 	Number    *big.Int  `json:"blknum"`
