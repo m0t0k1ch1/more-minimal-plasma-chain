@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	merkle "github.com/m0t0k1ch1/fixed-merkle"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 const (
@@ -22,17 +21,17 @@ var (
 )
 
 type LightBlock struct {
-	TxHashes  []string
+	TxHashes  []common.Hash
 	Number    *big.Int
 	Signature Signature
 }
 
-func (lblk *LightBlock) GetTxHash(txIndex *big.Int) (string, error) {
+func (lblk *LightBlock) GetTxHash(txIndex *big.Int) common.Hash {
 	if !lblk.IsExistTxHash(txIndex) {
-		return "", ErrInvalidTxIndex
+		return NullHash
 	}
 
-	return lblk.TxHashes[txIndex.Uint64()], nil
+	return lblk.TxHashes[txIndex.Uint64()]
 }
 
 func (lblk *LightBlock) IsExistTxHash(txIndex *big.Int) bool {
@@ -151,7 +150,7 @@ func (blk *Block) SignerAddress() (common.Address, error) {
 
 func (blk *Block) Lighten() (*LightBlock, error) {
 	lblk := &LightBlock{
-		TxHashes:  make([]string, len(blk.Txes)),
+		TxHashes:  make([]common.Hash, len(blk.Txes)),
 		Number:    blk.Number,
 		Signature: blk.Signature,
 	}
@@ -162,7 +161,7 @@ func (blk *Block) Lighten() (*LightBlock, error) {
 			return nil, err
 		}
 
-		lblk.TxHashes[i] = utils.EncodeToHex(txHash.Bytes())
+		lblk.TxHashes[i] = txHash
 	}
 
 	return lblk, nil
