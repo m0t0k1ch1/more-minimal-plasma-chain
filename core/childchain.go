@@ -120,7 +120,9 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 	defer cc.mu.Unlock()
 
 	tx := types.NewTx()
-	tx.Outputs[0] = types.NewTxOut(ownerAddr, amount)
+	if err := tx.SetOutput(big.NewInt(0), types.NewTxOut(ownerAddr, amount)); err != nil {
+		return types.NullHash, err
+	}
 
 	blk, err := types.NewBlock([]*types.Tx{tx}, cc.currentBlock.Number)
 	if err != nil {
