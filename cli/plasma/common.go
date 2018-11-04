@@ -53,25 +53,21 @@ func getBigInt(c *cli.Context, f cli.Flag) (*big.Int, error) {
 func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
 	addrStr := getString(c, f)
 
-	if !common.IsHexAddress(addrStr) {
+	if !utils.IsHexAddress(addrStr) {
 		return types.NullAddress, fmt.Errorf("invalid address hex")
 	}
 
-	return common.HexToAddress(addrStr), nil
+	return utils.HexToAddress(addrStr), nil
 }
 
 func getHash(c *cli.Context, f cli.Flag) (common.Hash, error) {
 	hashStr := getString(c, f)
 
-	hashBytes, err := utils.DecodeHex(hashStr)
-	if err != nil {
-		return types.NullHash, err
-	}
-	if len(hashBytes) != common.HashLength {
+	if !utils.IsHexHash(hashStr) {
 		return types.NullHash, fmt.Errorf("invalid hash hex")
 	}
 
-	return common.BytesToHash(hashBytes), nil
+	return utils.HexToHash(hashStr), nil
 }
 
 func getPrivateKey(c *cli.Context, f cli.Flag) (*ecdsa.PrivateKey, error) {

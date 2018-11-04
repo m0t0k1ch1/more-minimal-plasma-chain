@@ -30,5 +30,5 @@ func (c *Client) GetChain(ctx context.Context, blkNum *big.Int) (common.Hash, er
 		return types.NullHash, err
 	}
 
-	return utils.HexToHash(resp.Result.BlockHashStr)
+	return utils.HexToHash(resp.Result.BlockHashStr), nil
 }

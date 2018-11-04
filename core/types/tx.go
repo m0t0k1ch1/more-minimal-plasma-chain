@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 const (
@@ -84,7 +85,7 @@ func (tx *Tx) Hash() (common.Hash, error) {
 		return NullHash, err
 	}
 
-	return common.BytesToHash(crypto.Keccak256(b)), nil
+	return utils.BytesToHash(crypto.Keccak256(b)), nil
 }
 
 func (tx *Tx) ConfirmationHash() (common.Hash, error) {
@@ -93,7 +94,7 @@ func (tx *Tx) ConfirmationHash() (common.Hash, error) {
 		return NullHash, err
 	}
 
-	return common.BytesToHash(crypto.Keccak256(h.Bytes())), nil
+	return utils.BytesToHash(crypto.Keccak256(h.Bytes())), nil
 }
 
 func (tx *Tx) MerkleLeaf() ([]byte, error) {

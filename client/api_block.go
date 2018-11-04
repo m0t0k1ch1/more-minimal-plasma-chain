@@ -30,7 +30,7 @@ func (c *Client) PostBlock(ctx context.Context) (common.Hash, error) {
 		return types.NullHash, err
 	}
 
-	return utils.HexToHash(resp.Result.BlockHashStr)
+	return utils.HexToHash(resp.Result.BlockHashStr), nil
 }
 
 type GetBlockResponse struct {

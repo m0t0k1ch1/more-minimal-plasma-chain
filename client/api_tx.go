@@ -40,7 +40,7 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (common.Hash, error) 
 		return types.NullHash, err
 	}
 
-	return utils.HexToHash(resp.Result.TxHashStr)
+	return utils.HexToHash(resp.Result.TxHashStr), nil
 }
 
 type GetTxResponse struct {
@@ -120,5 +120,5 @@ func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int,
 		return types.NullHash, err
 	}
 
-	return utils.HexToHash(resp.Result.TxHashStr)
+	return utils.HexToHash(resp.Result.TxHashStr), nil
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,7 +37,7 @@ func TestBlock_Hash(t *testing.T) {
 			"null block",
 			newTestNullBlock(t),
 			output{
-				common.HexToHash("0x122d07b601c05953fe8229d17e5b5c0a66fbec3b9da839aea24afc18d86a6219"),
+				utils.HexToHash("0x122d07b601c05953fe8229d17e5b5c0a66fbec3b9da839aea24afc18d86a6219"),
 				nil,
 			},
 		},
@@ -44,7 +45,7 @@ func TestBlock_Hash(t *testing.T) {
 			"deposit block",
 			newTestBlock(t, []*Tx{newTestDepositTx(t)}, big.NewInt(1)),
 			output{
-				common.HexToHash("0xde3e0e2864dfae133ca62399c2e194e813ede8ff7723e43c9c4660841d32b144"),
+				utils.HexToHash("0xde3e0e2864dfae133ca62399c2e194e813ede8ff7723e43c9c4660841d32b144"),
 				nil,
 			},
 		},
@@ -79,7 +80,7 @@ func TestBlock_Root(t *testing.T) {
 			"null block",
 			newTestNullBlock(t),
 			output{
-				common.HexToHash("0xe026cc5a4aed3c22a58cbd3d2ac754c9352c5436f638042dca99034e83636516"),
+				utils.HexToHash("0xe026cc5a4aed3c22a58cbd3d2ac754c9352c5436f638042dca99034e83636516"),
 				nil,
 			},
 		},
@@ -87,7 +88,7 @@ func TestBlock_Root(t *testing.T) {
 			"deposit block",
 			newTestBlock(t, []*Tx{newTestDepositTx(t)}, big.NewInt(1)),
 			output{
-				common.HexToHash("0xf88f3819a6a679a60f8d5070af717bdfb41a87ab9eceb631136273928fb30560"),
+				utils.HexToHash("0xf88f3819a6a679a60f8d5070af717bdfb41a87ab9eceb631136273928fb30560"),
 				nil,
 			},
 		},

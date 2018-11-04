@@ -41,15 +41,13 @@ func (c *Context) getBigIntFromPath(key string) (*big.Int, error) {
 }
 
 func (c *Context) getHashFromPath(key string) (common.Hash, error) {
-	b, err := utils.DecodeHex(c.getPathParam(key))
-	if err != nil {
-		return types.NullHash, NewInvalidPathParamError(key)
-	}
-	if len(b) != common.HashLength {
+	hashStr := c.getPathParam(key)
+
+	if !utils.IsHexHash(hashStr) {
 		return types.NullHash, NewInvalidFormParamError(key)
 	}
 
-	return common.BytesToHash(b), nil
+	return utils.HexToHash(hashStr), nil
 }
 
 func (c *Context) getPathParam(key string) string {
