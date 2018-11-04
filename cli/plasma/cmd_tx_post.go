@@ -29,7 +29,7 @@ var cmdTxPost = cli.Command{
 		}
 
 		return printlnJSON(map[string]string{
-			"txhash": utils.EncodeToHex(txHashBytes),
+			"txhash": utils.HashToHex(txHash),
 		})
 	},
 }

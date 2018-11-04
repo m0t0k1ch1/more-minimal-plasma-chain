@@ -29,7 +29,7 @@ var cmdChainGet = cli.Command{
 		}
 
 		return printlnJSON(map[string]string{
-			"blkhash": utils.EncodeToHex(blkHashBytes),
+			"blkhash": utils.HashToHex(blkHash),
 		})
 	},
 }

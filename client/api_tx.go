@@ -55,7 +55,7 @@ func (c *Client) GetTx(ctx context.Context, txHash common.Hash) (*types.Tx, erro
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("txes/%s", utils.EncodeToHex(txHash.Bytes())),
+		fmt.Sprintf("txes/%s", utils.HashToHex(txHash)),
 		nil,
 		&resp,
 	); err != nil {
@@ -87,7 +87,7 @@ func (c *Client) GetTxProof(ctx context.Context, txHash common.Hash) ([]byte, er
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("txes/%s/proof", utils.EncodeToHex(txHash.Bytes())),
+		fmt.Sprintf("txes/%s/proof", utils.HashToHex(txHash)),
 		nil,
 		&resp,
 	); err != nil {
@@ -113,7 +113,7 @@ func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int,
 	if err := c.doAPI(
 		ctx,
 		http.MethodPut,
-		fmt.Sprintf("txes/%s", utils.EncodeToHex(txHash.Bytes())),
+		fmt.Sprintf("txes/%s", utils.HashToHex(txHash)),
 		v,
 		&resp,
 	); err != nil {

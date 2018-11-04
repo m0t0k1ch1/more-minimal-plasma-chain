@@ -20,6 +20,6 @@ func (p *Plasma) GetChainHandler(c *Context) error {
 	}
 
 	return c.JSONSuccess(map[string]interface{}{
-		"blkhash": utils.EncodeToHex(blkHashBytes),
+		"blkhash": utils.HashToHex(blkHash),
 	})
 }

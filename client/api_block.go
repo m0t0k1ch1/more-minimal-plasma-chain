@@ -45,7 +45,7 @@ func (c *Client) GetBlock(ctx context.Context, blkHash common.Hash) (*types.Bloc
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("blocks/%s", utils.EncodeToHex(blkHash.Bytes())),
+		fmt.Sprintf("blocks/%s", utils.HashToHex(blkHash)),
 		nil,
 		&resp,
 	); err != nil {

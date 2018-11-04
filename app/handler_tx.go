@@ -29,7 +29,7 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 	}
 
 	return c.JSONSuccess(map[string]interface{}{
-		"txhash": utils.EncodeToHex(txHash.Bytes()),
+		"txhash": utils.HashToHex(txHash),
 	})
 }
 
@@ -105,6 +105,6 @@ func (p *Plasma) PutTxHandler(c *Context) error {
 	}
 
 	return c.JSONSuccess(map[string]interface{}{
-		"txhash": utils.EncodeToHex(txHash.Bytes()),
+		"txhash": utils.HashToHex(txHash),
 	})
 }

@@ -139,10 +139,10 @@ func (p *Plasma) watchRootChain() error {
 				p.Logger().Error(err)
 			} else {
 				p.Logger().Infof(
-					"[DEPOSIT] blkhash: %s, owner: %s: amount: %d",
-					utils.EncodeToHex(blkHash.Bytes()),
-					utils.EncodeToHex(log.Owner.Bytes()),
-					log.Amount.Uint64(),
+					"[DEPOSIT] blkhash: %s, owner: %s: amount: %s",
+					utils.HashToHex(blkHash),
+					utils.AddressToHex(log.Owner),
+					log.Amount.String(),
 				)
 			}
 		}

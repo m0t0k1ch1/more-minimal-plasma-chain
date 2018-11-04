@@ -41,10 +41,10 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 	if _, err := p.rootChain.CommitPlasmaBlockRoot(p.operator, rootHash); err != nil {
 		return c.JSONError(err)
 	}
-	p.Logger().Infof("[COMMIT] root: %s", utils.EncodeToHex(rootHash[:]))
+	p.Logger().Infof("[COMMIT] root: %s", utils.HashToHex(rootHash))
 
 	return c.JSONSuccess(map[string]interface{}{
-		"blkhash": utils.EncodeToHex(blkHash.Bytes()),
+		"blkhash": utils.HashToHex(blkHash),
 	})
 }
 

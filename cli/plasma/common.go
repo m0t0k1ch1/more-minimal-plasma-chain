@@ -29,7 +29,7 @@ func newRootChain(c *cli.Context) (*core.RootChain, error) {
 	return core.NewRootChain(&core.RootChainConfig{
 		RPC:     getString(c, rpcFlag),
 		WS:      getString(c, wsFlag),
-		Address: utils.EncodeToHex(addr.Bytes()),
+		Address: utils.AddressToHex(addr),
 	})
 }
 
