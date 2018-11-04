@@ -112,7 +112,7 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 }
 
 func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
-	if iIndex.Cmp(TxElementsNumBig) >= 0 {
+	if !tx.IsExistInput(iIndex) {
 		return ErrInvalidTxInIndex
 	}
 
@@ -136,7 +136,7 @@ func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
 }
 
 func (tx *Tx) Confirm(iIndex *big.Int, signer *Account) error {
-	if iIndex.Cmp(TxElementsNumBig) >= 0 {
+	if !tx.IsExistInput(iIndex) {
 		return ErrInvalidTxInIndex
 	}
 
@@ -160,7 +160,7 @@ func (tx *Tx) Confirm(iIndex *big.Int, signer *Account) error {
 }
 
 func (tx *Tx) SignerAddress(iIndex *big.Int) (common.Address, error) {
-	if iIndex.Cmp(TxElementsNumBig) >= 0 {
+	if !tx.IsExistInput(iIndex) {
 		return NullAddress, ErrInvalidTxInIndex
 	}
 
@@ -173,7 +173,7 @@ func (tx *Tx) SignerAddress(iIndex *big.Int) (common.Address, error) {
 }
 
 func (tx *Tx) ConfirmationSignerAddress(iIndex *big.Int) (common.Address, error) {
-	if iIndex.Cmp(TxElementsNumBig) >= 0 {
+	if !tx.IsExistInput(iIndex) {
 		return NullAddress, ErrInvalidTxInIndex
 	}
 
@@ -199,4 +199,8 @@ func (tx *Tx) InBlock(blkNum, txIndex *big.Int) *BlockTx {
 		BlockNumber: blkNum,
 		TxIndex:     txIndex,
 	}
+}
+
+func (tx *Tx) IsExistInput(iIndex *big.Int) bool {
+	return iIndex.Cmp(TxElementsNumBig) < 0
 }
