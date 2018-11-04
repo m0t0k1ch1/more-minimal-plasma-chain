@@ -5,6 +5,10 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
+func AddressToHex(addr common.Address) string {
+	return EncodeToHex(addr.Bytes())
+}
+
 func HashToHex(h common.Hash) string {
 	return EncodeToHex(h.Bytes())
 }
