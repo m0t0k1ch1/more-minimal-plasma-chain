@@ -55,6 +55,10 @@ func (sig Signature) Bytes() []byte {
 	return sig[:]
 }
 
+func (sig Signature) Hex() string {
+	return utils.EncodeToHex(sig.Bytes())
+}
+
 func (sig Signature) MarshalText() ([]byte, error) {
 	b := make([]byte, len(sig[:])*2+2)
 	copy(b, `0x`)

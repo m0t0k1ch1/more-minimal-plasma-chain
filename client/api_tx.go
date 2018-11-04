@@ -107,7 +107,7 @@ type PutTxResponse struct {
 func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) ([]byte, error) {
 	v := url.Values{}
 	v.Set("index", iIndex.String())
-	v.Set("confsig", utils.EncodeToHex(confSig.Bytes()))
+	v.Set("confsig", confSig.Hex())
 
 	var resp PutTxResponse
 	if err := c.doAPI(
