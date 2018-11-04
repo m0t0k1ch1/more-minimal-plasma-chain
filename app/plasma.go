@@ -85,8 +85,13 @@ func (p *Plasma) initOperator() error {
 	return nil
 }
 
-func (p *Plasma) initChildChain() {
-	p.childChain = core.NewChildChain()
+func (p *Plasma) initChildChain() error {
+	cc, err := core.NewChildChain()
+	if err != nil {
+		return err
+	}
+	p.childChain = cc
+	return nil
 }
 
 func (p *Plasma) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
