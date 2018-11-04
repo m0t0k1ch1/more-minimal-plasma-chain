@@ -39,14 +39,19 @@ type ChildChain struct {
 	blockTxes    map[string]*types.BlockTx
 }
 
-func NewChildChain() *ChildChain {
+func NewChildChain() (*ChildChain, error) {
+	blk, err := types.NewBlock(nil, big.NewInt(DefaultBlockNumber))
+	if err != nil {
+		return nil, err
+	}
+
 	return &ChildChain{
 		mu:           &sync.RWMutex{},
-		currentBlock: types.NewBlock(nil, big.NewInt(DefaultBlockNumber)),
+		currentBlock: blk,
 		chain:        map[string]string{},
 		lightBlocks:  map[string]*types.LightBlock{},
 		blockTxes:    map[string]*types.BlockTx{},
-	}
+	}, nil
 }
 
 func (cc *ChildChain) CurrentBlockNumber() *big.Int {
@@ -75,7 +80,7 @@ func (cc *ChildChain) GetBlock(blkHash common.Hash) (*types.Block, error) {
 		return nil, ErrBlockNotFound
 	}
 
-	return cc.getBlock(blkHashStr), nil
+	return cc.getBlock(blkHashStr)
 }
 
 func (cc *ChildChain) AddBlock(signer *types.Account) (common.Hash, error) {
@@ -101,7 +106,11 @@ func (cc *ChildChain) AddBlock(signer *types.Account) (common.Hash, error) {
 	}
 
 	// reset current block
-	cc.currentBlock = types.NewBlock(nil, blk.Number.Add(blk.Number, big.NewInt(1)))
+	blkNext, err := types.NewBlock(nil, blk.Number.Add(blk.Number, big.NewInt(1)))
+	if err != nil {
+		return types.NullHash, err
+	}
+	cc.currentBlock = blkNext
 
 	return blkHash, nil
 }
@@ -113,7 +122,10 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 	tx := types.NewTx()
 	tx.Outputs[0] = types.NewTxOut(ownerAddr, amount)
 
-	blk := types.NewBlock([]*types.Tx{tx}, cc.currentBlock.Number)
+	blk, err := types.NewBlock([]*types.Tx{tx}, cc.currentBlock.Number)
+	if err != nil {
+		return types.NullHash, err
+	}
 
 	// sign block
 	if err := blk.Sign(signer); err != nil {
@@ -158,7 +170,10 @@ func (cc *ChildChain) GetTxProof(txHash common.Hash) ([]byte, error) {
 		return nil, ErrTxNotFound
 	}
 
-	blk := cc.getBlock(cc.chain[btx.BlockNumber.String()])
+	blk, err := cc.getBlock(cc.chain[btx.BlockNumber.String()])
+	if err != nil {
+		return nil, err
+	}
 
 	// build tx Merkle tree
 	tree, err := blk.MerkleTree()
@@ -226,7 +241,7 @@ func (cc *ChildChain) ConfirmTx(txHash common.Hash, iIndex *big.Int, confSig typ
 	return nil
 }
 
-func (cc *ChildChain) getBlock(blkHashStr string) *types.Block {
+func (cc *ChildChain) getBlock(blkHashStr string) (*types.Block, error) {
 	lblk := cc.lightBlocks[blkHashStr]
 
 	// get txes in block
@@ -236,10 +251,13 @@ func (cc *ChildChain) getBlock(blkHashStr string) *types.Block {
 	}
 
 	// build block
-	blk := types.NewBlock(txes, lblk.Number)
+	blk, err := types.NewBlock(txes, lblk.Number)
+	if err != nil {
+		return nil, err
+	}
 	blk.Signature = lblk.Signature
 
-	return blk
+	return blk, nil
 }
 
 func (cc *ChildChain) addBlock(blk *types.Block) (common.Hash, error) {
