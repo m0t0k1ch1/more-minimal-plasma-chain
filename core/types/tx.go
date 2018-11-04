@@ -112,12 +112,12 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (tx *Tx) GetInput(iIndex *big.Int) (*TxIn, error) {
+func (tx *Tx) GetInput(iIndex *big.Int) *TxIn {
 	if !tx.IsExistInput(iIndex) {
-		return nil, ErrInvalidTxInIndex
+		return nil
 	}
 
-	return tx.Inputs[iIndex.Uint64()], nil
+	return tx.Inputs[iIndex.Uint64()]
 }
 
 func (tx *Tx) SetInput(iIndex *big.Int, txIn *TxIn) error {
@@ -134,12 +134,12 @@ func (tx *Tx) IsExistInput(iIndex *big.Int) bool {
 	return iIndex.Cmp(TxElementsNumBig) < 0
 }
 
-func (tx *Tx) GetOutput(oIndex *big.Int) (*TxOut, error) {
+func (tx *Tx) GetOutput(oIndex *big.Int) *TxOut {
 	if !tx.IsExistOutput(oIndex) {
-		return nil, ErrInvalidTxOutIndex
+		return nil
 	}
 
-	return tx.Outputs[oIndex.Uint64()], nil
+	return tx.Outputs[oIndex.Uint64()]
 }
 
 func (tx *Tx) SetOutput(oIndex *big.Int, txOut *TxOut) error {
