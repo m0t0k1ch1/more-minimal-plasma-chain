@@ -17,6 +17,7 @@ const (
 )
 
 var (
+	ErrInvalidTxIndex           = errors.New("tx index is invalid")
 	ErrBlockTxesNumExceedsLimit = errors.New("block txes num exceeds the limit")
 )
 
@@ -24,6 +25,14 @@ type LightBlock struct {
 	TxHashes  []string
 	Number    *big.Int
 	Signature Signature
+}
+
+func (lblk *LightBlock) GetTxHash(txIndex *big.Int) (string, error) {
+	if !lblk.IsExistTxHash(txIndex) {
+		return "", ErrInvalidTxIndex
+	}
+
+	return lblk.TxHashes[txIndex.Uint64()], nil
 }
 
 func (lblk *LightBlock) IsExistTxHash(txIndex *big.Int) bool {

@@ -152,6 +152,16 @@ func (tx *Tx) SetOutput(oIndex *big.Int, txOut *TxOut) error {
 	return nil
 }
 
+func (tx *Tx) SpendOutput(oIndex *big.Int) error {
+	if !tx.IsExistOutput(oIndex) {
+		return ErrInvalidTxOutIndex
+	}
+
+	tx.Outputs[oIndex.Uint64()].IsSpent = true
+
+	return nil
+}
+
 func (tx *Tx) IsExistOutput(oIndex *big.Int) bool {
 	return oIndex.Cmp(TxElementsNumBig) < 0
 }
@@ -230,6 +240,14 @@ func (tx *Tx) ConfirmationSignerAddress(iIndex *big.Int) (common.Address, error)
 	return tx.signerAddress(h, tx.Inputs[iIndex.Uint64()].ConfirmationSignature)
 }
 
+func (tx *Tx) signerAddress(h common.Hash, sig Signature) (common.Address, error) {
+	if bytes.Equal(sig.Bytes(), NullSignature.Bytes()) {
+		return NullAddress, nil
+	}
+
+	return sig.SignerAddress(h)
+}
+
 func (tx *Tx) SetConfirmationSignature(iIndex *big.Int, confSig Signature) error {
 	if !tx.IsExistInput(iIndex) {
 		return ErrInvalidTxInIndex
@@ -238,14 +256,6 @@ func (tx *Tx) SetConfirmationSignature(iIndex *big.Int, confSig Signature) error
 	tx.Inputs[iIndex.Uint64()].ConfirmationSignature = confSig
 
 	return nil
-}
-
-func (tx *Tx) signerAddress(h common.Hash, sig Signature) (common.Address, error) {
-	if bytes.Equal(sig.Bytes(), NullSignature.Bytes()) {
-		return NullAddress, nil
-	}
-
-	return sig.SignerAddress(h)
 }
 
 func (tx *Tx) InBlock(blkNum, txIndex *big.Int) *BlockTx {
