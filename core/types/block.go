@@ -125,7 +125,7 @@ func (blk *Block) Sign(signer *Account) error {
 	if err != nil {
 		return err
 	}
-	sig, err := NewSignatureFromBytes(sigBytes)
+	sig, err := BytesToSignature(sigBytes)
 	if err != nil {
 		return err
 	}

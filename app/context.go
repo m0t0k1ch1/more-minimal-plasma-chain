@@ -88,7 +88,7 @@ func (c *Context) getRequiredSignatureFromForm(key string) (types.Signature, err
 		return types.NullSignature, err
 	}
 
-	sig, err := types.NewSignatureFromHex(sigStr)
+	sig, err := types.HexToSignature(sigStr)
 	if err != nil {
 		return types.NullSignature, NewInvalidFormParamError(key)
 	}

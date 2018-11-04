@@ -180,7 +180,7 @@ func (tx *Tx) Sign(iIndex *big.Int, signer *Account) error {
 	if err != nil {
 		return err
 	}
-	sig, err := NewSignatureFromBytes(sigBytes)
+	sig, err := BytesToSignature(sigBytes)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func (tx *Tx) Confirm(iIndex *big.Int, signer *Account) error {
 	if err != nil {
 		return err
 	}
-	sig, err := NewSignatureFromBytes(sigBytes)
+	sig, err := BytesToSignature(sigBytes)
 	if err != nil {
 		return err
 	}
