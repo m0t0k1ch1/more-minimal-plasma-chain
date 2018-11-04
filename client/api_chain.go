@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
@@ -16,7 +18,7 @@ type GetChainResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetChain(ctx context.Context, blkNum *big.Int) ([]byte, error) {
+func (c *Client) GetChain(ctx context.Context, blkNum *big.Int) (common.Hash, error) {
 	var resp GetChainResponse
 	if err := c.doAPI(
 		ctx,
@@ -25,8 +27,8 @@ func (c *Client) GetChain(ctx context.Context, blkNum *big.Int) ([]byte, error) 
 		nil,
 		&resp,
 	); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
-	return utils.DecodeHex(resp.Result.BlockHashStr)
+	return utils.HexToHash(resp.Result.BlockHashStr)
 }

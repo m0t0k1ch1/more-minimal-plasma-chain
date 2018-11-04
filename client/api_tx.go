@@ -20,10 +20,10 @@ type PostTxResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) PostTx(ctx context.Context, tx *types.Tx) ([]byte, error) {
+func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (common.Hash, error) {
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
 	v := url.Values{}
@@ -37,10 +37,10 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) ([]byte, error) {
 		v,
 		&resp,
 	); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
-	return utils.DecodeHex(resp.Result.TxHashStr)
+	return utils.HexToHash(resp.Result.TxHashStr)
 }
 
 type GetTxResponse struct {
@@ -104,7 +104,7 @@ type PutTxResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) ([]byte, error) {
+func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) (common.Hash, error) {
 	v := url.Values{}
 	v.Set("index", iIndex.String())
 	v.Set("confsig", confSig.Hex())
@@ -117,8 +117,8 @@ func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int,
 		v,
 		&resp,
 	); err != nil {
-		return nil, err
+		return types.NullHash, err
 	}
 
-	return utils.DecodeHex(resp.Result.TxHashStr)
+	return utils.HexToHash(resp.Result.TxHashStr)
 }
