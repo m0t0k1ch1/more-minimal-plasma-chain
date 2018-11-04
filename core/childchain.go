@@ -371,7 +371,7 @@ func (cc *ChildChain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
 		return false
 	}
 
-	if !lblk.IsExistTx(txIndex) {
+	if !lblk.IsExistTxHash(txIndex) {
 		return false
 	}
 	txHashStr := lblk.TxHashes[txIndex.Uint64()]

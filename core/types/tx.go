@@ -19,8 +19,8 @@ var (
 )
 
 var (
-	ErrInvalidTxInIndex  = errors.New("invalid txin index")
-	ErrInvalidTxOutIndex = errors.New("invalid txout index")
+	ErrInvalidTxInIndex  = errors.New("tx input index is invalid")
+	ErrInvalidTxOutIndex = errors.New("tx ouptut index is invalid")
 )
 
 type BlockTx struct {
