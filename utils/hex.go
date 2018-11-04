@@ -20,7 +20,7 @@ var (
 	ErrInvalidHashSize = fmt.Errorf("hash size must be %d bytes", common.HashLength)
 )
 
-func HexToHash(b []byte) (common.Hash, error) {
+func BytesToHash(b []byte) (common.Hash, error) {
 	if len(b) != common.HashLength {
 		return NullHash, ErrInvalidHashSize
 	}
@@ -29,6 +29,15 @@ func HexToHash(b []byte) (common.Hash, error) {
 	copy(h[:], b[:])
 
 	return h, nil
+}
+
+func HexToHash(s string) (common.Hash, error) {
+	b, err := DecodeHex(s)
+	if err != nil {
+		return NullHash, err
+	}
+
+	return BytesToHash(b)
 }
 
 func AddressToHex(addr common.Address) string {
