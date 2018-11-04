@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -9,6 +10,14 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	merkle "github.com/m0t0k1ch1/fixed-merkle"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
+)
+
+const (
+	MaxBlockTxesNum = 99999
+)
+
+var (
+	ErrBlockTxesNumExceedsLimit = errors.New("block txes num exceeds the limit")
 )
 
 type LightBlock struct {
@@ -23,12 +32,16 @@ type Block struct {
 	Signature Signature `json:"sig"`
 }
 
-func NewBlock(txes []*Tx, blkNum *big.Int) *Block {
+func NewBlock(txes []*Tx, blkNum *big.Int) (*Block, error) {
+	if len(txes) >= MaxBlockTxesNum {
+		return nil, ErrBlockTxesNumExceedsLimit
+	}
+
 	return &Block{
 		Txes:      txes,
 		Number:    blkNum,
 		Signature: NullSignature,
-	}
+	}, nil
 }
 
 func (blk *Block) Encode() ([]byte, error) {
@@ -130,4 +143,14 @@ func (blk *Block) Lighten() (*LightBlock, error) {
 	}
 
 	return lblk, nil
+}
+
+func (blk *Block) AddTx(tx *Tx) error {
+	if len(blk.Txes) >= MaxBlockTxesNum {
+		return ErrBlockTxesNumExceedsLimit
+	}
+
+	blk.Txes = append(blk.Txes, tx)
+
+	return nil
 }

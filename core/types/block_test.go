@@ -11,11 +11,15 @@ import (
 )
 
 func newTestNullBlock(t *testing.T) *Block {
-	return NewBlock(nil, big.NewInt(0))
+	blk, err := NewBlock(nil, big.NewInt(0))
+	require.NoError(t, err)
+	return blk
 }
 
 func newTestBlock(t *testing.T, txes []*Tx, blkNum *big.Int) *Block {
-	return NewBlock(txes, blkNum)
+	blk, err := NewBlock(txes, blkNum)
+	require.NoError(t, err)
+	return blk
 }
 
 func TestBlock_Hash(t *testing.T) {
