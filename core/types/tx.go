@@ -230,6 +230,16 @@ func (tx *Tx) ConfirmationSignerAddress(iIndex *big.Int) (common.Address, error)
 	return tx.signerAddress(h, tx.Inputs[iIndex.Uint64()].ConfirmationSignature)
 }
 
+func (tx *Tx) SetConfirmationSignature(iIndex *big.Int, confSig Signature) error {
+	if !tx.IsExistInput(iIndex) {
+		return ErrInvalidTxInIndex
+	}
+
+	tx.Inputs[iIndex.Uint64()].ConfirmationSignature = confSig
+
+	return nil
+}
+
 func (tx *Tx) signerAddress(h common.Hash, sig Signature) (common.Address, error) {
 	if bytes.Equal(sig.Bytes(), NullSignature.Bytes()) {
 		return NullAddress, nil
