@@ -13,10 +13,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
 	mmpctypes "github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
+
+const RootChainABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"operator\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"plasmaExits\",\"outputs\":[{\"name\":\"owner\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"},{\"name\":\"isStarted\",\"type\":\"bool\"},{\"name\":\"isValid\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"currentPlasmaBlockNumber\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"plasmaBlocks\",\"outputs\":[{\"name\":\"root\",\"type\":\"bytes32\"},{\"name\":\"timestamp\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"CHALLENGE_PERIOD\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"EXIT_BOND\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"depositBlock\",\"type\":\"uint256\"}],\"name\":\"DepositCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"blockNumber\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"root\",\"type\":\"bytes32\"}],\"name\":\"PlasmaBlockRootCommitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"utxoPosition\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"ExitStarted\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[],\"name\":\"deposit\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_root\",\"type\":\"bytes32\"}],\"name\":\"commitPlasmaBlockRoot\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_utxoBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_utxoTxIndex\",\"type\":\"uint256\"},{\"name\":\"_utxoOutputIndex\",\"type\":\"uint256\"},{\"name\":\"_encodedTx\",\"type\":\"bytes\"},{\"name\":\"_txInclusionProof\",\"type\":\"bytes\"},{\"name\":\"_txSignatures\",\"type\":\"bytes\"},{\"name\":\"_txConfirmationSignatures\",\"type\":\"bytes\"}],\"name\":\"startExit\",\"outputs\":[],\"payable\":true,\"stateMutability\":\"payable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_exitingUtxoBlockNumber\",\"type\":\"uint256\"},{\"name\":\"_exitingUtxoTxIndex\",\"type\":\"uint256\"},{\"name\":\"_exitingUtxoOutputIndex\",\"type\":\"uint256\"},{\"name\":\"_encodedSpendingTx\",\"type\":\"bytes\"},{\"name\":\"_spendingTxConfirmationSignature\",\"type\":\"bytes\"}],\"name\":\"challengeExit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"processExits\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
 
 type RootChainConfig struct {
 	RPC     string `json:"rpc"`
@@ -64,7 +65,7 @@ func (rc *RootChain) initAddress() error {
 }
 
 func (rc *RootChain) initABI() error {
-	abi, err := abi.JSON(strings.NewReader(contract.RootChainABI))
+	abi, err := abi.JSON(strings.NewReader(RootChainABI))
 	if err != nil {
 		return err
 	}
@@ -112,10 +113,14 @@ func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootHash common
 	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootHash)
 }
 
-// NOTICE:
-// By right, we should use contract.RootChain.WatchDepositCreated() instead of this func,
-// but we use this func because ganache cannot parse web3.eth.subscribe request created by contract.RootChain.
-func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *contract.RootChainDepositCreated) (event.Subscription, error) {
+type RootChainDepositCreated struct {
+	Owner        common.Address
+	Amount       *big.Int
+	DepositBlock *big.Int
+	Raw          gethtypes.Log
+}
+
+func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *RootChainDepositCreated) (event.Subscription, error) {
 	logs := make(chan gethtypes.Log)
 	arg := map[string]interface{}{
 		"fromBlock": "0x0",
@@ -137,7 +142,7 @@ func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *contr
 		for {
 			select {
 			case log := <-logs:
-				event := new(contract.RootChainDepositCreated)
+				event := new(RootChainDepositCreated)
 				if err := rc.contract.UnpackLog(event, "DepositCreated", log); err != nil {
 					return err
 				}
