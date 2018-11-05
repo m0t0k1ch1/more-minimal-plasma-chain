@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/contract"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -125,7 +124,7 @@ func (p *Plasma) Start() error {
 }
 
 func (p *Plasma) watchRootChain() error {
-	sink := make(chan *contract.RootChainDepositCreated)
+	sink := make(chan *core.RootChainDepositCreated)
 	sub, err := p.rootChain.WatchDepositCreated(context.Background(), sink)
 	if err != nil {
 		return err
