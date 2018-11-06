@@ -134,13 +134,14 @@ func (p *Plasma) watchRootChain() error {
 	go func() {
 		defer sub.Unsubscribe()
 		for log := range sink {
-			blkHash, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
+			blkHash, txHash, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
 			if err != nil {
 				p.Logger().Error(err)
 			} else {
 				p.Logger().Infof(
-					"[DEPOSIT] blkhash: %s, owner: %s: amount: %s",
+					"[DEPOSIT] blkhash: %s, txhash: %s, owner: %s, amount: %s",
 					utils.HashToHex(blkHash),
+					utils.HashToHex(txHash),
 					utils.AddressToHex(log.Owner),
 					log.Amount.String(),
 				)
