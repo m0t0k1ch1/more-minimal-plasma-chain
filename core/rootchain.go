@@ -133,6 +133,13 @@ func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootHash common
 	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootHash)
 }
 
+func (rc *RootChain) Deposit(a *mmpctypes.Account, amount *big.Int) (*gethtypes.Transaction, error) {
+	opts := a.TransactOpts()
+	opts.Value = amount
+
+	return rc.contract.Transact(opts, "deposit")
+}
+
 func (rc *RootChain) StartExit(a *mmpctypes.Account, blkNum, txIndex, oIndex *big.Int, tx *mmpctypes.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {
 	encodedTxBytes, err := tx.Encode()
 	if err != nil {
