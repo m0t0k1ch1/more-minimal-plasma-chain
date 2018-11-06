@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"math/big"
 
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 	"github.com/urfave/cli"
 )
 
@@ -12,13 +12,13 @@ var cmdBlockFix = cli.Command{
 	Usage: "fix block",
 	Flags: flags(),
 	Action: func(c *cli.Context) error {
-		blkHash, err := newClient().PostBlock(context.Background())
+		blkNum, err := newClient().PostBlock(context.Background())
 		if err != nil {
 			return err
 		}
 
-		return printlnJSON(map[string]string{
-			"blkhash": utils.HashToHex(blkHash),
+		return printlnJSON(map[string]*big.Int{
+			"blkhash": blkNum,
 		})
 	},
 }

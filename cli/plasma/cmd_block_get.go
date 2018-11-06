@@ -10,16 +10,16 @@ var cmdBlockGet = cli.Command{
 	Name:  "get",
 	Usage: "get block",
 	Flags: flags(
-		blkHashFlag,
+		blkNumFlag,
 		encodedFlag,
 	),
 	Action: func(c *cli.Context) error {
-		blkHash, err := getHash(c, blkHashFlag)
+		blkNum, err := getBigInt(c, blkNumFlag)
 		if err != nil {
 			return err
 		}
 
-		blk, err := newClient().GetBlock(context.Background(), blkHash)
+		blk, err := newClient().GetBlock(context.Background(), blkNum)
 		if err != nil {
 			return err
 		}
