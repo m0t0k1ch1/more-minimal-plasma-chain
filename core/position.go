@@ -2,23 +2,15 @@ package core
 
 import "math/big"
 
-var (
-	BlockPositionOffset = big.NewInt(1000000000)
-	TxPositionOffset    = big.NewInt(10000)
-)
-
-func BlockPosition(blkNum *big.Int) *big.Int {
-	return new(big.Int).Mul(blkNum, BlockPositionOffset)
-}
-
 func TxPosition(blkNum, txIndex *big.Int) *big.Int {
-	pos := BlockPosition(blkNum)
-	pos.Add(pos, new(big.Int).Mul(txIndex, TxPositionOffset))
+	pos := new(big.Int).Mul(blkNum, big.NewInt(100000))
+	pos.Add(pos, txIndex)
 	return pos
 }
 
 func TxOutPosition(blkNum, txIndex, oIndex *big.Int) *big.Int {
 	pos := TxPosition(blkNum, txIndex)
+	pos.Mul(pos, big.NewInt(10000))
 	pos.Add(pos, oIndex)
 	return pos
 }
