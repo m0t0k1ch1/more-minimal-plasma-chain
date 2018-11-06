@@ -25,8 +25,8 @@ func newTestBlock(t *testing.T, txes []*Tx, blkNum *big.Int) *Block {
 
 func TestBlock_Hash(t *testing.T) {
 	type output struct {
-		hash common.Hash
-		err  error
+		blkHash common.Hash
+		err     error
 	}
 	testCases := []struct {
 		name string
@@ -55,12 +55,12 @@ func TestBlock_Hash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			blk, out := tc.blk, tc.out
 
-			h, err := blk.Hash()
+			blkHash, err := blk.Hash()
 			if out.err != nil {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.hash, h)
+				assert.Equal(t, out.blkHash, blkHash)
 			}
 		})
 	}
@@ -68,8 +68,8 @@ func TestBlock_Hash(t *testing.T) {
 
 func TestBlock_Root(t *testing.T) {
 	type output struct {
-		root common.Hash
-		err  error
+		blkRootHash common.Hash
+		err         error
 	}
 	testCases := []struct {
 		name string
@@ -98,12 +98,12 @@ func TestBlock_Root(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			blk, out := tc.blk, tc.out
 
-			root, err := blk.Root()
+			blkRootHash, err := blk.Root()
 			if out.err != nil {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.root, root)
+				assert.Equal(t, out.blkRootHash, blkRootHash)
 			}
 		})
 	}
