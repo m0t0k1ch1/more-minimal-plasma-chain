@@ -21,6 +21,8 @@ const RootChainABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"operator\",\"
 
 var (
 	DefaultExitBondAmount = big.NewInt(123456789)
+	BlockPositionOffset   = big.NewInt(1000000000)
+	TxPositionOffset      = big.NewInt(10000)
 )
 
 type RootChainConfig struct {
@@ -110,11 +112,32 @@ func (rc *RootChain) CurrentPlasmaBlockNumber() (*big.Int, error) {
 	if err := rc.contract.Call(nil, blkNum, "currentPlasmaBlockNumber"); err != nil {
 		return nil, err
 	}
+
 	return *blkNum, nil
+}
+
+func (rc *RootChain) PlasmaExits(blkNum, txIndex, oIndex *big.Int) (mmpctypes.Exit, error) {
+	utxoPos := new(big.Int).Set(oIndex)
+	utxoPos.Add(utxoPos, new(big.Int).Mul(txIndex, TxPositionOffset))
+	utxoPos.Add(utxoPos, new(big.Int).Mul(blkNum, BlockPositionOffset))
+
+	exit := new(mmpctypes.Exit)
+	if err := rc.contract.Call(nil, exit, "plasmaExits", utxoPos); err != nil {
+		return mmpctypes.Exit{}, err
+	}
+
+	return *exit, nil
 }
 
 func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootHash common.Hash) (*gethtypes.Transaction, error) {
 	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootHash)
+}
+
+func (rc *RootChain) Deposit(a *mmpctypes.Account, amount *big.Int) (*gethtypes.Transaction, error) {
+	opts := a.TransactOpts()
+	opts.Value = amount
+
+	return rc.contract.Transact(opts, "deposit")
 }
 
 func (rc *RootChain) StartExit(a *mmpctypes.Account, blkNum, txIndex, oIndex *big.Int, tx *mmpctypes.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {

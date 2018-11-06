@@ -5,25 +5,29 @@ import (
 	"github.com/urfave/cli"
 )
 
-var cmdRootChainWithdraw = cli.Command{
-	Name:  "withdraw",
-	Usage: "withdraw",
+var cmdDepositMake = cli.Command{
+	Name:  "make",
+	Usage: "make deposit",
 	Flags: []cli.Flag{
 		rpcFlag, wsFlag, contractAddrFlag,
+		amountFlag,
 		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
+		rc, err := newRootChain(c)
+		if err != nil {
+			return err
+		}
+		amount, err := getBigInt(c, amountFlag)
+		if err != nil {
+			return err
+		}
 		privKey, err := getPrivateKey(c, privKeyFlag)
 		if err != nil {
 			return err
 		}
 
-		rc, err := newRootChain(c)
-		if err != nil {
-			return err
-		}
-
-		txn, err := rc.ProcessExits(types.NewAccount(privKey))
+		txn, err := rc.Deposit(types.NewAccount(privKey), amount)
 		if err != nil {
 			return err
 		}

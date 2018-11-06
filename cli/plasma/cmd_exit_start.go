@@ -7,9 +7,9 @@ import (
 	"github.com/urfave/cli"
 )
 
-var cmdRootChainExit = cli.Command{
-	Name:  "exit",
-	Usage: "exit UTXO",
+var cmdExitStart = cli.Command{
+	Name:  "start",
+	Usage: "start exit",
 	Flags: []cli.Flag{
 		rpcFlag, wsFlag, contractAddrFlag,
 		apiFlag,

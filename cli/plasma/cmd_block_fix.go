@@ -14,9 +14,7 @@ var cmdBlockFix = cli.Command{
 		apiFlag,
 	},
 	Action: func(c *cli.Context) error {
-		blkHash, err := newClient(c).PostBlock(
-			context.Background(),
-		)
+		blkHash, err := newClient(c).PostBlock(context.Background())
 		if err != nil {
 			return err
 		}

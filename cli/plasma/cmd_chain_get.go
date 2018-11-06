@@ -9,7 +9,7 @@ import (
 
 var cmdChainGet = cli.Command{
 	Name:  "get",
-	Usage: "get chain",
+	Usage: "get block hash",
 	Flags: []cli.Flag{
 		apiFlag,
 		blkNumFlag,
@@ -20,10 +20,7 @@ var cmdChainGet = cli.Command{
 			return err
 		}
 
-		blkHash, err := newClient(c).GetChain(
-			context.Background(),
-			blkNum,
-		)
+		blkHash, err := newClient(c).GetChain(context.Background(), blkNum)
 		if err != nil {
 			return err
 		}

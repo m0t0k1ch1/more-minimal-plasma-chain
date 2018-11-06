@@ -2,17 +2,17 @@ package main
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/urfave/cli"
 )
 
-var cmdTxGet = cli.Command{
-	Name:  "get",
-	Usage: "get tx",
+var cmdTxIndex = cli.Command{
+	Name:  "index",
+	Usage: "get tx index",
 	Flags: []cli.Flag{
 		apiFlag,
 		txHashFlag,
-		encodedFlag,
 	},
 	Action: func(c *cli.Context) error {
 		txHash, err := getHash(c, txHashFlag)
@@ -20,14 +20,14 @@ var cmdTxGet = cli.Command{
 			return err
 		}
 
-		tx, err := newClient(c).GetTx(context.Background(), txHash)
+		blkNum, txIndex, err := newClient(c).GetTxIndex(context.Background(), txHash)
 		if err != nil {
 			return err
 		}
 
-		if getBool(c, encodedFlag) {
-			return printlnEncodedTx(tx)
-		}
-		return printlnJSON(tx)
+		return printlnJSON(map[string]*big.Int{
+			"blknum":  blkNum,
+			"txindex": txIndex,
+		})
 	},
 }
