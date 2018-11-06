@@ -160,6 +160,19 @@ func (cc *ChildChain) GetTx(txHash common.Hash) (*types.Tx, error) {
 	return cc.getTx(txHash), nil
 }
 
+func (cc *ChildChain) GetTxIndex(txHash common.Hash) (*big.Int, *big.Int, error) {
+	cc.mu.RLock()
+	defer cc.mu.RUnlock()
+
+	if !cc.isExistBlockTx(txHash) {
+		return nil, nil, ErrTxNotFound
+	}
+
+	btx := cc.getBlockTx(txHash)
+
+	return btx.BlockNumber, btx.TxIndex, nil
+}
+
 func (cc *ChildChain) GetTxProof(txHash common.Hash) ([]byte, error) {
 	cc.mu.RLock()
 	defer cc.mu.RUnlock()

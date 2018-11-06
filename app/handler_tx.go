@@ -57,6 +57,26 @@ func (p *Plasma) GetTxHandler(c *Context) error {
 	})
 }
 
+func (p *Plasma) GetTxIndexHandler(c *Context) error {
+	txHash, err := c.GetTxHashFromPath()
+	if err != nil {
+		return c.JSONError(err)
+	}
+
+	blkNum, txIndex, err := p.childChain.GetTxIndex(txHash)
+	if err != nil {
+		if err == core.ErrTxNotFound {
+			return c.JSONError(ErrTxNotFound)
+		}
+		return c.JSONError(err)
+	}
+
+	return c.JSONSuccess(map[string]interface{}{
+		"blknum":  blkNum,
+		"txindex": txIndex,
+	})
+}
+
 func (p *Plasma) GetTxProofHandler(c *Context) error {
 	txHash, err := c.GetTxHashFromPath()
 	if err != nil {

@@ -62,6 +62,7 @@ func (p *Plasma) initRoutes() {
 	p.GET("/blocks/:blkHash", p.GetBlockHandler)
 	p.POST("/txes", p.PostTxHandler)
 	p.GET("/txes/:txHash", p.GetTxHandler)
+	p.GET("/txes/:txHash/index", p.GetTxIndexHandler)
 	p.GET("/txes/:txHash/proof", p.GetTxProofHandler)
 	p.PUT("/txes/:txHash", p.PutTxHandler)
 }
