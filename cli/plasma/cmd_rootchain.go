@@ -7,5 +7,7 @@ var cmdRootChain = cli.Command{
 	Usage: "commands for root chain",
 	Subcommands: []cli.Command{
 		cmdRootChainCommit,
+		cmdRootChainExit,
+		cmdRootChainWithdraw,
 	},
 }
