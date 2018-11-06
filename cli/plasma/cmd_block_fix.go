@@ -12,7 +12,7 @@ var cmdBlockFix = cli.Command{
 	Usage: "fix block",
 	Flags: flags(),
 	Action: func(c *cli.Context) error {
-		blkHash, err := newClient(c).PostBlock(context.Background())
+		blkHash, err := newClient().PostBlock(context.Background())
 		if err != nil {
 			return err
 		}

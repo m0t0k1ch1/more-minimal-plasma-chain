@@ -36,7 +36,7 @@ var cmdTxCreate = cli.Command{
 			return err
 		}
 
-		clnt := newClient(c)
+		clnt := newClient()
 		ctx := context.Background()
 
 		// get input tx

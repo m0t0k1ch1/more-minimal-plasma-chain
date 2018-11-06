@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -16,21 +17,16 @@ import (
 	"github.com/urfave/cli"
 )
 
-func newClient(c *cli.Context) *client.Client {
-	return client.New(getString(c, apiFlag))
+func newClient() *client.Client {
+	return client.New(conf.ChildChain.API)
 }
 
-func newRootChain(c *cli.Context) (*core.RootChain, error) {
-	addr, err := getAddress(c, contractAddrFlag)
-	if err != nil {
-		return nil, err
-	}
+func newRootChain() (*core.RootChain, error) {
+	return core.NewRootChain(conf.RootChain)
+}
 
-	return core.NewRootChain(&core.RootChainConfig{
-		RPC:     getString(c, rpcFlag),
-		WS:      getString(c, wsFlag),
-		Address: utils.AddressToHex(addr),
-	})
+func getGlobalString(c *cli.Context, f cli.Flag) string {
+	return c.GlobalString(f.GetName())
 }
 
 func getBool(c *cli.Context, f cli.Flag) bool {
@@ -124,4 +120,11 @@ func printlnJSON(v interface{}) error {
 	fmt.Println(string(b))
 
 	return nil
+}
+
+func exit(err error) {
+	printlnJSON(map[string]string{
+		"error": err.Error(),
+	})
+	os.Exit(1)
 }

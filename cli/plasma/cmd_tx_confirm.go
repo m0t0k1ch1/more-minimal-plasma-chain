@@ -30,7 +30,7 @@ var cmdTxConfirm = cli.Command{
 			return err
 		}
 
-		clnt := newClient(c)
+		clnt := newClient()
 		ctx := context.Background()
 
 		// get tx

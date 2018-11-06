@@ -22,7 +22,7 @@ var cmdBlockCommit = cli.Command{
 			return err
 		}
 
-		rc, err := newRootChain(c)
+		rc, err := newRootChain()
 		if err != nil {
 			return err
 		}

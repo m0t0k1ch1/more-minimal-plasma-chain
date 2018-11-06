@@ -1,10 +1,24 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/urfave/cli"
 )
+
+var (
+	conf Config
+)
+
+func loadConfig(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	return json.NewDecoder(file).Decode(&conf)
+}
 
 func main() {
 	app := cli.NewApp()
@@ -15,11 +29,17 @@ func main() {
 		cmdExit,
 		cmdTx,
 	}
+	app.Flags = []cli.Flag{
+		confFlag,
+	}
+	app.Before = func(c *cli.Context) error {
+		if err := loadConfig(getGlobalString(c, confFlag)); err != nil {
+			exit(err)
+		}
+		return nil
+	}
 
 	if err := app.Run(os.Args); err != nil {
-		printlnJSON(map[string]string{
-			"error": err.Error(),
-		})
-		os.Exit(1)
+		exit(err)
 	}
 }

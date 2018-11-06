@@ -8,11 +8,7 @@ const (
 )
 
 var (
-	// common flags added by flags()
-	rpcFlag          = cli.StringFlag{Name: "rpc", Value: "http://127.0.0.1:7545"}
-	wsFlag           = cli.StringFlag{Name: "ws", Value: "ws://127.0.0.1:7545"}
-	contractAddrFlag = cli.StringFlag{Name: "contract", Value: nullAddressStr}
-	apiFlag          = cli.StringFlag{Name: "api", Value: "http://127.0.0.1:1323"}
+	confFlag = cli.StringFlag{Name: "conf", Value: "config.json"}
 
 	blkHashFlag     = cli.StringFlag{Name: "blkhash", Value: nullHashStr}
 	blkRootHashFlag = cli.StringFlag{Name: "blkroot", Value: nullHashStr}
@@ -31,9 +27,6 @@ var (
 
 func flags(fs ...cli.Flag) []cli.Flag {
 	return append([]cli.Flag{
-		rpcFlag,
-		wsFlag,
-		contractAddrFlag,
-		apiFlag,
+		confFlag,
 	}, fs...)
 }

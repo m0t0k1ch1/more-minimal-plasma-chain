@@ -19,7 +19,7 @@ var cmdTxIndex = cli.Command{
 			return err
 		}
 
-		blkNum, txIndex, err := newClient(c).GetTxIndex(context.Background(), txHash)
+		blkNum, txIndex, err := newClient().GetTxIndex(context.Background(), txHash)
 		if err != nil {
 			return err
 		}

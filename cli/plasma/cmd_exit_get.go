@@ -23,13 +23,13 @@ var cmdExitGet = cli.Command{
 			return err
 		}
 
-		rc, err := newRootChain(c)
+		rc, err := newRootChain()
 		if err != nil {
 			return err
 		}
 
 		// get tx index
-		blkNum, txIndex, err := newClient(c).GetTxIndex(context.Background(), txHash)
+		blkNum, txIndex, err := newClient().GetTxIndex(context.Background(), txHash)
 		if err != nil {
 			return err
 		}
