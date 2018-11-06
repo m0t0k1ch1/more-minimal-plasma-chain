@@ -37,7 +37,7 @@ func BytesToSignature(b []byte) (Signature, error) {
 	}
 
 	sig := Signature{}
-	copy(sig[:], b[:])
+	copy(sig[:], b)
 
 	return sig, nil
 }
