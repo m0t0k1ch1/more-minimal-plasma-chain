@@ -61,20 +61,15 @@ func (cc *ChildChain) CurrentBlockNumber() *big.Int {
 	return cc.currentBlockNumber()
 }
 
-func (cc *ChildChain) GetBlockHash(blkNum *big.Int) (common.Hash, error) {
+func (cc *ChildChain) GetBlock(blkNum *big.Int) (*types.Block, error) {
 	cc.mu.RLock()
 	defer cc.mu.RUnlock()
 
 	if !cc.isExistBlockHash(blkNum) {
-		return types.NullHash, ErrBlockNotFound
+		return nil, ErrBlockNotFound
 	}
 
-	return cc.getBlockHash(blkNum), nil
-}
-
-func (cc *ChildChain) GetBlock(blkHash common.Hash) (*types.Block, error) {
-	cc.mu.RLock()
-	defer cc.mu.RUnlock()
+	blkHash := cc.getBlockHash(blkNum)
 
 	if !cc.isExistLightBlock(blkHash) {
 		return nil, ErrBlockNotFound
@@ -83,7 +78,7 @@ func (cc *ChildChain) GetBlock(blkHash common.Hash) (*types.Block, error) {
 	return cc.getBlock(blkHash)
 }
 
-func (cc *ChildChain) AddBlock(signer *types.Account) (common.Hash, error) {
+func (cc *ChildChain) AddBlock(signer *types.Account) (*big.Int, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -91,31 +86,30 @@ func (cc *ChildChain) AddBlock(signer *types.Account) (common.Hash, error) {
 
 	// check block validity
 	if len(blk.Txes) == 0 {
-		return types.NullHash, ErrEmptyBlock
+		return nil, ErrEmptyBlock
 	}
 
 	// sign block
 	if err := blk.Sign(signer); err != nil {
-		return types.NullHash, err
+		return nil, err
 	}
 
 	// add block
-	blkHash, err := cc.addBlock(blk)
-	if err != nil {
-		return types.NullHash, err
+	if err := cc.addBlock(blk); err != nil {
+		return nil, err
 	}
 
 	// reset current block
 	blkNext, err := types.NewBlock(nil, cc.newNextBlockNumber())
 	if err != nil {
-		return types.NullHash, err
+		return nil, err
 	}
 	cc.currentBlock = blkNext
 
-	return blkHash, nil
+	return blk.Number, nil
 }
 
-func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int, signer *types.Account) (common.Hash, common.Hash, error) {
+func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int, signer *types.Account) (*big.Int, common.Hash, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -123,24 +117,23 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 	tx := types.NewTx()
 	txOut := types.NewTxOut(ownerAddr, amount)
 	if err := tx.SetOutput(big.NewInt(0), txOut); err != nil {
-		return types.NullHash, types.NullHash, err
+		return nil, types.NullHash, err
 	}
 
 	// create deposit block
 	blk, err := types.NewBlock([]*types.Tx{tx}, cc.newCurrentBlockNumber())
 	if err != nil {
-		return types.NullHash, types.NullHash, err
+		return nil, types.NullHash, err
 	}
 
 	// sign deposit block
 	if err := blk.Sign(signer); err != nil {
-		return types.NullHash, types.NullHash, err
+		return nil, types.NullHash, err
 	}
 
 	// add deposit block
-	blkHash, err := cc.addBlock(blk)
-	if err != nil {
-		return types.NullHash, types.NullHash, err
+	if err := cc.addBlock(blk); err != nil {
+		return nil, types.NullHash, err
 	}
 
 	txHash := cc.getTxHash(cc.currentBlockNumber(), big.NewInt(0))
@@ -148,7 +141,7 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 	// increment current block number
 	cc.incrementBlockNumber()
 
-	return blkHash, txHash, nil
+	return blk.Number, txHash, nil
 }
 
 func (cc *ChildChain) GetTx(txHash common.Hash) (*types.Tx, error) {
@@ -306,15 +299,15 @@ func (cc *ChildChain) getBlockByIndex(blkNum *big.Int) (*types.Block, error) {
 	return cc.getBlock(cc.getBlockHash(blkNum))
 }
 
-func (cc *ChildChain) addBlock(blk *types.Block) (common.Hash, error) {
+func (cc *ChildChain) addBlock(blk *types.Block) error {
 	lblk, err := blk.Lighten()
 	if err != nil {
-		return types.NullHash, err
+		return err
 	}
 
 	blkHash, err := blk.Hash()
 	if err != nil {
-		return types.NullHash, err
+		return err
 	}
 	blkHashStr := utils.HashToHex(blkHash)
 
@@ -331,7 +324,7 @@ func (cc *ChildChain) addBlock(blk *types.Block) (common.Hash, error) {
 		cc.blockTxes[utils.HashToHex(txHash)] = tx.InBlock(blk.Number, iBig)
 	}
 
-	return blkHash, nil
+	return nil
 }
 
 func (cc *ChildChain) getLightBlock(blkHash common.Hash) *types.LightBlock {

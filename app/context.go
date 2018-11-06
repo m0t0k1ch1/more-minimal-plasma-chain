@@ -23,10 +23,6 @@ func (c *Context) GetBlockNumberFromPath() (*big.Int, error) {
 	return c.getBigIntFromPath("blkNum")
 }
 
-func (c *Context) GetBlockHashFromPath() (common.Hash, error) {
-	return c.getHashFromPath("blkHash")
-}
-
 func (c *Context) GetTxHashFromPath() (common.Hash, error) {
 	return c.getHashFromPath("txHash")
 }
