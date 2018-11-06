@@ -8,11 +8,11 @@ import (
 var cmdTxSign = cli.Command{
 	Name:  "sign",
 	Usage: "sign tx",
-	Flags: []cli.Flag{
+	Flags: flags(
 		txFlag,
 		iIndexFlag,
 		privKeyFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		tx, err := getTx(c, txFlag)
 		if err != nil {

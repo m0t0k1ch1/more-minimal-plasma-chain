@@ -10,10 +10,9 @@ import (
 var cmdTxPost = cli.Command{
 	Name:  "post",
 	Usage: "post tx",
-	Flags: []cli.Flag{
-		apiFlag,
+	Flags: flags(
 		txFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		tx, err := getTx(c, txFlag)
 		if err != nil {

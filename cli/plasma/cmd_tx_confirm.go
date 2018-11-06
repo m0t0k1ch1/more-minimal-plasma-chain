@@ -11,12 +11,11 @@ import (
 var cmdTxConfirm = cli.Command{
 	Name:  "confirm",
 	Usage: "confirm tx",
-	Flags: []cli.Flag{
-		apiFlag,
+	Flags: flags(
 		txHashFlag,
 		iIndexFlag,
 		privKeyFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		txHash, err := getHash(c, txHashFlag)
 		if err != nil {

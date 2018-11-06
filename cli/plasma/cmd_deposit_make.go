@@ -8,11 +8,10 @@ import (
 var cmdDepositMake = cli.Command{
 	Name:  "make",
 	Usage: "make deposit",
-	Flags: []cli.Flag{
-		rpcFlag, wsFlag, contractAddrFlag,
+	Flags: flags(
 		amountFlag,
 		privKeyFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		rc, err := newRootChain(c)
 		if err != nil {

@@ -10,13 +10,11 @@ import (
 var cmdExitStart = cli.Command{
 	Name:  "start",
 	Usage: "start exit",
-	Flags: []cli.Flag{
-		rpcFlag, wsFlag, contractAddrFlag,
-		apiFlag,
+	Flags: flags(
 		txHashFlag,
 		oIndexFlag,
 		privKeyFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		txHash, err := getHash(c, txHashFlag)
 		if err != nil {

@@ -8,11 +8,10 @@ import (
 var cmdBlockCommit = cli.Command{
 	Name:  "commit",
 	Usage: "commit block root to root chain",
-	Flags: []cli.Flag{
-		rpcFlag, wsFlag, contractAddrFlag,
+	Flags: flags(
 		blkRootHashFlag,
 		privKeyFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		blkRootHash, err := getHash(c, blkRootHashFlag)
 		if err != nil {

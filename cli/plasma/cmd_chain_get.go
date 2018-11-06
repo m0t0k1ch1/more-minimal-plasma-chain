@@ -10,10 +10,9 @@ import (
 var cmdChainGet = cli.Command{
 	Name:  "get",
 	Usage: "get block hash",
-	Flags: []cli.Flag{
-		apiFlag,
+	Flags: flags(
 		blkNumFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		blkNum, err := getBigInt(c, blkNumFlag)
 		if err != nil {

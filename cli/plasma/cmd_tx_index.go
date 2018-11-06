@@ -10,10 +10,9 @@ import (
 var cmdTxIndex = cli.Command{
 	Name:  "index",
 	Usage: "get tx index",
-	Flags: []cli.Flag{
-		apiFlag,
+	Flags: flags(
 		txHashFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		txHash, err := getHash(c, txHashFlag)
 		if err != nil {
