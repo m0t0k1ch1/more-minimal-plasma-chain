@@ -197,7 +197,7 @@ func (cc *ChildChain) GetTxProof(txHash common.Hash) ([]byte, error) {
 		return nil, err
 	}
 
-	// create proof
+	// create tx proof
 	return tree.CreateMembershipProof(btx.TxIndex.Uint64())
 }
 
