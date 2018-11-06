@@ -35,10 +35,7 @@ var cmdTxConfirm = cli.Command{
 		ctx := context.Background()
 
 		// get tx
-		tx, err := clnt.GetTx(
-			ctx,
-			txHash,
-		)
+		tx, err := clnt.GetTx(ctx, txHash)
 		if err != nil {
 			return err
 		}
@@ -49,10 +46,7 @@ var cmdTxConfirm = cli.Command{
 		}
 
 		// update confirmation signature
-		if _, err := clnt.PutTx(
-			ctx,
-			txHash, iIndex, tx.GetInput(iIndex).ConfirmationSignature,
-		); err != nil {
+		if _, err := clnt.PutTx(ctx, txHash, iIndex, tx.GetInput(iIndex).ConfirmationSignature); err != nil {
 			return err
 		}
 

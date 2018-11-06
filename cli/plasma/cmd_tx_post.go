@@ -20,10 +20,7 @@ var cmdTxPost = cli.Command{
 			return err
 		}
 
-		txHash, err := newClient(c).PostTx(
-			context.Background(),
-			tx,
-		)
+		txHash, err := newClient(c).PostTx(context.Background(), tx)
 		if err != nil {
 			return err
 		}

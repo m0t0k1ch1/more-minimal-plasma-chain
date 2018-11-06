@@ -20,10 +20,7 @@ var cmdTxProof = cli.Command{
 			return err
 		}
 
-		txProofBytes, err := newClient(c).GetTxProof(
-			context.Background(),
-			txHash,
-		)
+		txProofBytes, err := newClient(c).GetTxProof(context.Background(), txHash)
 		if err != nil {
 			return err
 		}

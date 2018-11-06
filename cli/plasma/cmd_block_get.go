@@ -20,10 +20,7 @@ var cmdBlockGet = cli.Command{
 			return err
 		}
 
-		blk, err := newClient(c).GetBlock(
-			context.Background(),
-			blkHash,
-		)
+		blk, err := newClient(c).GetBlock(context.Background(), blkHash)
 		if err != nil {
 			return err
 		}

@@ -41,19 +41,13 @@ var cmdTxCreate = cli.Command{
 		ctx := context.Background()
 
 		// get input tx
-		inTx, err := clnt.GetTx(
-			ctx,
-			txHash,
-		)
+		inTx, err := clnt.GetTx(ctx, txHash)
 		if err != nil {
 			return err
 		}
 
 		// get input tx index
-		blkNum, txIndex, err := clnt.GetTxIndex(
-			ctx,
-			txHash,
-		)
+		blkNum, txIndex, err := clnt.GetTxIndex(ctx, txHash)
 		if err != nil {
 			return err
 		}
