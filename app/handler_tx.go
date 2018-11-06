@@ -83,7 +83,7 @@ func (p *Plasma) GetTxProofHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	proofBytes, err := p.childChain.GetTxProof(txHash)
+	txProofBytes, err := p.childChain.GetTxProof(txHash)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
@@ -92,7 +92,7 @@ func (p *Plasma) GetTxProofHandler(c *Context) error {
 	}
 
 	return c.JSONSuccess(map[string]interface{}{
-		"proof": utils.EncodeToHex(proofBytes),
+		"proof": utils.EncodeToHex(txProofBytes),
 	})
 }
 
