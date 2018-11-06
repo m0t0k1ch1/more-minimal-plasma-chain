@@ -31,8 +31,16 @@ type RootChainConfig struct {
 	AddressStr string `json:"address"`
 }
 
+func (conf RootChainConfig) Address() (common.Address, error) {
+	if ok := utils.IsHexAddress(conf.AddressStr); !ok {
+		return mmpctypes.NullAddress, fmt.Errorf("invalid root chain address")
+	}
+
+	return utils.HexToAddress(conf.AddressStr), nil
+}
+
 type RootChain struct {
-	config    *RootChainConfig
+	config    RootChainConfig
 	address   common.Address
 	abi       abi.ABI
 	rpcClient *ethclient.Client
@@ -40,7 +48,7 @@ type RootChain struct {
 	contract  *bind.BoundContract
 }
 
-func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
+func NewRootChain(conf RootChainConfig) (*RootChain, error) {
 	rc := &RootChain{
 		config: conf,
 	}
@@ -63,10 +71,11 @@ func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
 }
 
 func (rc *RootChain) initAddress() error {
-	if ok := utils.IsHexAddress(rc.config.AddressStr); !ok {
-		return fmt.Errorf("invalid root chain address")
+	addr, err := rc.config.Address()
+	if err != nil {
+		return err
 	}
-	rc.address = utils.HexToAddress(rc.config.AddressStr)
+	rc.address = addr
 	return nil
 }
 

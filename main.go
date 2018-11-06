@@ -12,18 +12,18 @@ const (
 	DefaultConfigPath = "config.json"
 )
 
-func loadConfig(path string) (*app.Config, error) {
+func loadConfig(path string) (app.Config, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return app.Config{}, err
 	}
 
 	var conf app.Config
 	if err := json.NewDecoder(file).Decode(&conf); err != nil {
-		return nil, err
+		return app.Config{}, err
 	}
 
-	return &conf, nil
+	return conf, nil
 }
 
 func main() {
