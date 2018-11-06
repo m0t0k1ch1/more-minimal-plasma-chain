@@ -77,7 +77,7 @@ func (p *Plasma) initRootChain() error {
 }
 
 func (p *Plasma) initOperator() error {
-	privKey, err := crypto.HexToECDSA(p.config.Operator.PrivateKey)
+	privKey, err := crypto.HexToECDSA(p.config.Operator.PrivateKeyStr)
 	if err != nil {
 		return err
 	}

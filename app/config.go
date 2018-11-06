@@ -9,5 +9,5 @@ type Config struct {
 }
 
 type OperatorConfig struct {
-	PrivateKey string `json:"privkey"`
+	PrivateKeyStr string `json:"privkey"`
 }

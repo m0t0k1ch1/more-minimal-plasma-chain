@@ -26,9 +26,9 @@ var (
 )
 
 type RootChainConfig struct {
-	RPC     string `json:"rpc"`
-	WS      string `json:"ws"`
-	Address string `json:"address"`
+	RPC        string `json:"rpc"`
+	WS         string `json:"ws"`
+	AddressStr string `json:"address"`
 }
 
 type RootChain struct {
@@ -63,10 +63,10 @@ func NewRootChain(conf *RootChainConfig) (*RootChain, error) {
 }
 
 func (rc *RootChain) initAddress() error {
-	if ok := utils.IsHexAddress(rc.config.Address); !ok {
+	if ok := utils.IsHexAddress(rc.config.AddressStr); !ok {
 		return fmt.Errorf("invalid root chain address")
 	}
-	rc.address = utils.HexToAddress(rc.config.Address)
+	rc.address = utils.HexToAddress(rc.config.AddressStr)
 	return nil
 }
 
@@ -178,7 +178,7 @@ func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *RootC
 	arg := map[string]interface{}{
 		"fromBlock": "0x0",
 		"toBlock":   "latest",
-		"address":   rc.config.Address,
+		"address":   rc.config.AddressStr,
 		"topics": []interface{}{
 			rc.abi.Events["DepositCreated"].Id().Hex(),
 			nil,
