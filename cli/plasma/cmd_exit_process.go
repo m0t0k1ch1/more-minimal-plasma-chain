@@ -5,19 +5,14 @@ import (
 	"github.com/urfave/cli"
 )
 
-var cmdRootChainCommit = cli.Command{
-	Name:  "commit",
-	Usage: "commit block root",
+var cmdExitProcess = cli.Command{
+	Name:  "process",
+	Usage: "process exits",
 	Flags: []cli.Flag{
 		rpcFlag, wsFlag, contractAddrFlag,
-		blkRootHashFlag,
 		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
-		blkRootHash, err := getHash(c, blkRootHashFlag)
-		if err != nil {
-			return err
-		}
 		privKey, err := getPrivateKey(c, privKeyFlag)
 		if err != nil {
 			return err
@@ -28,7 +23,7 @@ var cmdRootChainCommit = cli.Command{
 			return err
 		}
 
-		txn, err := rc.CommitPlasmaBlockRoot(types.NewAccount(privKey), blkRootHash)
+		txn, err := rc.ProcessExits(types.NewAccount(privKey))
 		if err != nil {
 			return err
 		}

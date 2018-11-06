@@ -9,7 +9,7 @@ import (
 
 var cmdChainGet = cli.Command{
 	Name:  "get",
-	Usage: "get chain",
+	Usage: "get block hash",
 	Flags: []cli.Flag{
 		apiFlag,
 		blkNumFlag,

@@ -5,14 +5,19 @@ import (
 	"github.com/urfave/cli"
 )
 
-var cmdRootChainWithdraw = cli.Command{
-	Name:  "withdraw",
-	Usage: "withdraw",
+var cmdBlockCommit = cli.Command{
+	Name:  "commit",
+	Usage: "commit block root to root chain",
 	Flags: []cli.Flag{
 		rpcFlag, wsFlag, contractAddrFlag,
+		blkRootHashFlag,
 		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
+		blkRootHash, err := getHash(c, blkRootHashFlag)
+		if err != nil {
+			return err
+		}
 		privKey, err := getPrivateKey(c, privKeyFlag)
 		if err != nil {
 			return err
@@ -23,7 +28,7 @@ var cmdRootChainWithdraw = cli.Command{
 			return err
 		}
 
-		txn, err := rc.ProcessExits(types.NewAccount(privKey))
+		txn, err := rc.CommitPlasmaBlockRoot(types.NewAccount(privKey), blkRootHash)
 		if err != nil {
 			return err
 		}

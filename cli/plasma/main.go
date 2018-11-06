@@ -11,7 +11,7 @@ func main() {
 	app.Commands = []cli.Command{
 		cmdBlock,
 		cmdChain,
-		cmdRootChain,
+		cmdExit,
 		cmdTx,
 	}
 
