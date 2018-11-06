@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
@@ -17,14 +16,14 @@ import (
 type HandlerFunc func(*Context) error
 
 type Plasma struct {
-	config     *Config
+	config     Config
 	server     *echo.Echo
 	operator   *types.Account
 	rootChain  *core.RootChain
 	childChain *core.ChildChain
 }
 
-func NewPlasma(conf *Config) (*Plasma, error) {
+func NewPlasma(conf Config) (*Plasma, error) {
 	p := &Plasma{
 		config: conf,
 	}
@@ -77,7 +76,7 @@ func (p *Plasma) initRootChain() error {
 }
 
 func (p *Plasma) initOperator() error {
-	privKey, err := crypto.HexToECDSA(p.config.Operator.PrivateKey)
+	privKey, err := p.config.Operator.PrivateKey()
 	if err != nil {
 		return err
 	}

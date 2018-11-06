@@ -1,13 +1,22 @@
 package app
 
-import "github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+import (
+	"crypto/ecdsa"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+)
 
 type Config struct {
-	Port      int                   `json:"port"`
-	Operator  *OperatorConfig       `json:"operator"`
-	RootChain *core.RootChainConfig `json:"rootchain"`
+	Port      int                  `json:"port"`
+	Operator  OperatorConfig       `json:"operator"`
+	RootChain core.RootChainConfig `json:"rootchain"`
 }
 
 type OperatorConfig struct {
-	PrivateKey string `json:"privkey"`
+	PrivateKeyStr string `json:"privkey"`
+}
+
+func (conf OperatorConfig) PrivateKey() (*ecdsa.PrivateKey, error) {
+	return crypto.HexToECDSA(conf.PrivateKeyStr)
 }

@@ -13,7 +13,7 @@ var cmdDepositMake = cli.Command{
 		privKeyFlag,
 	),
 	Action: func(c *cli.Context) error {
-		rc, err := newRootChain(c)
+		rc, err := newRootChain()
 		if err != nil {
 			return err
 		}
