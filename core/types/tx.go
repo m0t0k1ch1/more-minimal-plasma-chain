@@ -113,6 +113,28 @@ func (tx *Tx) MerkleLeaf() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (tx *Tx) SignaturesBytes() ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+	for _, txIn := range tx.Inputs {
+		if _, err := buf.Write(txIn.Signature.Bytes()); err != nil {
+			return nil, err
+		}
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (tx *Tx) ConfirmationSignaturesBytes() ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+	for _, txIn := range tx.Inputs {
+		if _, err := buf.Write(txIn.ConfirmationSignature.Bytes()); err != nil {
+			return nil, err
+		}
+	}
+
+	return buf.Bytes(), nil
+}
+
 func (tx *Tx) GetInput(iIndex *big.Int) *TxIn {
 	if !tx.IsExistInput(iIndex) {
 		return nil
