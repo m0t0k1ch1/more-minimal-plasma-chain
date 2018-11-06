@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	merkle "github.com/m0t0k1ch1/fixed-merkle"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 const (
@@ -93,16 +94,14 @@ func (blk *Block) MerkleTree() (*merkle.Tree, error) {
 }
 
 func (blk *Block) Root() (common.Hash, error) {
-	rootHash := common.Hash{}
+	blkRootHash := common.Hash{}
 
 	tree, err := blk.MerkleTree()
 	if err != nil {
-		return rootHash, err
+		return blkRootHash, err
 	}
 
-	copy(rootHash[:], tree.Root().Bytes()[:])
-
-	return rootHash, nil
+	return utils.BytesToHash(tree.Root().Bytes()), nil
 }
 
 func (blk *Block) AddTx(tx *Tx) error {
