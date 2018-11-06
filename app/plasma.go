@@ -56,7 +56,6 @@ func (p *Plasma) initServer() {
 
 func (p *Plasma) initRoutes() {
 	p.GET("/ping", p.PingHandler)
-	p.GET("/chain/:blkNum", p.GetChainHandler)
 	p.POST("/blocks", p.PostBlockHandler)
 	p.GET("/blocks/:blkHash", p.GetBlockHandler)
 	p.POST("/txes", p.PostTxHandler)
