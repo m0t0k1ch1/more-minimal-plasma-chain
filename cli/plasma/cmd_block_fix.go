@@ -10,9 +10,7 @@ import (
 var cmdBlockFix = cli.Command{
 	Name:  "fix",
 	Usage: "fix block",
-	Flags: []cli.Flag{
-		apiFlag,
-	},
+	Flags: flags(),
 	Action: func(c *cli.Context) error {
 		blkHash, err := newClient(c).PostBlock(context.Background())
 		if err != nil {

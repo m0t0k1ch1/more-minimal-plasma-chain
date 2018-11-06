@@ -9,11 +9,10 @@ import (
 var cmdTxGet = cli.Command{
 	Name:  "get",
 	Usage: "get tx",
-	Flags: []cli.Flag{
-		apiFlag,
+	Flags: flags(
 		txHashFlag,
 		encodedFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		txHash, err := getHash(c, txHashFlag)
 		if err != nil {

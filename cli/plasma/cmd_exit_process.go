@@ -8,10 +8,9 @@ import (
 var cmdExitProcess = cli.Command{
 	Name:  "process",
 	Usage: "process exits",
-	Flags: []cli.Flag{
-		rpcFlag, wsFlag, contractAddrFlag,
+	Flags: flags(
 		privKeyFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		privKey, err := getPrivateKey(c, privKeyFlag)
 		if err != nil {

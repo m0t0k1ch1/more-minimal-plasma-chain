@@ -12,13 +12,12 @@ import (
 var cmdTxCreate = cli.Command{
 	Name:  "create",
 	Usage: "create tx",
-	Flags: []cli.Flag{
-		apiFlag,
+	Flags: flags(
 		txHashFlag,
 		oIndexFlag,
 		toAddrFlag,
 		amountFlag,
-	},
+	),
 	Action: func(c *cli.Context) error {
 		txHash, err := getHash(c, txHashFlag)
 		if err != nil {

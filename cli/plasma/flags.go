@@ -8,11 +8,11 @@ const (
 )
 
 var (
+	// common flags added by flags()
 	rpcFlag          = cli.StringFlag{Name: "rpc", Value: "http://127.0.0.1:7545"}
 	wsFlag           = cli.StringFlag{Name: "ws", Value: "ws://127.0.0.1:7545"}
 	contractAddrFlag = cli.StringFlag{Name: "contract", Value: nullAddressStr}
-
-	apiFlag = cli.StringFlag{Name: "api", Value: "http://127.0.0.1:1323"}
+	apiFlag          = cli.StringFlag{Name: "api", Value: "http://127.0.0.1:1323"}
 
 	blkHashFlag     = cli.StringFlag{Name: "blkhash", Value: nullHashStr}
 	blkRootHashFlag = cli.StringFlag{Name: "blkroot", Value: nullHashStr}
@@ -28,3 +28,12 @@ var (
 	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
 	encodedFlag = cli.BoolFlag{Name: "encoded"}
 )
+
+func flags(fs ...cli.Flag) []cli.Flag {
+	return append([]cli.Flag{
+		rpcFlag,
+		wsFlag,
+		contractAddrFlag,
+		apiFlag,
+	}, fs...)
+}
