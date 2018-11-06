@@ -20,7 +20,7 @@ var cmdTxProof = cli.Command{
 			return err
 		}
 
-		proofBytes, err := newClient(c).GetTxProof(
+		txProofBytes, err := newClient(c).GetTxProof(
 			context.Background(),
 			txHash,
 		)
@@ -29,7 +29,7 @@ var cmdTxProof = cli.Command{
 		}
 
 		return printlnJSON(map[string]string{
-			"proof": utils.EncodeToHex(proofBytes),
+			"proof": utils.EncodeToHex(txProofBytes),
 		})
 	},
 }

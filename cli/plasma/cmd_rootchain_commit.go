@@ -10,8 +10,8 @@ var cmdRootChainCommit = cli.Command{
 	Usage: "commit block root",
 	Flags: []cli.Flag{
 		rpcFlag, wsFlag, contractAddrFlag,
-		privKeyFlag,
 		blkRootHashFlag,
+		privKeyFlag,
 	},
 	Action: func(c *cli.Context) error {
 		blkRootHash, err := getHash(c, blkRootHashFlag)
