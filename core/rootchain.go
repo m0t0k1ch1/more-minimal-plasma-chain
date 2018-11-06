@@ -21,8 +21,6 @@ const RootChainABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"operator\",\"
 
 var (
 	DefaultExitBondAmount = big.NewInt(123456789)
-	BlockPositionOffset   = big.NewInt(1000000000)
-	TxPositionOffset      = big.NewInt(10000)
 )
 
 type RootChainConfig struct {
@@ -126,12 +124,8 @@ func (rc *RootChain) CurrentPlasmaBlockNumber() (*big.Int, error) {
 }
 
 func (rc *RootChain) PlasmaExits(blkNum, txIndex, oIndex *big.Int) (mmpctypes.Exit, error) {
-	utxoPos := new(big.Int).Set(oIndex)
-	utxoPos.Add(utxoPos, new(big.Int).Mul(txIndex, TxPositionOffset))
-	utxoPos.Add(utxoPos, new(big.Int).Mul(blkNum, BlockPositionOffset))
-
 	exit := new(mmpctypes.Exit)
-	if err := rc.contract.Call(nil, exit, "plasmaExits", utxoPos); err != nil {
+	if err := rc.contract.Call(nil, exit, "plasmaExits", TxOutPosition(blkNum, txIndex, oIndex)); err != nil {
 		return mmpctypes.Exit{}, err
 	}
 
