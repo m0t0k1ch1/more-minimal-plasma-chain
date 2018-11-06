@@ -33,15 +33,15 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	rootHash, err := blk.Root()
+	blkRootHash, err := blk.Root()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	if _, err := p.rootChain.CommitPlasmaBlockRoot(p.operator, rootHash); err != nil {
+	if _, err := p.rootChain.CommitPlasmaBlockRoot(p.operator, blkRootHash); err != nil {
 		return c.JSONError(err)
 	}
-	p.Logger().Infof("[COMMIT] root: %s", utils.HashToHex(rootHash))
+	p.Logger().Infof("[COMMIT] root: %s", utils.HashToHex(blkRootHash))
 
 	return c.JSONSuccess(map[string]interface{}{
 		"blkhash": utils.HashToHex(blkHash),
