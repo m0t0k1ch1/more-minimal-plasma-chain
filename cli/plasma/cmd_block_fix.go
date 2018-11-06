@@ -18,7 +18,7 @@ var cmdBlockFix = cli.Command{
 		}
 
 		return printlnJSON(map[string]*big.Int{
-			"blkhash": blkNum,
+			"blknum": blkNum,
 		})
 	},
 }
