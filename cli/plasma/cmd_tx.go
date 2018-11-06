@@ -10,6 +10,7 @@ var cmdTx = cli.Command{
 	Subcommands: []cli.Command{
 		cmdTxConfirm,
 		cmdTxCreate,
+		cmdTxDecode,
 		cmdTxGet,
 		cmdTxPost,
 		cmdTxProof,

@@ -11,11 +11,11 @@ var cmdTxGet = cli.Command{
 	Usage: "get tx",
 	Flags: []cli.Flag{
 		apiFlag,
-		hashFlag,
+		txHashFlag,
 		encodedFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txHash, err := getHash(c, hashFlag)
+		txHash, err := getHash(c, txHashFlag)
 		if err != nil {
 			return err
 		}

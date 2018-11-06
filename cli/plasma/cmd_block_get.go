@@ -11,11 +11,11 @@ var cmdBlockGet = cli.Command{
 	Usage: "get block",
 	Flags: []cli.Flag{
 		apiFlag,
-		hashFlag,
+		blkHashFlag,
 		encodedFlag,
 	},
 	Action: func(c *cli.Context) error {
-		blkHash, err := getHash(c, hashFlag)
+		blkHash, err := getHash(c, blkHashFlag)
 		if err != nil {
 			return err
 		}

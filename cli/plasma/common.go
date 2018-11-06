@@ -21,7 +21,7 @@ func newClient(c *cli.Context) *client.Client {
 }
 
 func newRootChain(c *cli.Context) (*core.RootChain, error) {
-	addr, err := getAddress(c, contractFlag)
+	addr, err := getAddress(c, contractAddrFlag)
 	if err != nil {
 		return nil, err
 	}
