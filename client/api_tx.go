@@ -97,6 +97,29 @@ func (c *Client) GetTxProof(ctx context.Context, txHash common.Hash) ([]byte, er
 	return utils.DecodeHex(resp.Result.ProofStr)
 }
 
+type GetTxIndexResponse struct {
+	State  string `json:"state"`
+	Result struct {
+		BlockNumber *big.Int `json:"blknum"`
+		TxIndex     *big.Int `json:"txindex"`
+	} `json:"result"`
+}
+
+func (c *Client) GetTxIndex(ctx context.Context, txHash common.Hash) (*big.Int, *big.Int, error) {
+	var resp GetTxIndexResponse
+	if err := c.doAPI(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("txes/%s/index", utils.HashToHex(txHash)),
+		nil,
+		&resp,
+	); err != nil {
+		return nil, nil, err
+	}
+
+	return resp.Result.BlockNumber, resp.Result.TxIndex, nil
+}
+
 type PutTxResponse struct {
 	State  string `json:"state"`
 	Result struct {
