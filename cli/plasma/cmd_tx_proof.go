@@ -12,10 +12,10 @@ var cmdTxProof = cli.Command{
 	Usage: "get tx proof",
 	Flags: []cli.Flag{
 		apiFlag,
-		hashFlag,
+		txHashFlag,
 	},
 	Action: func(c *cli.Context) error {
-		txHash, err := getHash(c, hashFlag)
+		txHash, err := getHash(c, txHashFlag)
 		if err != nil {
 			return err
 		}

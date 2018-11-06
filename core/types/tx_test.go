@@ -26,8 +26,8 @@ func newTestDepositTx(t *testing.T) *Tx {
 
 func TestTx_Hash(t *testing.T) {
 	type output struct {
-		hash common.Hash
-		err  error
+		txHash common.Hash
+		err    error
 	}
 	testCases := []struct {
 		name string
@@ -56,12 +56,12 @@ func TestTx_Hash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx, out := tc.tx, tc.out
 
-			h, err := tx.Hash()
+			txHash, err := tx.Hash()
 			if out.err != nil {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.hash, h)
+				assert.Equal(t, out.txHash, txHash)
 			}
 		})
 	}
@@ -69,8 +69,8 @@ func TestTx_Hash(t *testing.T) {
 
 func TestTx_ConfirmationHash(t *testing.T) {
 	type output struct {
-		hash common.Hash
-		err  error
+		txConfHash common.Hash
+		err        error
 	}
 	testCases := []struct {
 		name string
@@ -99,12 +99,12 @@ func TestTx_ConfirmationHash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx, out := tc.tx, tc.out
 
-			h, err := tx.ConfirmationHash()
+			txConfHash, err := tx.ConfirmationHash()
 			if out.err != nil {
 				assert.EqualError(t, err, out.err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, out.hash, h)
+				assert.Equal(t, out.txConfHash, txConfHash)
 			}
 		})
 	}

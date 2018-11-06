@@ -9,28 +9,26 @@ var cmdRootChainCommit = cli.Command{
 	Name:  "commit",
 	Usage: "commit block root",
 	Flags: []cli.Flag{
-		rpcFlag, wsFlag, contractFlag,
+		rpcFlag, wsFlag, contractAddrFlag,
 		privKeyFlag,
-		rootFlag,
+		blkRootHashFlag,
 	},
 	Action: func(c *cli.Context) error {
-		rootHash, err := getHash(c, rootFlag)
+		blkRootHash, err := getHash(c, blkRootHashFlag)
 		if err != nil {
 			return err
 		}
-
 		privKey, err := getPrivateKey(c, privKeyFlag)
 		if err != nil {
 			return err
 		}
-		a := types.NewAccount(privKey)
 
 		rc, err := newRootChain(c)
 		if err != nil {
 			return err
 		}
 
-		txn, err := rc.CommitPlasmaBlockRoot(a, rootHash)
+		txn, err := rc.CommitPlasmaBlockRoot(types.NewAccount(privKey), blkRootHash)
 		if err != nil {
 			return err
 		}

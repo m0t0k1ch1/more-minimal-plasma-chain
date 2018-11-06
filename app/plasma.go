@@ -62,6 +62,7 @@ func (p *Plasma) initRoutes() {
 	p.GET("/blocks/:blkHash", p.GetBlockHandler)
 	p.POST("/txes", p.PostTxHandler)
 	p.GET("/txes/:txHash", p.GetTxHandler)
+	p.GET("/txes/:txHash/index", p.GetTxIndexHandler)
 	p.GET("/txes/:txHash/proof", p.GetTxProofHandler)
 	p.PUT("/txes/:txHash", p.PutTxHandler)
 }
@@ -133,13 +134,14 @@ func (p *Plasma) watchRootChain() error {
 	go func() {
 		defer sub.Unsubscribe()
 		for log := range sink {
-			blkHash, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
+			blkHash, txHash, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
 			if err != nil {
 				p.Logger().Error(err)
 			} else {
 				p.Logger().Infof(
-					"[DEPOSIT] blkhash: %s, owner: %s: amount: %s",
+					"[DEPOSIT] blkhash: %s, txhash: %s, owner: %s, amount: %s",
 					utils.HashToHex(blkHash),
+					utils.HashToHex(txHash),
 					utils.AddressToHex(log.Owner),
 					log.Amount.String(),
 				)

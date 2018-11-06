@@ -106,7 +106,7 @@ func (cc *ChildChain) AddBlock(signer *types.Account) (common.Hash, error) {
 	}
 
 	// reset current block
-	blkNext, err := types.NewBlock(nil, cc.nextBlockNumber())
+	blkNext, err := types.NewBlock(nil, cc.newNextBlockNumber())
 	if err != nil {
 		return types.NullHash, err
 	}
@@ -115,7 +115,7 @@ func (cc *ChildChain) AddBlock(signer *types.Account) (common.Hash, error) {
 	return blkHash, nil
 }
 
-func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int, signer *types.Account) (common.Hash, error) {
+func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int, signer *types.Account) (common.Hash, common.Hash, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -123,30 +123,32 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 	tx := types.NewTx()
 	txOut := types.NewTxOut(ownerAddr, amount)
 	if err := tx.SetOutput(big.NewInt(0), txOut); err != nil {
-		return types.NullHash, err
+		return types.NullHash, types.NullHash, err
 	}
 
 	// create deposit block
-	blk, err := types.NewBlock([]*types.Tx{tx}, cc.currentBlockNumber())
+	blk, err := types.NewBlock([]*types.Tx{tx}, cc.newCurrentBlockNumber())
 	if err != nil {
-		return types.NullHash, err
+		return types.NullHash, types.NullHash, err
 	}
 
 	// sign deposit block
 	if err := blk.Sign(signer); err != nil {
-		return types.NullHash, err
+		return types.NullHash, types.NullHash, err
 	}
 
 	// add deposit block
 	blkHash, err := cc.addBlock(blk)
 	if err != nil {
-		return types.NullHash, err
+		return types.NullHash, types.NullHash, err
 	}
+
+	txHash := cc.getTxHash(cc.currentBlockNumber(), big.NewInt(0))
 
 	// increment current block number
 	cc.incrementBlockNumber()
 
-	return blkHash, nil
+	return blkHash, txHash, nil
 }
 
 func (cc *ChildChain) GetTx(txHash common.Hash) (*types.Tx, error) {
@@ -158,6 +160,19 @@ func (cc *ChildChain) GetTx(txHash common.Hash) (*types.Tx, error) {
 	}
 
 	return cc.getTx(txHash), nil
+}
+
+func (cc *ChildChain) GetTxIndex(txHash common.Hash) (*big.Int, *big.Int, error) {
+	cc.mu.RLock()
+	defer cc.mu.RUnlock()
+
+	if !cc.isExistBlockTx(txHash) {
+		return nil, nil, ErrTxNotFound
+	}
+
+	btx := cc.getBlockTx(txHash)
+
+	return btx.BlockNumber, btx.TxIndex, nil
 }
 
 func (cc *ChildChain) GetTxProof(txHash common.Hash) ([]byte, error) {
@@ -247,7 +262,11 @@ func (cc *ChildChain) currentBlockNumber() *big.Int {
 	return cc.currentBlock.Number
 }
 
-func (cc *ChildChain) nextBlockNumber() *big.Int {
+func (cc *ChildChain) newCurrentBlockNumber() *big.Int {
+	return new(big.Int).Set(cc.currentBlockNumber())
+}
+
+func (cc *ChildChain) newNextBlockNumber() *big.Int {
 	return new(big.Int).Add(cc.currentBlockNumber(), big.NewInt(1))
 }
 
