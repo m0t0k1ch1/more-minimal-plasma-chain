@@ -26,6 +26,10 @@ func (c *Context) GetTxPositionFromPath() (types.Position, error) {
 	return c.getPositionFromPath("txPos")
 }
 
+func (c *Context) GetTxInPositionFromPath() (types.Position, error) {
+	return c.getPositionFromPath("txInPos")
+}
+
 func (c *Context) getBigIntFromPath(key string) (*big.Int, error) {
 	i, ok := new(big.Int).SetString(c.getPathParam(key), 10)
 	if !ok {
@@ -48,30 +52,12 @@ func (c *Context) getPathParam(key string) string {
 	return c.Param(key)
 }
 
-func (c *Context) GetInputIndexFromForm() (*big.Int, error) {
-	return c.getRequiredBigIntFromForm("index")
-}
-
 func (c *Context) GetConfirmationSignatureFromForm() (types.Signature, error) {
 	return c.getRequiredSignatureFromForm("confsig")
 }
 
 func (c *Context) GetTxFromForm() (*types.Tx, error) {
 	return c.getRequiredTxFromForm("tx")
-}
-
-func (c *Context) getRequiredBigIntFromForm(key string) (*big.Int, error) {
-	iStr, err := c.getRequiredFormParam(key)
-	if err != nil {
-		return big.NewInt(0), err
-	}
-
-	i, ok := new(big.Int).SetString(iStr, 10)
-	if !ok {
-		return big.NewInt(0), NewInvalidFormParamError(key)
-	}
-
-	return i, nil
 }
 
 func (c *Context) getRequiredSignatureFromForm(key string) (types.Signature, error) {

@@ -30,7 +30,7 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 	}
 
 	return c.JSONSuccess(map[string]types.Position{
-		"txpos": txPos,
+		"pos": txPos,
 	})
 }
 
@@ -74,38 +74,5 @@ func (p *Plasma) GetTxProofHandler(c *Context) error {
 
 	return c.JSONSuccess(map[string]string{
 		"proof": utils.EncodeToHex(txProofBytes),
-	})
-}
-
-func (p *Plasma) PutTxHandler(c *Context) error {
-	c.Request().ParseForm()
-
-	txPos, err := c.GetTxPositionFromPath()
-	if err != nil {
-		return c.JSONError(err)
-	}
-
-	iIndex, err := c.GetInputIndexFromForm()
-	if err != nil {
-		return c.JSONError(err)
-	}
-	confSig, err := c.GetConfirmationSignatureFromForm()
-	if err != nil {
-		return c.JSONError(err)
-	}
-
-	if err := p.childChain.ConfirmTx(txPos, iIndex, confSig); err != nil {
-		if err == core.ErrInvalidTxConfirmationSignature {
-			return c.JSONError(ErrInvalidTxConfirmationSignature)
-		} else if err == core.ErrTxInNotFound {
-			return c.JSONError(ErrTxInNotFound)
-		} else if err == core.ErrNullTxInConfirmation {
-			return c.JSONError(ErrNullTxInConfirmation)
-		}
-		return c.JSONError(err)
-	}
-
-	return c.JSONSuccess(map[string]types.Position{
-		"txpos": txPos,
 	})
 }
