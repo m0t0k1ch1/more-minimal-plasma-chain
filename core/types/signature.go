@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	SignatureSize = 65 // bytes
+	SignatureLength = 65 // bytes
 )
 
 var (
@@ -27,14 +27,14 @@ var (
 )
 
 var (
-	ErrInvalidSignatureSize = fmt.Errorf("signature must be %d bytes", SignatureSize)
+	ErrInvalidSignatureLength = fmt.Errorf("signature must be %d bytes", SignatureLength)
 )
 
-type Signature [SignatureSize]byte
+type Signature [SignatureLength]byte
 
 func BytesToSignature(b []byte) (Signature, error) {
-	if len(b) != SignatureSize {
-		return NullSignature, ErrInvalidSignatureSize
+	if len(b) != SignatureLength {
+		return NullSignature, ErrInvalidSignatureLength
 	}
 
 	sig := Signature{}
