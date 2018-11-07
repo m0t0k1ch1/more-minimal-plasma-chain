@@ -25,7 +25,15 @@ func NewTxPosition(blkNum, txIndex *big.Int) Position {
 	return NewPosition(pos)
 }
 
-func NewTxOutPosition(blkNum, txIndex, index *big.Int) Position {
+func NewTxInPosition(blkNum, txIndex, iIndex *big.Int) Position {
+	return newTxElementPosition(blkNum, txIndex, iIndex)
+}
+
+func NewTxOutPosition(blkNum, txIndex, oIndex *big.Int) Position {
+	return newTxElementPosition(blkNum, txIndex, oIndex)
+}
+
+func newTxElementPosition(blkNum, txIndex, index *big.Int) Position {
 	pos := NewTxPosition(blkNum, txIndex)
 	pos.Mul(pos.Int, TxPositionOffset)
 	pos.Add(pos.Int, index)
@@ -38,7 +46,15 @@ func ParseTxPosition(pos Position) (blkNum, txIndex *big.Int) {
 	return
 }
 
-func ParseTxOutPosition(pos Position) (blkNum, txIndex, index *big.Int) {
+func ParseTxInPosition(pos Position) (*big.Int, *big.Int, *big.Int) {
+	return parseTxElementPosition(pos)
+}
+
+func ParseTxOutPosition(pos Position) (*big.Int, *big.Int, *big.Int) {
+	return parseTxElementPosition(pos)
+}
+
+func parseTxElementPosition(pos Position) (blkNum, txIndex, index *big.Int) {
 	txPos := new(big.Int).Div(pos.Int, TxPositionOffset)
 	blkNum, txIndex = ParseTxPosition(NewPosition(txPos))
 	index = new(big.Int).Mod(pos.Int, txPos)
