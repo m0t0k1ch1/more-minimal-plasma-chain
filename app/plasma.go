@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/dgraph-io/badger"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
@@ -19,6 +20,7 @@ type HandlerFunc func(*Context) error
 type Plasma struct {
 	config     Config
 	server     *echo.Echo
+	db         *badger.DB
 	operator   *types.Account
 	rootChain  *core.RootChain
 	childChain *core.ChildChain
@@ -30,6 +32,9 @@ func NewPlasma(conf Config) (*Plasma, error) {
 	}
 
 	p.initServer()
+	if err := p.initDB(); err != nil {
+		return nil, err
+	}
 	if err := p.initRootChain(); err != nil {
 		return nil, err
 	}
@@ -53,6 +58,18 @@ func (p *Plasma) initServer() {
 	p.server.HTTPErrorHandler = p.httpErrorHandler
 	p.server.Logger.SetLevel(log.INFO)
 	p.initRoutes()
+}
+
+func (p *Plasma) initDB() error {
+	opts := badger.DefaultOptions
+	opts.Dir = p.config.DB.Dir
+	opts.ValueDir = p.config.DB.Dir
+	db, err := badger.Open(opts)
+	if err != nil {
+		return err
+	}
+	p.db = db
+	return nil
 }
 
 func (p *Plasma) initRoutes() {
