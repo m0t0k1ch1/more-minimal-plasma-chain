@@ -87,7 +87,7 @@ func (blk *Block) Root() (common.Hash, error) {
 }
 
 func (blk *Block) LastTxIndex() *big.Int {
-	return big.NewInt(int64(len(blk.Txes)))
+	return big.NewInt(int64(len(blk.Txes) - 1))
 }
 
 func (blk *Block) IsExistTx(txIndex *big.Int) bool {
