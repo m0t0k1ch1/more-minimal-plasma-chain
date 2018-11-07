@@ -123,9 +123,9 @@ func (rc *RootChain) CurrentPlasmaBlockNumber() (*big.Int, error) {
 	return *blkNum, nil
 }
 
-func (rc *RootChain) PlasmaExits(blkNum, txIndex, oIndex *big.Int) (mmpctypes.Exit, error) {
+func (rc *RootChain) PlasmaExits(txOutPos mmpctypes.Position) (mmpctypes.Exit, error) {
 	exit := new(mmpctypes.Exit)
-	if err := rc.contract.Call(nil, exit, "plasmaExits", mmpctypes.NewTxOutPosition(blkNum, txIndex, oIndex)); err != nil {
+	if err := rc.contract.Call(nil, exit, "plasmaExits", txOutPos.Int); err != nil {
 		return mmpctypes.Exit{}, err
 	}
 
@@ -143,7 +143,9 @@ func (rc *RootChain) Deposit(a *mmpctypes.Account, amount *big.Int) (*gethtypes.
 	return rc.contract.Transact(opts, "deposit")
 }
 
-func (rc *RootChain) StartExit(a *mmpctypes.Account, blkNum, txIndex, oIndex *big.Int, tx *mmpctypes.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {
+func (rc *RootChain) StartExit(a *mmpctypes.Account, txOutPos mmpctypes.Position, tx *mmpctypes.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {
+	blkNum, txIndex, oIndex := mmpctypes.ParseTxOutPosition(txOutPos)
+
 	encodedTxBytes, err := tx.Encode()
 	if err != nil {
 		return nil, err
