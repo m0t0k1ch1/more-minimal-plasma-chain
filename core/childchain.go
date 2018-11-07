@@ -164,22 +164,22 @@ func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (types.Position, error) {
 
 	// validate tx
 	if err := cc.validateTx(tx); err != nil {
-		return types.Position{}, err
+		return types.NullPosition, err
 	}
 
 	// add tx to mempool
 	if err := cc.addTxToMempool(tx); err != nil {
-		return types.Position{}, err
+		return types.NullPosition, err
 	}
 
 	return types.NewTxPosition(cc.currentBlock.Number, cc.currentBlock.LastTxIndex()), nil
 }
 
-func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature) error {
+func (cc *ChildChain) ConfirmTx(txPos types.Position, iIndex *big.Int, confSig types.Signature) error {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
-	blkNum, txIndex, iIndex := types.ParseTxElementPosition(txInPos)
+	blkNum, txIndex := types.ParseTxPosition(txPos)
 
 	// check tx existence
 	if !cc.isExistTx(blkNum, txIndex) {
