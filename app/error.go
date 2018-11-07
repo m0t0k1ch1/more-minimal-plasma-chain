@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 const (
@@ -26,6 +27,8 @@ var (
 	ErrInvalidTxIn                    = NewError(11008, core.ErrInvalidTxIn.Error())
 	ErrNullTxInConfirmation           = NewError(11009, core.ErrNullTxInConfirmation.Error())
 	ErrTxOutAlreadySpent              = NewError(11010, core.ErrTxOutAlreadySpent.Error())
+
+	ErrBlockTxesNumExceedsLimit = NewError(12001, types.ErrBlockTxesNumExceedsLimit.Error())
 )
 
 type Error struct {

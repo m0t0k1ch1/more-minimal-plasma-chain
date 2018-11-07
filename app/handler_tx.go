@@ -25,6 +25,8 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 			return c.JSONError(ErrInvalidTxIn)
 		} else if err == core.ErrTxOutAlreadySpent {
 			return c.JSONError(ErrTxOutAlreadySpent)
+		} else if err == types.ErrBlockTxesNumExceedsLimit {
+			return c.JSONError(ErrBlockTxesNumExceedsLimit)
 		}
 		return c.JSONError(err)
 	}
