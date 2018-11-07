@@ -16,10 +16,6 @@ const (
 )
 
 var (
-	TxElementsNumBig = big.NewInt(TxElementsNum)
-)
-
-var (
 	ErrInvalidTxInIndex  = fmt.Errorf("txin index must be less than %d", TxElementsNum)
 	ErrInvalidTxOutIndex = fmt.Errorf("txout index must be less than %d", TxElementsNum)
 )
@@ -148,7 +144,7 @@ func (tx *Tx) SetInput(inIndex *big.Int, txIn *TxIn) error {
 }
 
 func (tx *Tx) IsExistInput(inIndex *big.Int) bool {
-	return inIndex.Cmp(TxElementsNumBig) < 0
+	return inIndex.Uint64() < TxElementsNum
 }
 
 func (tx *Tx) GetOutput(outIndex *big.Int) *TxOut {
@@ -180,7 +176,7 @@ func (tx *Tx) SpendOutput(outIndex *big.Int) error {
 }
 
 func (tx *Tx) IsExistOutput(outIndex *big.Int) bool {
-	return outIndex.Cmp(TxElementsNumBig) < 0
+	return outIndex.Uint64() < TxElementsNum
 }
 
 func (tx *Tx) Sign(inIndex *big.Int, signer *Account) error {
