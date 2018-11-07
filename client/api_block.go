@@ -12,7 +12,7 @@ import (
 )
 
 type PostBlockResponse struct {
-	State  string `json:"state"`
+	*ResponseBase
 	Result struct {
 		BlockNumber *big.Int `json:"blknum"`
 	} `json:"result"`
@@ -34,7 +34,7 @@ func (c *Client) PostBlock(ctx context.Context) (*big.Int, error) {
 }
 
 type GetBlockResponse struct {
-	State  string `json:"state"`
+	*ResponseBase
 	Result struct {
 		BlockStr string `json:"blk"`
 	} `json:"result"`

@@ -13,7 +13,7 @@ import (
 )
 
 type PostTxResponse struct {
-	State  string `json:"state"`
+	*ResponseBase
 	Result struct {
 		Pos *big.Int `json:"pos"`
 	} `json:"result"`
@@ -43,7 +43,7 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (types.Position, erro
 }
 
 type GetTxResponse struct {
-	State  string `json:"state"`
+	*ResponseBase
 	Result struct {
 		TxStr string `json:"tx"`
 	} `json:"result"`
@@ -75,7 +75,7 @@ func (c *Client) GetTx(ctx context.Context, txPos types.Position) (*types.Tx, er
 }
 
 type GetTxProofResponse struct {
-	State  string `json:"state"`
+	*ResponseBase
 	Result struct {
 		ProofStr string `json:"proof"`
 	} `json:"result"`

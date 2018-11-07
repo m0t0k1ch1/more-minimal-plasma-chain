@@ -11,7 +11,7 @@ import (
 )
 
 type PutTxInResponse struct {
-	State  string `json:"state"`
+	*ResponseBase
 	Result struct {
 		Pos *big.Int `json:"pos"`
 	} `json:"result"`
