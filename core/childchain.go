@@ -253,16 +253,15 @@ func (cc *ChildChain) addBlock(blk *types.Block) {
 }
 
 func (cc *ChildChain) getTx(blkNum, txIndex *big.Int) *types.Tx {
-	return cc.chain[blkNum.String()].Txes[txIndex.Int64()]
+	return cc.getBlock(blkNum).GetTx(txIndex)
 }
 
 func (cc *ChildChain) isExistTx(blkNum, txIndex *big.Int) bool {
-	blk, ok := cc.chain[blkNum.String()]
-	if !ok {
+	if !cc.isExistBlock(blkNum) {
 		return false
 	}
 
-	return blk.IsExistTx(txIndex)
+	return cc.getBlock(blkNum).IsExistTx(txIndex)
 }
 
 func (cc *ChildChain) validateTx(tx *types.Tx) error {

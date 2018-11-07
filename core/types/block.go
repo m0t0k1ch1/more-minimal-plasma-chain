@@ -90,6 +90,18 @@ func (blk *Block) LastTxIndex() *big.Int {
 	return big.NewInt(int64(len(blk.Txes)))
 }
 
+func (blk *Block) IsExistTx(txIndex *big.Int) bool {
+	return txIndex.Cmp(big.NewInt(int64(len(blk.Txes)))) < 0
+}
+
+func (blk *Block) GetTx(txIndex *big.Int) *Tx {
+	if !blk.IsExistTx(txIndex) {
+		return nil
+	}
+
+	return blk.Txes[txIndex.Uint64()]
+}
+
 func (blk *Block) AddTx(tx *Tx) error {
 	if len(blk.Txes) >= MaxBlockTxesNum {
 		return ErrBlockTxesNumExceedsLimit
@@ -98,10 +110,6 @@ func (blk *Block) AddTx(tx *Tx) error {
 	blk.Txes = append(blk.Txes, tx)
 
 	return nil
-}
-
-func (blk *Block) IsExistTx(txIndex *big.Int) bool {
-	return txIndex.Cmp(big.NewInt(int64(len(blk.Txes)))) < 0
 }
 
 func (blk *Block) Sign(signer *Account) error {
