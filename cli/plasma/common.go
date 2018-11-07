@@ -56,6 +56,15 @@ func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
 	return utils.HexToAddress(addrStr), nil
 }
 
+func getPosition(c *cli.Context, f cli.Flag) (types.Position, error) {
+	i, err := getBigInt(c, f)
+	if err != nil {
+		return types.NullPosition, err
+	}
+
+	return types.NewPosition(i), nil
+}
+
 func getHash(c *cli.Context, f cli.Flag) (common.Hash, error) {
 	hashStr := getString(c, f)
 

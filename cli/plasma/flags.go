@@ -10,16 +10,16 @@ const (
 var (
 	confFlag = cli.StringFlag{Name: "conf", Value: "config.json"}
 
-	blkHashFlag     = cli.StringFlag{Name: "blkhash", Value: nullHashStr}
 	blkRootHashFlag = cli.StringFlag{Name: "blkroot", Value: nullHashStr}
 	blkNumFlag      = cli.StringFlag{Name: "blknum", Value: "0"}
 
-	txFlag     = cli.StringFlag{Name: "tx", Value: ""}
-	txHashFlag = cli.StringFlag{Name: "txhash", Value: nullHashStr}
-	iIndexFlag = cli.StringFlag{Name: "iindex", Value: "0"}
-	oIndexFlag = cli.StringFlag{Name: "oindex", Value: "0"}
-	toAddrFlag = cli.StringFlag{Name: "to", Value: nullAddressStr}
-	amountFlag = cli.StringFlag{Name: "amount", Value: "0"}
+	txFlag       = cli.StringFlag{Name: "tx", Value: ""}
+	txPosFlag    = cli.StringFlag{Name: "txpos", Value: "0"}
+	txOutPosFlag = cli.StringFlag{Name: "txopos", Value: "0"}
+	iIndexFlag   = cli.StringFlag{Name: "iindex", Value: "0"}
+	oIndexFlag   = cli.StringFlag{Name: "oindex", Value: "0"}
+	toAddrFlag   = cli.StringFlag{Name: "to", Value: nullAddressStr}
+	amountFlag   = cli.StringFlag{Name: "amount", Value: "0"}
 
 	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
 	encodedFlag = cli.BoolFlag{Name: "encoded"}

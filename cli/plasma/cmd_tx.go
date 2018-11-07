@@ -12,7 +12,6 @@ var cmdTx = cli.Command{
 		cmdTxCreate,
 		cmdTxDecode,
 		cmdTxGet,
-		cmdTxIndex,
 		cmdTxPost,
 		cmdTxProof,
 		cmdTxSign,

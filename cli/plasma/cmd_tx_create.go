@@ -13,17 +13,12 @@ var cmdTxCreate = cli.Command{
 	Name:  "create",
 	Usage: "create tx",
 	Flags: flags(
-		txHashFlag,
-		oIndexFlag,
+		txOutPosFlag,
 		toAddrFlag,
 		amountFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txHash, err := getHash(c, txHashFlag)
-		if err != nil {
-			return err
-		}
-		oIndex, err := getBigInt(c, oIndexFlag)
+		txOutPos, err := getPosition(c, txOutPosFlag)
 		if err != nil {
 			return err
 		}
@@ -39,14 +34,11 @@ var cmdTxCreate = cli.Command{
 		clnt := newClient()
 		ctx := context.Background()
 
-		// get input tx
-		inTx, err := clnt.GetTx(ctx, txHash)
-		if err != nil {
-			return err
-		}
+		blkNum, txIndex, oIndex := types.ParseTxOutPosition(txOutPos)
+		txPos := types.NewTxPosition(blkNum, txIndex)
 
-		// get input tx index
-		blkNum, txIndex, err := clnt.GetTxIndex(ctx, txHash)
+		// get input tx
+		inTx, err := clnt.GetTx(ctx, txPos)
 		if err != nil {
 			return err
 		}

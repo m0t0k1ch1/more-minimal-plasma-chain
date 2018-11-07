@@ -11,16 +11,11 @@ var cmdExitStart = cli.Command{
 	Name:  "start",
 	Usage: "start exit",
 	Flags: flags(
-		txHashFlag,
-		oIndexFlag,
+		txOutPosFlag,
 		privKeyFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txHash, err := getHash(c, txHashFlag)
-		if err != nil {
-			return err
-		}
-		oIndex, err := getBigInt(c, oIndexFlag)
+		txOutPos, err := getPosition(c, txOutPosFlag)
 		if err != nil {
 			return err
 		}
@@ -37,26 +32,23 @@ var cmdExitStart = cli.Command{
 		clnt := newClient()
 		ctx := context.Background()
 
-		// get tx
-		tx, err := clnt.GetTx(ctx, txHash)
-		if err != nil {
-			return err
-		}
+		blkNum, txIndex, _ := types.ParseTxOutPosition(txOutPos)
+		txPos := types.NewTxPosition(blkNum, txIndex)
 
-		// get tx index
-		blkNum, txIndex, err := clnt.GetTxIndex(ctx, txHash)
+		// get tx
+		tx, err := clnt.GetTx(ctx, txPos)
 		if err != nil {
 			return err
 		}
 
 		// get tx proof
-		txProofBytes, err := clnt.GetTxProof(ctx, txHash)
+		txProofBytes, err := clnt.GetTxProof(ctx, txPos)
 		if err != nil {
 			return err
 		}
 
 		// start exit
-		txn, err := rc.StartExit(types.NewAccount(privKey), blkNum, txIndex, oIndex, tx, txProofBytes)
+		txn, err := rc.StartExit(types.NewAccount(privKey), txOutPos, tx, txProofBytes)
 		if err != nil {
 			return err
 		}

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-
 	"github.com/urfave/cli"
 )
 
@@ -10,15 +8,10 @@ var cmdExitGet = cli.Command{
 	Name:  "get",
 	Usage: "get exit",
 	Flags: flags(
-		txHashFlag,
-		oIndexFlag,
+		txOutPosFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txHash, err := getHash(c, txHashFlag)
-		if err != nil {
-			return err
-		}
-		oIndex, err := getBigInt(c, oIndexFlag)
+		txOutPos, err := getPosition(c, txOutPosFlag)
 		if err != nil {
 			return err
 		}
@@ -28,14 +21,7 @@ var cmdExitGet = cli.Command{
 			return err
 		}
 
-		// get tx index
-		blkNum, txIndex, err := newClient().GetTxIndex(context.Background(), txHash)
-		if err != nil {
-			return err
-		}
-
-		// get exit
-		exit, err := rc.PlasmaExits(blkNum, txIndex, oIndex)
+		exit, err := rc.PlasmaExits(txOutPos)
 		if err != nil {
 			return err
 		}
