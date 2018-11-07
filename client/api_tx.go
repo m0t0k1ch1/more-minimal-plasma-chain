@@ -15,7 +15,7 @@ import (
 type PostTxResponse struct {
 	State  string `json:"state"`
 	Result struct {
-		PosBig *big.Int `json:"pos"`
+		Pos *big.Int `json:"pos"`
 	} `json:"result"`
 }
 
@@ -39,7 +39,7 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (types.Position, erro
 		return types.NullPosition, err
 	}
 
-	return types.NewPosition(resp.Result.PosBig), nil
+	return types.NewPosition(resp.Result.Pos), nil
 }
 
 type GetTxResponse struct {
