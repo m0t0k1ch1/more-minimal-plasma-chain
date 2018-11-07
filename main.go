@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/app"
 )
@@ -40,5 +43,20 @@ func main() {
 		panic(err)
 	}
 
-	p.Logger().Fatal(p.Start())
+	done := make(chan bool, 1)
+	go func() {
+		sigterm := make(chan os.Signal, 1)
+		signal.Notify(sigterm, syscall.SIGTERM)
+		<-sigterm
+
+		p.Finalize()
+		if err := p.Shutdown(context.Background()); err != nil {
+			p.Logger().Fatal(err)
+		}
+		close(done)
+	}()
+	if err := p.Start(); err != nil {
+		p.Logger().Info(err)
+	}
+	<-done
 }
