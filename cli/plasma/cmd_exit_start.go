@@ -11,11 +11,11 @@ var cmdExitStart = cli.Command{
 	Name:  "start",
 	Usage: "start exit",
 	Flags: flags(
-		txOutPosFlag,
+		posFlag,
 		privKeyFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txOutPos, err := getPosition(c, txOutPosFlag)
+		txOutPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}

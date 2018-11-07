@@ -8,10 +8,10 @@ var cmdExitGet = cli.Command{
 	Name:  "get",
 	Usage: "get exit",
 	Flags: flags(
-		txOutPosFlag,
+		posFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txOutPos, err := getPosition(c, txOutPosFlag)
+		txOutPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}

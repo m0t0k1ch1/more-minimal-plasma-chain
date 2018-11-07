@@ -10,11 +10,11 @@ var cmdBlockGet = cli.Command{
 	Name:  "get",
 	Usage: "get block",
 	Flags: flags(
-		blkNumFlag,
+		numFlag,
 		encodedFlag,
 	),
 	Action: func(c *cli.Context) error {
-		blkNum, err := getBigInt(c, blkNumFlag)
+		blkNum, err := getBigInt(c, numFlag)
 		if err != nil {
 			return err
 		}

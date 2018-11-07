@@ -11,10 +11,10 @@ var cmdTxProof = cli.Command{
 	Name:  "proof",
 	Usage: "get tx proof",
 	Flags: flags(
-		txPosFlag,
+		posFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txPos, err := getPosition(c, txPosFlag)
+		txPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}

@@ -13,16 +13,16 @@ var cmdTxCreate = cli.Command{
 	Name:  "create",
 	Usage: "create tx",
 	Flags: flags(
-		txOutPosFlag,
-		toAddrFlag,
+		posFlag,
+		toFlag,
 		amountFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txOutPos, err := getPosition(c, txOutPosFlag)
+		txOutPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}
-		toAddr, err := getAddress(c, toAddrFlag)
+		toAddr, err := getAddress(c, toFlag)
 		if err != nil {
 			return err
 		}

@@ -11,16 +11,11 @@ var cmdTxConfirm = cli.Command{
 	Name:  "confirm",
 	Usage: "confirm tx",
 	Flags: flags(
-		txPosFlag,
-		iIndexFlag,
+		posFlag,
 		privKeyFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txPos, err := getPosition(c, txPosFlag)
-		if err != nil {
-			return err
-		}
-		iIndex, err := getBigInt(c, iIndexFlag)
+		txInPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}
@@ -31,6 +26,9 @@ var cmdTxConfirm = cli.Command{
 
 		clnt := newClient()
 		ctx := context.Background()
+
+		blkNum, txIndex, iIndex := types.ParseTxInPosition(txInPos)
+		txPos := types.NewTxPosition(blkNum, txIndex)
 
 		// get tx
 		tx, err := clnt.GetTx(ctx, txPos)
@@ -44,12 +42,12 @@ var cmdTxConfirm = cli.Command{
 		}
 
 		// update confirmation signature
-		if _, err := clnt.PutTx(ctx, txPos, iIndex, tx.GetInput(iIndex).ConfirmationSignature); err != nil {
+		if _, err := clnt.PutTxIn(ctx, txInPos, tx.GetInput(iIndex).ConfirmationSignature); err != nil {
 			return err
 		}
 
-		return printlnJSON(map[string]string{
-			"txpos": txPos.String(),
+		return printlnJSON(map[string]types.Position{
+			"txipos": txInPos,
 		})
 	},
 }

@@ -10,7 +10,7 @@ var cmdTxSign = cli.Command{
 	Usage: "sign tx",
 	Flags: flags(
 		txFlag,
-		iIndexFlag,
+		indexFlag,
 		privKeyFlag,
 	),
 	Action: func(c *cli.Context) error {
@@ -18,7 +18,7 @@ var cmdTxSign = cli.Command{
 		if err != nil {
 			return err
 		}
-		iIndex, err := getBigInt(c, iIndexFlag)
+		iIndex, err := getBigInt(c, indexFlag)
 		if err != nil {
 			return err
 		}

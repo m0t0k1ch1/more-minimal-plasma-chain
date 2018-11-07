@@ -10,11 +10,11 @@ var cmdTxGet = cli.Command{
 	Name:  "get",
 	Usage: "get tx",
 	Flags: flags(
-		txPosFlag,
+		posFlag,
 		encodedFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txPos, err := getPosition(c, txPosFlag)
+		txPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}
