@@ -56,10 +56,16 @@ var cmdTxCreate = cli.Command{
 
 		// create tx
 		tx := types.NewTx()
-		tx.Inputs[0] = types.NewTxIn(blkNum, txIndex, oIndex)
-		tx.Outputs[0] = types.NewTxOut(toAddr, amount)
+		if err := tx.SetInput(big.NewInt(0), types.NewTxIn(blkNum, txIndex, oIndex)); err != nil {
+			return err
+		}
+		if err := tx.SetOutput(big.NewInt(0), types.NewTxOut(toAddr, amount)); err != nil {
+			return err
+		}
 		if changeAmount.Cmp(big.NewInt(0)) > 0 {
-			tx.Outputs[1] = types.NewTxOut(inTxOut.OwnerAddress, changeAmount)
+			if err := tx.SetOutput(big.NewInt(1), types.NewTxOut(inTxOut.OwnerAddress, changeAmount)); err != nil {
+				return err
+			}
 		}
 
 		return printlnEncodedTx(tx)
