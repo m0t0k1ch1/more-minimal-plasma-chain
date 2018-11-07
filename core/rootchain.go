@@ -13,7 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/rpc"
-	mmpctypes "github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
@@ -31,7 +31,7 @@ type RootChainConfig struct {
 
 func (conf RootChainConfig) Address() (common.Address, error) {
 	if ok := utils.IsHexAddress(conf.AddressStr); !ok {
-		return mmpctypes.NullAddress, fmt.Errorf("invalid root chain address")
+		return types.NullAddress, fmt.Errorf("invalid root chain address")
 	}
 
 	return utils.HexToAddress(conf.AddressStr), nil
@@ -123,28 +123,28 @@ func (rc *RootChain) CurrentPlasmaBlockNumber() (*big.Int, error) {
 	return *blkNum, nil
 }
 
-func (rc *RootChain) PlasmaExits(txOutPos mmpctypes.Position) (mmpctypes.Exit, error) {
-	exit := new(mmpctypes.Exit)
+func (rc *RootChain) PlasmaExits(txOutPos types.Position) (types.Exit, error) {
+	exit := new(types.Exit)
 	if err := rc.contract.Call(nil, exit, "plasmaExits", txOutPos.Int); err != nil {
-		return mmpctypes.Exit{}, err
+		return types.Exit{}, err
 	}
 
 	return *exit, nil
 }
 
-func (rc *RootChain) CommitPlasmaBlockRoot(a *mmpctypes.Account, rootHash common.Hash) (*gethtypes.Transaction, error) {
+func (rc *RootChain) CommitPlasmaBlockRoot(a *types.Account, rootHash common.Hash) (*gethtypes.Transaction, error) {
 	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootHash)
 }
 
-func (rc *RootChain) Deposit(a *mmpctypes.Account, amount *big.Int) (*gethtypes.Transaction, error) {
+func (rc *RootChain) Deposit(a *types.Account, amount *big.Int) (*gethtypes.Transaction, error) {
 	opts := a.TransactOpts()
 	opts.Value = amount
 
 	return rc.contract.Transact(opts, "deposit")
 }
 
-func (rc *RootChain) StartExit(a *mmpctypes.Account, txOutPos mmpctypes.Position, tx *mmpctypes.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {
-	blkNum, txIndex, oIndex := mmpctypes.ParseTxOutPosition(txOutPos)
+func (rc *RootChain) StartExit(a *types.Account, txOutPos types.Position, tx *types.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {
+	blkNum, txIndex, oIndex := types.ParseTxOutPosition(txOutPos)
 
 	encodedTxBytes, err := tx.Encode()
 	if err != nil {
@@ -167,7 +167,7 @@ func (rc *RootChain) StartExit(a *mmpctypes.Account, txOutPos mmpctypes.Position
 	return rc.contract.Transact(opts, "startExit", blkNum, txIndex, oIndex, encodedTxBytes, txProofBytes, sigsBytes, confSigsBytes)
 }
 
-func (rc *RootChain) ProcessExits(a *mmpctypes.Account) (*gethtypes.Transaction, error) {
+func (rc *RootChain) ProcessExits(a *types.Account) (*gethtypes.Transaction, error) {
 	return rc.contract.Transact(a.TransactOpts(), "processExits")
 }
 
