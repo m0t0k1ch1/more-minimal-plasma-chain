@@ -137,11 +137,11 @@ func (p *Plasma) watchRootChain() error {
 				p.Logger().Error(err)
 			} else {
 				p.Logger().Infof(
-					"[DEPOSIT] blknum: %s, txpos: %s, owner: %s, amount: %s",
-					blkNum.String(),
-					types.NewTxPosition(blkNum, big.NewInt(0)).String(),
+					"[DEPOSIT] blknum: %d, txpos: %d, owner: %s, amount: %d",
+					blkNum,
+					types.NewTxPosition(blkNum, big.NewInt(0)),
 					utils.AddressToHex(log.Owner),
-					log.Amount.String(),
+					log.Amount,
 				)
 			}
 		}

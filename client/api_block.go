@@ -45,7 +45,7 @@ func (c *Client) GetBlock(ctx context.Context, blkNum *big.Int) (*types.Block, e
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("blocks/%s", blkNum.String()),
+		fmt.Sprintf("blocks/%d", blkNum),
 		nil,
 		&resp,
 	); err != nil {

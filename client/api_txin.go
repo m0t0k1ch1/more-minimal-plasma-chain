@@ -25,7 +25,7 @@ func (c *Client) PutTxIn(ctx context.Context, txInPos types.Position, confSig ty
 	if err := c.doAPI(
 		ctx,
 		http.MethodPut,
-		fmt.Sprintf("txins/%s", txInPos.String()),
+		fmt.Sprintf("txins/%d", txInPos),
 		v,
 		&resp,
 	); err != nil {

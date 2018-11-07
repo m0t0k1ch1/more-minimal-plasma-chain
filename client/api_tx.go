@@ -54,7 +54,7 @@ func (c *Client) GetTx(ctx context.Context, txPos types.Position) (*types.Tx, er
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("txes/%s", txPos.String()),
+		fmt.Sprintf("txes/%d", txPos),
 		nil,
 		&resp,
 	); err != nil {
@@ -86,7 +86,7 @@ func (c *Client) GetTxProof(ctx context.Context, txPos types.Position) ([]byte, 
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("txes/%s/proof", txPos.String()),
+		fmt.Sprintf("txes/%d/proof", txPos),
 		nil,
 		&resp,
 	); err != nil {
