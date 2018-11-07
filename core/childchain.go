@@ -34,8 +34,7 @@ var (
 type ChildChain struct {
 	mu           *sync.RWMutex
 	currentBlock *types.Block
-	chain        map[string]common.Hash
-	lightBlocks  map[string]*types.LightBlock
+	lightBlocks  map[string]*types.LightBlock // key: blkNum
 	blockTxes    map[string]*types.BlockTx
 }
 
@@ -48,7 +47,6 @@ func NewChildChain() (*ChildChain, error) {
 	return &ChildChain{
 		mu:           &sync.RWMutex{},
 		currentBlock: blk,
-		chain:        map[string]common.Hash{},
 		lightBlocks:  map[string]*types.LightBlock{},
 		blockTxes:    map[string]*types.BlockTx{},
 	}, nil
@@ -65,17 +63,11 @@ func (cc *ChildChain) GetBlock(blkNum *big.Int) (*types.Block, error) {
 	cc.mu.RLock()
 	defer cc.mu.RUnlock()
 
-	if !cc.isExistBlockHash(blkNum) {
+	if !cc.isExistLightBlock(blkNum) {
 		return nil, ErrBlockNotFound
 	}
 
-	blkHash := cc.getBlockHash(blkNum)
-
-	if !cc.isExistLightBlock(blkHash) {
-		return nil, ErrBlockNotFound
-	}
-
-	return cc.getBlock(blkHash)
+	return cc.getBlock(blkNum)
 }
 
 func (cc *ChildChain) AddBlock(signer *types.Account) (*big.Int, error) {
@@ -179,7 +171,7 @@ func (cc *ChildChain) GetTxProof(txHash common.Hash) ([]byte, error) {
 
 	btx := cc.getBlockTx(txHash)
 
-	blk, err := cc.getBlockByIndex(btx.BlockNumber)
+	blk, err := cc.getBlock(btx.BlockNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -267,17 +259,8 @@ func (cc *ChildChain) incrementBlockNumber() {
 	cc.currentBlockNumber().Add(cc.currentBlockNumber(), big.NewInt(1))
 }
 
-func (cc *ChildChain) getBlockHash(blkNum *big.Int) common.Hash {
-	return cc.chain[blkNum.String()]
-}
-
-func (cc *ChildChain) isExistBlockHash(blkNum *big.Int) bool {
-	_, ok := cc.chain[blkNum.String()]
-	return ok
-}
-
-func (cc *ChildChain) getBlock(blkHash common.Hash) (*types.Block, error) {
-	lblk := cc.getLightBlock(blkHash)
+func (cc *ChildChain) getBlock(blkNum *big.Int) (*types.Block, error) {
+	lblk := cc.getLightBlock(blkNum)
 
 	// get txes in block
 	txes := make([]*types.Tx, len(lblk.TxHashes))
@@ -295,27 +278,14 @@ func (cc *ChildChain) getBlock(blkHash common.Hash) (*types.Block, error) {
 	return blk, nil
 }
 
-func (cc *ChildChain) getBlockByIndex(blkNum *big.Int) (*types.Block, error) {
-	return cc.getBlock(cc.getBlockHash(blkNum))
-}
-
 func (cc *ChildChain) addBlock(blk *types.Block) error {
 	lblk, err := blk.Lighten()
 	if err != nil {
 		return err
 	}
 
-	blkHash, err := blk.Hash()
-	if err != nil {
-		return err
-	}
-	blkHashStr := utils.HashToHex(blkHash)
-
-	// update chain
-	cc.chain[blk.Number.String()] = blkHash
-
 	// store block
-	cc.lightBlocks[blkHashStr] = lblk
+	cc.lightBlocks[lblk.Number.String()] = lblk
 
 	// store txes
 	for i, tx := range blk.Txes {
@@ -327,29 +297,17 @@ func (cc *ChildChain) addBlock(blk *types.Block) error {
 	return nil
 }
 
-func (cc *ChildChain) getLightBlock(blkHash common.Hash) *types.LightBlock {
-	return cc.lightBlocks[utils.HashToHex(blkHash)]
+func (cc *ChildChain) getLightBlock(blkNum *big.Int) *types.LightBlock {
+	return cc.lightBlocks[blkNum.String()]
 }
 
-func (cc *ChildChain) getLightBlockByIndex(blkNum *big.Int) *types.LightBlock {
-	return cc.getLightBlock(cc.getBlockHash(blkNum))
-}
-
-func (cc *ChildChain) isExistLightBlock(blkHash common.Hash) bool {
-	_, ok := cc.lightBlocks[utils.HashToHex(blkHash)]
+func (cc *ChildChain) isExistLightBlock(blkNum *big.Int) bool {
+	_, ok := cc.lightBlocks[blkNum.String()]
 	return ok
 }
 
-func (cc *ChildChain) isExistLightBlockByIndex(blkNum *big.Int) bool {
-	if !cc.isExistBlockHash(blkNum) {
-		return false
-	}
-
-	return cc.isExistLightBlock(cc.getBlockHash(blkNum))
-}
-
 func (cc *ChildChain) getTxHash(blkNum, txIndex *big.Int) common.Hash {
-	return cc.getLightBlockByIndex(blkNum).GetTxHash(txIndex)
+	return cc.getLightBlock(blkNum).GetTxHash(txIndex)
 }
 
 func (cc *ChildChain) getTx(txHash common.Hash) *types.Tx {
@@ -450,11 +408,11 @@ func (cc *ChildChain) isExistBlockTx(txHash common.Hash) bool {
 }
 
 func (cc *ChildChain) isExistBlockTxByIndex(blkNum, txIndex *big.Int) bool {
-	if !cc.isExistLightBlockByIndex(blkNum) {
+	if !cc.isExistLightBlock(blkNum) {
 		return false
 	}
 
-	lblk := cc.getLightBlockByIndex(blkNum)
+	lblk := cc.getLightBlock(blkNum)
 
 	if !lblk.IsExistTxHash(txIndex) {
 		return false
