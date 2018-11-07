@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/labstack/echo"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
@@ -23,8 +22,8 @@ func (c *Context) GetBlockNumberFromPath() (*big.Int, error) {
 	return c.getBigIntFromPath("blkNum")
 }
 
-func (c *Context) GetTxHashFromPath() (common.Hash, error) {
-	return c.getHashFromPath("txHash")
+func (c *Context) GetTxPositionFromPath() (types.Position, error) {
+	return c.getPositionFromPath("txPos")
 }
 
 func (c *Context) getBigIntFromPath(key string) (*big.Int, error) {
@@ -36,14 +35,13 @@ func (c *Context) getBigIntFromPath(key string) (*big.Int, error) {
 	return i, nil
 }
 
-func (c *Context) getHashFromPath(key string) (common.Hash, error) {
-	hashStr := c.getPathParam(key)
-
-	if !utils.IsHexHash(hashStr) {
-		return types.NullHash, NewInvalidFormParamError(key)
+func (c *Context) getPositionFromPath(key string) (types.Position, error) {
+	i, err := c.getBigIntFromPath(key)
+	if err != nil {
+		return types.NullPosition, err
 	}
 
-	return utils.HexToHash(hashStr), nil
+	return types.NewPosition(i), nil
 }
 
 func (c *Context) getPathParam(key string) string {

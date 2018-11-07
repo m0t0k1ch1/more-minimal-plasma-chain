@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -59,10 +60,9 @@ func (p *Plasma) initRoutes() {
 	p.POST("/blocks", p.PostBlockHandler)
 	p.GET("/blocks/:blkNum", p.GetBlockHandler)
 	p.POST("/txes", p.PostTxHandler)
-	p.GET("/txes/:txHash", p.GetTxHandler)
-	p.GET("/txes/:txHash/index", p.GetTxIndexHandler)
-	p.GET("/txes/:txHash/proof", p.GetTxProofHandler)
-	p.PUT("/txes/:txHash", p.PutTxHandler)
+	p.GET("/txes/:txPos", p.GetTxHandler)
+	p.GET("/txes/:txPos/proof", p.GetTxProofHandler)
+	p.PUT("/txes/:txPos", p.PutTxHandler)
 }
 
 func (p *Plasma) initRootChain() error {
@@ -132,14 +132,14 @@ func (p *Plasma) watchRootChain() error {
 	go func() {
 		defer sub.Unsubscribe()
 		for log := range sink {
-			blkNum, txHash, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
+			blkNum, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
 			if err != nil {
 				p.Logger().Error(err)
 			} else {
 				p.Logger().Infof(
-					"[DEPOSIT] blknum: %s, txhash: %s, owner: %s, amount: %s",
+					"[DEPOSIT] blknum: %s, txpos: %s, owner: %s, amount: %s",
 					blkNum.String(),
-					utils.HashToHex(txHash),
+					types.NewTxPosition(blkNum, big.NewInt(0)).String(),
 					utils.AddressToHex(log.Owner),
 					log.Amount.String(),
 				)
