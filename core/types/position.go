@@ -13,14 +13,18 @@ type Position struct {
 	*big.Int
 }
 
-func TxPosition(blkNum, txIndex *big.Int) Position {
-	pos := new(big.Int).Mul(blkNum, BlockPositionOffset)
-	pos.Add(pos, txIndex)
-	return Position{pos}
+func NewPosition(i *big.Int) Position {
+	return Position{i}
 }
 
-func TxElementPosition(blkNum, txIndex, index *big.Int) Position {
-	pos := TxPosition(blkNum, txIndex)
+func NewTxPosition(blkNum, txIndex *big.Int) Position {
+	pos := new(big.Int).Mul(blkNum, BlockPositionOffset)
+	pos.Add(pos, txIndex)
+	return NewPosition(pos)
+}
+
+func NewTxElementPosition(blkNum, txIndex, index *big.Int) Position {
+	pos := NewTxPosition(blkNum, txIndex)
 	pos.Mul(pos.Int, TxPositionOffset)
 	pos.Add(pos.Int, index)
 	return pos
@@ -34,7 +38,7 @@ func ParseTxPosition(pos Position) (blkNum, txIndex *big.Int) {
 
 func ParseTxElementPosition(pos Position) (blkNum, txIndex, index *big.Int) {
 	txPos := new(big.Int).Div(pos.Int, TxPositionOffset)
-	blkNum, txIndex = ParseTxPosition(Position{txPos})
+	blkNum, txIndex = ParseTxPosition(NewPosition(txPos))
 	index = new(big.Int).Mod(pos.Int, txPos)
 	return
 }

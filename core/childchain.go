@@ -172,7 +172,7 @@ func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (types.Position, error) {
 		return types.Position{}, err
 	}
 
-	return types.TxPosition(cc.currentBlock.Number, cc.currentBlock.LastTxIndex()), nil
+	return types.NewTxPosition(cc.currentBlock.Number, cc.currentBlock.LastTxIndex()), nil
 }
 
 func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature) error {

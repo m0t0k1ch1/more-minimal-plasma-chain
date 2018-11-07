@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTxElementPosition(t *testing.T) {
+func TestNewTxElementPosition(t *testing.T) {
 	type input struct {
 		blkNum  *big.Int
 		txIndex *big.Int
@@ -38,7 +38,7 @@ func TestTxElementPosition(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			in, out := tc.in, tc.out
 
-			pos := TxElementPosition(in.blkNum, in.txIndex, in.oIndex)
+			pos := NewTxElementPosition(in.blkNum, in.txIndex, in.oIndex)
 			assert.Equal(t, out.pos, pos)
 		})
 	}
