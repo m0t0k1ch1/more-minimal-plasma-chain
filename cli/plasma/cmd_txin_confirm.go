@@ -7,9 +7,9 @@ import (
 	"github.com/urfave/cli"
 )
 
-var cmdTxConfirm = cli.Command{
+var cmdTxInConfirm = cli.Command{
 	Name:  "confirm",
-	Usage: "confirm tx",
+	Usage: "confirm tx input",
 	Flags: flags(
 		posFlag,
 		privKeyFlag,
@@ -47,7 +47,7 @@ var cmdTxConfirm = cli.Command{
 		}
 
 		return printlnJSON(map[string]types.Position{
-			"txipos": txInPos,
+			"pos": txInPos,
 		})
 	},
 }

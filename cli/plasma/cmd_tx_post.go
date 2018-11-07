@@ -25,7 +25,7 @@ var cmdTxPost = cli.Command{
 		}
 
 		return printlnJSON(map[string]types.Position{
-			"txpos": txPos,
+			"pos": txPos,
 		})
 	},
 }

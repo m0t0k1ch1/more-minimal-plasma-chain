@@ -27,6 +27,7 @@ func main() {
 		cmdDeposit,
 		cmdExit,
 		cmdTx,
+		cmdTxIn,
 	}
 	app.Flags = []cli.Flag{
 		confFlag,
