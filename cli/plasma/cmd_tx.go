@@ -8,11 +8,9 @@ var cmdTx = cli.Command{
 	Name:  "tx",
 	Usage: "commands for tx",
 	Subcommands: []cli.Command{
-		cmdTxConfirm,
 		cmdTxCreate,
 		cmdTxDecode,
 		cmdTxGet,
-		cmdTxIndex,
 		cmdTxPost,
 		cmdTxProof,
 		cmdTxSign,

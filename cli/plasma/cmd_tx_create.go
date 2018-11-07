@@ -13,21 +13,16 @@ var cmdTxCreate = cli.Command{
 	Name:  "create",
 	Usage: "create tx",
 	Flags: flags(
-		txHashFlag,
-		oIndexFlag,
-		toAddrFlag,
+		posFlag,
+		toFlag,
 		amountFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txHash, err := getHash(c, txHashFlag)
+		txOutPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}
-		oIndex, err := getBigInt(c, oIndexFlag)
-		if err != nil {
-			return err
-		}
-		toAddr, err := getAddress(c, toAddrFlag)
+		toAddr, err := getAddress(c, toFlag)
 		if err != nil {
 			return err
 		}
@@ -39,14 +34,11 @@ var cmdTxCreate = cli.Command{
 		clnt := newClient()
 		ctx := context.Background()
 
-		// get input tx
-		inTx, err := clnt.GetTx(ctx, txHash)
-		if err != nil {
-			return err
-		}
+		blkNum, txIndex, oIndex := types.ParseTxOutPosition(txOutPos)
+		txPos := types.NewTxPosition(blkNum, txIndex)
 
-		// get input tx index
-		blkNum, txIndex, err := clnt.GetTxIndex(ctx, txHash)
+		// get input tx
+		inTx, err := clnt.GetTx(ctx, txPos)
 		if err != nil {
 			return err
 		}
@@ -64,10 +56,16 @@ var cmdTxCreate = cli.Command{
 
 		// create tx
 		tx := types.NewTx()
-		tx.Inputs[0] = types.NewTxIn(blkNum, txIndex, oIndex)
-		tx.Outputs[0] = types.NewTxOut(toAddr, amount)
+		if err := tx.SetInput(big.NewInt(0), types.NewTxIn(blkNum, txIndex, oIndex)); err != nil {
+			return err
+		}
+		if err := tx.SetOutput(big.NewInt(0), types.NewTxOut(toAddr, amount)); err != nil {
+			return err
+		}
 		if changeAmount.Cmp(big.NewInt(0)) > 0 {
-			tx.Outputs[1] = types.NewTxOut(inTxOut.OwnerAddress, changeAmount)
+			if err := tx.SetOutput(big.NewInt(1), types.NewTxOut(inTxOut.OwnerAddress, changeAmount)); err != nil {
+				return err
+			}
 		}
 
 		return printlnEncodedTx(tx)

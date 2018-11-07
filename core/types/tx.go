@@ -24,12 +24,6 @@ var (
 	ErrInvalidTxOutIndex = errors.New("tx ouptut index is invalid")
 )
 
-type BlockTx struct {
-	*Tx
-	BlockNumber *big.Int
-	TxIndex     *big.Int
-}
-
 type Tx struct {
 	Inputs  [TxElementsNum]*TxIn  `json:"ins"`
 	Outputs [TxElementsNum]*TxOut `json:"outs"`
@@ -279,12 +273,4 @@ func (tx *Tx) SetConfirmationSignature(iIndex *big.Int, confSig Signature) error
 	tx.Inputs[iIndex.Uint64()].ConfirmationSignature = confSig
 
 	return nil
-}
-
-func (tx *Tx) InBlock(blkNum, txIndex *big.Int) *BlockTx {
-	return &BlockTx{
-		Tx:          tx,
-		BlockNumber: blkNum,
-		TxIndex:     txIndex,
-	}
 }

@@ -3,9 +3,9 @@ package client
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -14,11 +14,11 @@ import (
 type PostBlockResponse struct {
 	State  string `json:"state"`
 	Result struct {
-		BlockHashStr string `json:"blkhash"`
+		BlockNumber *big.Int `json:"blknum"`
 	} `json:"result"`
 }
 
-func (c *Client) PostBlock(ctx context.Context) (common.Hash, error) {
+func (c *Client) PostBlock(ctx context.Context) (*big.Int, error) {
 	var resp PostBlockResponse
 	if err := c.doAPI(
 		ctx,
@@ -27,10 +27,10 @@ func (c *Client) PostBlock(ctx context.Context) (common.Hash, error) {
 		nil,
 		&resp,
 	); err != nil {
-		return types.NullHash, err
+		return nil, err
 	}
 
-	return utils.HexToHash(resp.Result.BlockHashStr), nil
+	return resp.Result.BlockNumber, nil
 }
 
 type GetBlockResponse struct {
@@ -40,12 +40,12 @@ type GetBlockResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetBlock(ctx context.Context, blkHash common.Hash) (*types.Block, error) {
+func (c *Client) GetBlock(ctx context.Context, blkNum *big.Int) (*types.Block, error) {
 	var resp GetBlockResponse
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("blocks/%s", utils.HashToHex(blkHash)),
+		fmt.Sprintf("blocks/%s", blkNum.String()),
 		nil,
 		&resp,
 	); err != nil {

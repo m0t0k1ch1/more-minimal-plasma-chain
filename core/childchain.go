@@ -8,7 +8,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 const (
@@ -34,9 +33,7 @@ var (
 type ChildChain struct {
 	mu           *sync.RWMutex
 	currentBlock *types.Block
-	chain        map[string]common.Hash
-	lightBlocks  map[string]*types.LightBlock
-	blockTxes    map[string]*types.BlockTx
+	chain        map[string]*types.Block // key: blkNum
 }
 
 func NewChildChain() (*ChildChain, error) {
@@ -48,9 +45,7 @@ func NewChildChain() (*ChildChain, error) {
 	return &ChildChain{
 		mu:           &sync.RWMutex{},
 		currentBlock: blk,
-		chain:        map[string]common.Hash{},
-		lightBlocks:  map[string]*types.LightBlock{},
-		blockTxes:    map[string]*types.BlockTx{},
+		chain:        map[string]*types.Block{},
 	}, nil
 }
 
@@ -61,29 +56,18 @@ func (cc *ChildChain) CurrentBlockNumber() *big.Int {
 	return cc.currentBlockNumber()
 }
 
-func (cc *ChildChain) GetBlockHash(blkNum *big.Int) (common.Hash, error) {
+func (cc *ChildChain) GetBlock(blkNum *big.Int) (*types.Block, error) {
 	cc.mu.RLock()
 	defer cc.mu.RUnlock()
 
-	if !cc.isExistBlockHash(blkNum) {
-		return types.NullHash, ErrBlockNotFound
-	}
-
-	return cc.getBlockHash(blkNum), nil
-}
-
-func (cc *ChildChain) GetBlock(blkHash common.Hash) (*types.Block, error) {
-	cc.mu.RLock()
-	defer cc.mu.RUnlock()
-
-	if !cc.isExistLightBlock(blkHash) {
+	if !cc.isExistBlock(blkNum) {
 		return nil, ErrBlockNotFound
 	}
 
-	return cc.getBlock(blkHash)
+	return cc.getBlock(blkNum), nil
 }
 
-func (cc *ChildChain) AddBlock(signer *types.Account) (common.Hash, error) {
+func (cc *ChildChain) AddBlock(signer *types.Account) (*big.Int, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -91,31 +75,28 @@ func (cc *ChildChain) AddBlock(signer *types.Account) (common.Hash, error) {
 
 	// check block validity
 	if len(blk.Txes) == 0 {
-		return types.NullHash, ErrEmptyBlock
+		return nil, ErrEmptyBlock
 	}
 
 	// sign block
 	if err := blk.Sign(signer); err != nil {
-		return types.NullHash, err
+		return nil, err
 	}
 
 	// add block
-	blkHash, err := cc.addBlock(blk)
-	if err != nil {
-		return types.NullHash, err
-	}
+	cc.addBlock(blk)
 
 	// reset current block
 	blkNext, err := types.NewBlock(nil, cc.newNextBlockNumber())
 	if err != nil {
-		return types.NullHash, err
+		return nil, err
 	}
 	cc.currentBlock = blkNext
 
-	return blkHash, nil
+	return blk.Number, nil
 }
 
-func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int, signer *types.Account) (common.Hash, common.Hash, error) {
+func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int, signer *types.Account) (*big.Int, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -123,73 +104,49 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 	tx := types.NewTx()
 	txOut := types.NewTxOut(ownerAddr, amount)
 	if err := tx.SetOutput(big.NewInt(0), txOut); err != nil {
-		return types.NullHash, types.NullHash, err
+		return nil, err
 	}
 
 	// create deposit block
 	blk, err := types.NewBlock([]*types.Tx{tx}, cc.newCurrentBlockNumber())
 	if err != nil {
-		return types.NullHash, types.NullHash, err
+		return nil, err
 	}
 
 	// sign deposit block
 	if err := blk.Sign(signer); err != nil {
-		return types.NullHash, types.NullHash, err
+		return nil, err
 	}
 
 	// add deposit block
-	blkHash, err := cc.addBlock(blk)
-	if err != nil {
-		return types.NullHash, types.NullHash, err
-	}
-
-	txHash := cc.getTxHash(cc.currentBlockNumber(), big.NewInt(0))
+	cc.addBlock(blk)
 
 	// increment current block number
 	cc.incrementBlockNumber()
 
-	return blkHash, txHash, nil
+	return blk.Number, nil
 }
 
-func (cc *ChildChain) GetTx(txHash common.Hash) (*types.Tx, error) {
+func (cc *ChildChain) GetTx(txPos types.Position) (*types.Tx, error) {
 	cc.mu.RLock()
 	defer cc.mu.RUnlock()
 
-	if !cc.isExistBlockTx(txHash) {
+	blkNum, txIndex := types.ParseTxPosition(txPos)
+
+	if !cc.isExistTx(blkNum, txIndex) {
 		return nil, ErrTxNotFound
 	}
 
-	return cc.getTx(txHash), nil
+	return cc.getTx(blkNum, txIndex), nil
 }
 
-func (cc *ChildChain) GetTxIndex(txHash common.Hash) (*big.Int, *big.Int, error) {
+func (cc *ChildChain) GetTxProof(txPos types.Position) ([]byte, error) {
 	cc.mu.RLock()
 	defer cc.mu.RUnlock()
 
-	if !cc.isExistBlockTx(txHash) {
-		return nil, nil, ErrTxNotFound
-	}
+	blkNum, txIndex := types.ParseTxPosition(txPos)
 
-	btx := cc.getBlockTx(txHash)
-
-	return btx.BlockNumber, btx.TxIndex, nil
-}
-
-func (cc *ChildChain) GetTxProof(txHash common.Hash) ([]byte, error) {
-	cc.mu.RLock()
-	defer cc.mu.RUnlock()
-
-	// check tx existence
-	if !cc.isExistBlockTx(txHash) {
-		return nil, ErrTxNotFound
-	}
-
-	btx := cc.getBlockTx(txHash)
-
-	blk, err := cc.getBlockByIndex(btx.BlockNumber)
-	if err != nil {
-		return nil, err
-	}
+	blk := cc.getBlock(blkNum)
 
 	// build tx Merkle tree
 	tree, err := blk.MerkleTree()
@@ -198,47 +155,55 @@ func (cc *ChildChain) GetTxProof(txHash common.Hash) ([]byte, error) {
 	}
 
 	// create tx proof
-	return tree.CreateMembershipProof(btx.TxIndex.Uint64())
+	return tree.CreateMembershipProof(txIndex.Uint64())
 }
 
-func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (common.Hash, error) {
+func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (types.Position, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
+	// validate tx
 	if err := cc.validateTx(tx); err != nil {
-		return types.NullHash, err
+		return types.NullPosition, err
 	}
 
-	return cc.addTxToMempool(tx)
+	// add tx to mempool
+	if err := cc.addTxToMempool(tx); err != nil {
+		return types.NullPosition, err
+	}
+
+	return types.NewTxPosition(cc.currentBlock.Number, cc.currentBlock.LastTxIndex()), nil
 }
 
-func (cc *ChildChain) ConfirmTx(txHash common.Hash, iIndex *big.Int, confSig types.Signature) error {
+func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature) error {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
+	blkNum, txIndex, iIndex := types.ParseTxInPosition(txInPos)
+
 	// check tx existence
-	if !cc.isExistBlockTx(txHash) {
+	if !cc.isExistTx(blkNum, txIndex) {
 		return ErrTxNotFound
 	}
 
-	btx := cc.getBlockTx(txHash)
+	tx := cc.getTx(blkNum, txIndex)
 
 	// check txin existence
-	if !btx.IsExistInput(iIndex) {
+	if !tx.IsExistInput(iIndex) {
 		return ErrTxInNotFound
 	}
 
-	txIn := btx.GetInput(iIndex)
+	txIn := tx.GetInput(iIndex)
 
 	// check txin validity
 	if txIn.IsNull() {
 		return ErrNullTxInConfirmation
 	}
 
-	inTxOut := cc.getTxOutByIndex(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+	inTxOut := cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
 
 	// verify confirmation signature
-	h, err := btx.ConfirmationHash()
+	h, err := tx.ConfirmationHash()
 	if err != nil {
 		return err
 	}
@@ -251,7 +216,7 @@ func (cc *ChildChain) ConfirmTx(txHash common.Hash, iIndex *big.Int, confSig typ
 	}
 
 	// update confirmation signature
-	if err := cc.setConfirmationSignature(btx.BlockNumber, btx.TxIndex, iIndex, confSig); err != nil {
+	if err := cc.setConfirmationSignature(blkNum, txIndex, iIndex, confSig); err != nil {
 		return err
 	}
 
@@ -274,122 +239,29 @@ func (cc *ChildChain) incrementBlockNumber() {
 	cc.currentBlockNumber().Add(cc.currentBlockNumber(), big.NewInt(1))
 }
 
-func (cc *ChildChain) getBlockHash(blkNum *big.Int) common.Hash {
+func (cc *ChildChain) getBlock(blkNum *big.Int) *types.Block {
 	return cc.chain[blkNum.String()]
 }
 
-func (cc *ChildChain) isExistBlockHash(blkNum *big.Int) bool {
+func (cc *ChildChain) isExistBlock(blkNum *big.Int) bool {
 	_, ok := cc.chain[blkNum.String()]
 	return ok
 }
 
-func (cc *ChildChain) getBlock(blkHash common.Hash) (*types.Block, error) {
-	lblk := cc.getLightBlock(blkHash)
-
-	// get txes in block
-	txes := make([]*types.Tx, len(lblk.TxHashes))
-	for i, txHash := range lblk.TxHashes {
-		txes[i] = cc.getTx(txHash)
-	}
-
-	// build block
-	blk, err := types.NewBlock(txes, lblk.Number)
-	if err != nil {
-		return nil, err
-	}
-	blk.Signature = lblk.Signature
-
-	return blk, nil
+func (cc *ChildChain) addBlock(blk *types.Block) {
+	cc.chain[blk.Number.String()] = blk
 }
 
-func (cc *ChildChain) getBlockByIndex(blkNum *big.Int) (*types.Block, error) {
-	return cc.getBlock(cc.getBlockHash(blkNum))
+func (cc *ChildChain) getTx(blkNum, txIndex *big.Int) *types.Tx {
+	return cc.getBlock(blkNum).GetTx(txIndex)
 }
 
-func (cc *ChildChain) addBlock(blk *types.Block) (common.Hash, error) {
-	lblk, err := blk.Lighten()
-	if err != nil {
-		return types.NullHash, err
-	}
-
-	blkHash, err := blk.Hash()
-	if err != nil {
-		return types.NullHash, err
-	}
-	blkHashStr := utils.HashToHex(blkHash)
-
-	// update chain
-	cc.chain[blk.Number.String()] = blkHash
-
-	// store block
-	cc.lightBlocks[blkHashStr] = lblk
-
-	// store txes
-	for i, tx := range blk.Txes {
-		iBig := big.NewInt(int64(i))
-		txHash := lblk.GetTxHash(iBig)
-		cc.blockTxes[utils.HashToHex(txHash)] = tx.InBlock(blk.Number, iBig)
-	}
-
-	return blkHash, nil
-}
-
-func (cc *ChildChain) getLightBlock(blkHash common.Hash) *types.LightBlock {
-	return cc.lightBlocks[utils.HashToHex(blkHash)]
-}
-
-func (cc *ChildChain) getLightBlockByIndex(blkNum *big.Int) *types.LightBlock {
-	return cc.getLightBlock(cc.getBlockHash(blkNum))
-}
-
-func (cc *ChildChain) isExistLightBlock(blkHash common.Hash) bool {
-	_, ok := cc.lightBlocks[utils.HashToHex(blkHash)]
-	return ok
-}
-
-func (cc *ChildChain) isExistLightBlockByIndex(blkNum *big.Int) bool {
-	if !cc.isExistBlockHash(blkNum) {
+func (cc *ChildChain) isExistTx(blkNum, txIndex *big.Int) bool {
+	if !cc.isExistBlock(blkNum) {
 		return false
 	}
 
-	return cc.isExistLightBlock(cc.getBlockHash(blkNum))
-}
-
-func (cc *ChildChain) getTxHash(blkNum, txIndex *big.Int) common.Hash {
-	return cc.getLightBlockByIndex(blkNum).GetTxHash(txIndex)
-}
-
-func (cc *ChildChain) getTx(txHash common.Hash) *types.Tx {
-	return cc.getBlockTx(txHash).Tx
-}
-
-func (cc *ChildChain) getTxByIndex(blkNum, txIndex *big.Int) *types.Tx {
-	return cc.getBlockTxByIndex(blkNum, txIndex).Tx
-}
-
-func (cc *ChildChain) addTxToMempool(tx *types.Tx) (common.Hash, error) {
-	txHash, err := tx.Hash()
-	if err != nil {
-		return types.NullHash, err
-	}
-
-	for _, txIn := range tx.Inputs {
-		if txIn.IsNull() {
-			continue
-		}
-
-		// spend utxo
-		if err := cc.spendUTXO(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex); err != nil {
-			return types.NullHash, err
-		}
-	}
-
-	// add tx to current block
-	if err := cc.currentBlock.AddTx(tx); err != nil {
-		return types.NullHash, err
-	}
-
-	return txHash, nil
+	return cc.getBlock(blkNum).IsExistTx(txIndex)
 }
 
 func (cc *ChildChain) validateTx(tx *types.Tx) error {
@@ -402,7 +274,7 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 
 	for i, txIn := range tx.Inputs {
 		// check spending txout existence
-		if !cc.isExistTxOutByIndex(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex) {
+		if !cc.isExistTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex) {
 			if txIn.IsNull() {
 				nullTxInNum++
 				continue
@@ -410,7 +282,7 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 			return ErrInvalidTxIn
 		}
 
-		inTxOut := cc.getTxOutByIndex(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+		inTxOut := cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
 
 		// check double spent
 		if inTxOut.IsSpent {
@@ -443,49 +315,42 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 	return nil
 }
 
-func (cc *ChildChain) getBlockTx(txHash common.Hash) *types.BlockTx {
-	return cc.blockTxes[utils.HashToHex(txHash)]
+func (cc *ChildChain) addTxToMempool(tx *types.Tx) error {
+	for _, txIn := range tx.Inputs {
+		if txIn.IsNull() {
+			continue
+		}
+
+		// spend utxo
+		if err := cc.spendUTXO(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex); err != nil {
+			return err
+		}
+	}
+
+	// add tx to current block
+	if err := cc.currentBlock.AddTx(tx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (cc *ChildChain) getBlockTxByIndex(blkNum, txIndex *big.Int) *types.BlockTx {
-	return cc.getBlockTx(cc.getTxHash(blkNum, txIndex))
+func (cc *ChildChain) getTxOut(blkNum, txIndex, oIndex *big.Int) *types.TxOut {
+	return cc.getTx(blkNum, txIndex).GetOutput(oIndex)
 }
 
-func (cc *ChildChain) isExistBlockTx(txHash common.Hash) bool {
-	_, ok := cc.blockTxes[utils.HashToHex(txHash)]
-	return ok
-}
-
-func (cc *ChildChain) isExistBlockTxByIndex(blkNum, txIndex *big.Int) bool {
-	if !cc.isExistLightBlockByIndex(blkNum) {
+func (cc *ChildChain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
+	if !cc.isExistTx(blkNum, txIndex) {
 		return false
 	}
 
-	lblk := cc.getLightBlockByIndex(blkNum)
-
-	if !lblk.IsExistTxHash(txIndex) {
-		return false
-	}
-
-	return cc.isExistBlockTx(lblk.GetTxHash(txIndex))
-}
-
-func (cc *ChildChain) getTxOutByIndex(blkNum, txIndex, oIndex *big.Int) *types.TxOut {
-	return cc.getBlockTxByIndex(blkNum, txIndex).GetOutput(oIndex)
-}
-
-func (cc *ChildChain) isExistTxOutByIndex(blkNum, txIndex, oIndex *big.Int) bool {
-	if !cc.isExistBlockTxByIndex(blkNum, txIndex) {
-		return false
-	}
-
-	return cc.getBlockTxByIndex(blkNum, txIndex).IsExistOutput(oIndex)
+	return cc.getTx(blkNum, txIndex).IsExistOutput(oIndex)
 }
 
 func (cc *ChildChain) spendUTXO(blkNum, txIndex, oIndex *big.Int) error {
-	return cc.blockTxes[utils.HashToHex(cc.getTxHash(blkNum, txIndex))].SpendOutput(oIndex)
+	return cc.getTx(blkNum, txIndex).SpendOutput(oIndex)
 }
 
 func (cc *ChildChain) setConfirmationSignature(blkNum, txIndex, iIndex *big.Int, confSig types.Signature) error {
-	return cc.blockTxes[utils.HashToHex(cc.getTxHash(blkNum, txIndex))].SetConfirmationSignature(iIndex, confSig)
+	return cc.getTx(blkNum, txIndex).SetConfirmationSignature(iIndex, confSig)
 }

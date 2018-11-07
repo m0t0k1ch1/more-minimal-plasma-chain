@@ -46,6 +46,15 @@ func getBigInt(c *cli.Context, f cli.Flag) (*big.Int, error) {
 	return i, nil
 }
 
+func getPosition(c *cli.Context, f cli.Flag) (types.Position, error) {
+	i, err := getBigInt(c, f)
+	if err != nil {
+		return types.NullPosition, err
+	}
+
+	return types.NewPosition(i), nil
+}
+
 func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
 	addrStr := getString(c, f)
 

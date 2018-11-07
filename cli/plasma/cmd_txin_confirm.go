@@ -4,24 +4,18 @@ import (
 	"context"
 
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 	"github.com/urfave/cli"
 )
 
-var cmdTxConfirm = cli.Command{
+var cmdTxInConfirm = cli.Command{
 	Name:  "confirm",
-	Usage: "confirm tx",
+	Usage: "confirm tx input",
 	Flags: flags(
-		txHashFlag,
-		iIndexFlag,
+		posFlag,
 		privKeyFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txHash, err := getHash(c, txHashFlag)
-		if err != nil {
-			return err
-		}
-		iIndex, err := getBigInt(c, iIndexFlag)
+		txInPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}
@@ -33,8 +27,11 @@ var cmdTxConfirm = cli.Command{
 		clnt := newClient()
 		ctx := context.Background()
 
+		blkNum, txIndex, iIndex := types.ParseTxInPosition(txInPos)
+		txPos := types.NewTxPosition(blkNum, txIndex)
+
 		// get tx
-		tx, err := clnt.GetTx(ctx, txHash)
+		tx, err := clnt.GetTx(ctx, txPos)
 		if err != nil {
 			return err
 		}
@@ -45,12 +42,12 @@ var cmdTxConfirm = cli.Command{
 		}
 
 		// update confirmation signature
-		if _, err := clnt.PutTx(ctx, txHash, iIndex, tx.GetInput(iIndex).ConfirmationSignature); err != nil {
+		if _, err := clnt.PutTxIn(ctx, txInPos, tx.GetInput(iIndex).ConfirmationSignature); err != nil {
 			return err
 		}
 
-		return printlnJSON(map[string]string{
-			"txhash": utils.HashToHex(txHash),
+		return printlnJSON(map[string]types.Position{
+			"pos": txInPos,
 		})
 	},
 }

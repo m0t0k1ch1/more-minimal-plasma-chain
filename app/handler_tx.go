@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
@@ -14,7 +15,7 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	txHash, err := p.childChain.AddTxToMempool(tx)
+	txPos, err := p.childChain.AddTxToMempool(tx)
 	if err != nil {
 		if err == core.ErrInvalidTxSignature {
 			return c.JSONError(ErrInvalidTxSignature)
@@ -24,22 +25,24 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 			return c.JSONError(ErrInvalidTxIn)
 		} else if err == core.ErrTxOutAlreadySpent {
 			return c.JSONError(ErrTxOutAlreadySpent)
+		} else if err == types.ErrBlockTxesNumExceedsLimit {
+			return c.JSONError(ErrBlockTxesNumExceedsLimit)
 		}
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(map[string]interface{}{
-		"txhash": utils.HashToHex(txHash),
+	return c.JSONSuccess(map[string]types.Position{
+		"pos": txPos,
 	})
 }
 
 func (p *Plasma) GetTxHandler(c *Context) error {
-	txHash, err := c.GetTxHashFromPath()
+	txPos, err := c.GetTxPositionFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	tx, err := p.childChain.GetTx(txHash)
+	tx, err := p.childChain.GetTx(txPos)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
@@ -52,38 +55,18 @@ func (p *Plasma) GetTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(map[string]interface{}{
+	return c.JSONSuccess(map[string]string{
 		"tx": utils.EncodeToHex(txBytes),
 	})
 }
 
-func (p *Plasma) GetTxIndexHandler(c *Context) error {
-	txHash, err := c.GetTxHashFromPath()
-	if err != nil {
-		return c.JSONError(err)
-	}
-
-	blkNum, txIndex, err := p.childChain.GetTxIndex(txHash)
-	if err != nil {
-		if err == core.ErrTxNotFound {
-			return c.JSONError(ErrTxNotFound)
-		}
-		return c.JSONError(err)
-	}
-
-	return c.JSONSuccess(map[string]interface{}{
-		"blknum":  blkNum,
-		"txindex": txIndex,
-	})
-}
-
 func (p *Plasma) GetTxProofHandler(c *Context) error {
-	txHash, err := c.GetTxHashFromPath()
+	txPos, err := c.GetTxPositionFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	txProofBytes, err := p.childChain.GetTxProof(txHash)
+	txProofBytes, err := p.childChain.GetTxProof(txPos)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
@@ -91,40 +74,7 @@ func (p *Plasma) GetTxProofHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(map[string]interface{}{
+	return c.JSONSuccess(map[string]string{
 		"proof": utils.EncodeToHex(txProofBytes),
-	})
-}
-
-func (p *Plasma) PutTxHandler(c *Context) error {
-	c.Request().ParseForm()
-
-	txHash, err := c.GetTxHashFromPath()
-	if err != nil {
-		return c.JSONError(err)
-	}
-
-	iIndex, err := c.GetInputIndexFromForm()
-	if err != nil {
-		return c.JSONError(err)
-	}
-	confSig, err := c.GetConfirmationSignatureFromForm()
-	if err != nil {
-		return c.JSONError(err)
-	}
-
-	if err := p.childChain.ConfirmTx(txHash, iIndex, confSig); err != nil {
-		if err == core.ErrInvalidTxConfirmationSignature {
-			return c.JSONError(ErrInvalidTxConfirmationSignature)
-		} else if err == core.ErrTxInNotFound {
-			return c.JSONError(ErrTxInNotFound)
-		} else if err == core.ErrNullTxInConfirmation {
-			return c.JSONError(ErrNullTxInConfirmation)
-		}
-		return c.JSONError(err)
-	}
-
-	return c.JSONSuccess(map[string]interface{}{
-		"txhash": utils.HashToHex(txHash),
 	})
 }

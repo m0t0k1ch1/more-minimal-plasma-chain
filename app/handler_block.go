@@ -1,6 +1,8 @@
 package app
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -9,15 +11,15 @@ import (
 func (p *Plasma) PostBlockHandler(c *Context) error {
 	c.Request().ParseForm()
 
-	blkNum, err := p.rootChain.CurrentPlasmaBlockNumber()
+	rootBlkNum, err := p.rootChain.CurrentPlasmaBlockNumber()
 	if err != nil {
 		return c.JSONError(err)
 	}
-	if blkNum.Cmp(p.childChain.CurrentBlockNumber()) != 0 {
+	if rootBlkNum.Cmp(p.childChain.CurrentBlockNumber()) != 0 {
 		return c.JSONError(ErrBlockchainNotSynchronized)
 	}
 
-	blkHash, err := p.childChain.AddBlock(p.operator)
+	blkNum, err := p.childChain.AddBlock(p.operator)
 	if err != nil {
 		if err == core.ErrEmptyBlock {
 			return c.JSONError(ErrEmptyBlock)
@@ -25,7 +27,7 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	blk, err := p.childChain.GetBlock(blkHash)
+	blk, err := p.childChain.GetBlock(blkNum)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)
@@ -43,18 +45,18 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 	}
 	p.Logger().Infof("[COMMIT] root: %s", utils.HashToHex(blkRootHash))
 
-	return c.JSONSuccess(map[string]interface{}{
-		"blkhash": utils.HashToHex(blkHash),
+	return c.JSONSuccess(map[string]*big.Int{
+		"blknum": blkNum,
 	})
 }
 
 func (p *Plasma) GetBlockHandler(c *Context) error {
-	blkHash, err := c.GetBlockHashFromPath()
+	blkNum, err := c.GetBlockNumberFromPath()
 	if err != nil {
 		return c.JSONError(err)
 	}
 
-	blk, err := p.childChain.GetBlock(blkHash)
+	blk, err := p.childChain.GetBlock(blkNum)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)
@@ -67,7 +69,7 @@ func (p *Plasma) GetBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(map[string]interface{}{
+	return c.JSONSuccess(map[string]string{
 		"blk": utils.EncodeToHex(blkBytes),
 	})
 }

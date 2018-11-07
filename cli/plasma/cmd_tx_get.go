@@ -10,16 +10,16 @@ var cmdTxGet = cli.Command{
 	Name:  "get",
 	Usage: "get tx",
 	Flags: flags(
-		txHashFlag,
+		posFlag,
 		encodedFlag,
 	),
 	Action: func(c *cli.Context) error {
-		txHash, err := getHash(c, txHashFlag)
+		txPos, err := getPosition(c, posFlag)
 		if err != nil {
 			return err
 		}
 
-		tx, err := newClient().GetTx(context.Background(), txHash)
+		tx, err := newClient().GetTx(context.Background(), txPos)
 		if err != nil {
 			return err
 		}

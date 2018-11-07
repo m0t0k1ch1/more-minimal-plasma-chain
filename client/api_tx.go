@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -16,14 +15,14 @@ import (
 type PostTxResponse struct {
 	State  string `json:"state"`
 	Result struct {
-		TxHashStr string `json:"txhash"`
+		PosBig *big.Int `json:"pos"`
 	} `json:"result"`
 }
 
-func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (common.Hash, error) {
+func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (types.Position, error) {
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
-		return types.NullHash, err
+		return types.NullPosition, err
 	}
 
 	v := url.Values{}
@@ -37,10 +36,10 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (common.Hash, error) 
 		v,
 		&resp,
 	); err != nil {
-		return types.NullHash, err
+		return types.NullPosition, err
 	}
 
-	return utils.HexToHash(resp.Result.TxHashStr), nil
+	return types.NewPosition(resp.Result.PosBig), nil
 }
 
 type GetTxResponse struct {
@@ -50,12 +49,12 @@ type GetTxResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetTx(ctx context.Context, txHash common.Hash) (*types.Tx, error) {
+func (c *Client) GetTx(ctx context.Context, txPos types.Position) (*types.Tx, error) {
 	var resp GetTxResponse
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("txes/%s", utils.HashToHex(txHash)),
+		fmt.Sprintf("txes/%s", txPos.String()),
 		nil,
 		&resp,
 	); err != nil {
@@ -82,12 +81,12 @@ type GetTxProofResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetTxProof(ctx context.Context, txHash common.Hash) ([]byte, error) {
+func (c *Client) GetTxProof(ctx context.Context, txPos types.Position) ([]byte, error) {
 	var resp GetTxProofResponse
 	if err := c.doAPI(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("txes/%s/proof", utils.HashToHex(txHash)),
+		fmt.Sprintf("txes/%s/proof", txPos.String()),
 		nil,
 		&resp,
 	); err != nil {
@@ -95,53 +94,4 @@ func (c *Client) GetTxProof(ctx context.Context, txHash common.Hash) ([]byte, er
 	}
 
 	return utils.DecodeHex(resp.Result.ProofStr)
-}
-
-type GetTxIndexResponse struct {
-	State  string `json:"state"`
-	Result struct {
-		BlockNumber *big.Int `json:"blknum"`
-		TxIndex     *big.Int `json:"txindex"`
-	} `json:"result"`
-}
-
-func (c *Client) GetTxIndex(ctx context.Context, txHash common.Hash) (*big.Int, *big.Int, error) {
-	var resp GetTxIndexResponse
-	if err := c.doAPI(
-		ctx,
-		http.MethodGet,
-		fmt.Sprintf("txes/%s/index", utils.HashToHex(txHash)),
-		nil,
-		&resp,
-	); err != nil {
-		return nil, nil, err
-	}
-
-	return resp.Result.BlockNumber, resp.Result.TxIndex, nil
-}
-
-type PutTxResponse struct {
-	State  string `json:"state"`
-	Result struct {
-		TxHashStr string `json:"txhash"`
-	} `json:"result"`
-}
-
-func (c *Client) PutTx(ctx context.Context, txHash common.Hash, iIndex *big.Int, confSig types.Signature) (common.Hash, error) {
-	v := url.Values{}
-	v.Set("index", iIndex.String())
-	v.Set("confsig", confSig.Hex())
-
-	var resp PutTxResponse
-	if err := c.doAPI(
-		ctx,
-		http.MethodPut,
-		fmt.Sprintf("txes/%s", utils.HashToHex(txHash)),
-		v,
-		&resp,
-	); err != nil {
-		return types.NullHash, err
-	}
-
-	return utils.HexToHash(resp.Result.TxHashStr), nil
 }

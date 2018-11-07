@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -56,14 +57,12 @@ func (p *Plasma) initServer() {
 
 func (p *Plasma) initRoutes() {
 	p.GET("/ping", p.PingHandler)
-	p.GET("/chain/:blkNum", p.GetChainHandler)
 	p.POST("/blocks", p.PostBlockHandler)
-	p.GET("/blocks/:blkHash", p.GetBlockHandler)
+	p.GET("/blocks/:blkNum", p.GetBlockHandler)
 	p.POST("/txes", p.PostTxHandler)
-	p.GET("/txes/:txHash", p.GetTxHandler)
-	p.GET("/txes/:txHash/index", p.GetTxIndexHandler)
-	p.GET("/txes/:txHash/proof", p.GetTxProofHandler)
-	p.PUT("/txes/:txHash", p.PutTxHandler)
+	p.GET("/txes/:txPos", p.GetTxHandler)
+	p.GET("/txes/:txPos/proof", p.GetTxProofHandler)
+	p.PUT("/txins/:txInPos", p.PutTxInHandler)
 }
 
 func (p *Plasma) initRootChain() error {
@@ -133,14 +132,14 @@ func (p *Plasma) watchRootChain() error {
 	go func() {
 		defer sub.Unsubscribe()
 		for log := range sink {
-			blkHash, txHash, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
+			blkNum, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
 			if err != nil {
 				p.Logger().Error(err)
 			} else {
 				p.Logger().Infof(
-					"[DEPOSIT] blkhash: %s, txhash: %s, owner: %s, amount: %s",
-					utils.HashToHex(blkHash),
-					utils.HashToHex(txHash),
+					"[DEPOSIT] blknum: %s, txpos: %s, owner: %s, amount: %s",
+					blkNum.String(),
+					types.NewTxPosition(blkNum, big.NewInt(0)).String(),
 					utils.AddressToHex(log.Owner),
 					log.Amount.String(),
 				)
