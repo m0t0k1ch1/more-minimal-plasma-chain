@@ -131,12 +131,20 @@ func (p *Plasma) Logger() echo.Logger {
 	return p.server.Logger
 }
 
+func (p *Plasma) Finalize() {
+	p.db.Close()
+}
+
 func (p *Plasma) Start() error {
 	if err := p.watchRootChain(); err != nil {
 		return err
 	}
 
 	return p.server.Start(fmt.Sprintf(":%d", p.config.Port))
+}
+
+func (p *Plasma) Shutdown(ctx context.Context) error {
+	return p.server.Shutdown(ctx)
 }
 
 func (p *Plasma) watchRootChain() error {
