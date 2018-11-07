@@ -2,7 +2,7 @@ package types
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -20,8 +20,8 @@ var (
 )
 
 var (
-	ErrInvalidTxInIndex  = errors.New("tx input index is invalid")
-	ErrInvalidTxOutIndex = errors.New("tx ouptut index is invalid")
+	ErrInvalidTxInIndex  = fmt.Errorf("txin index must be less than %d", TxElementsNum)
+	ErrInvalidTxOutIndex = fmt.Errorf("txout index must be less than %d", TxElementsNum)
 )
 
 type Tx struct {
