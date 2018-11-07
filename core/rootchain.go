@@ -167,6 +167,25 @@ func (rc *RootChain) StartExit(a *types.Account, txOutPos types.Position, tx *ty
 	return rc.contract.Transact(opts, "startExit", blkNum, txIndex, oIndex, encodedTxBytes, txProofBytes, sigsBytes, confSigsBytes)
 }
 
+func (rc *RootChain) ChallengeExit(a *types.Account, txOutPos types.Position, spendingTx *types.Tx, spendingIIndex *big.Int) (*gethtypes.Transaction, error) {
+	blkNum, txIndex, oIndex := types.ParseTxOutPosition(txOutPos)
+
+	encodedSpendingTxBytes, err := spendingTx.Encode()
+	if err != nil {
+		return nil, err
+	}
+
+	spendingTxIn := spendingTx.GetInput(spendingIIndex)
+	if spendingTxIn == nil {
+		return nil, ErrTxInNotFound
+	}
+	if spendingTxIn.ConfirmationSignature.IsNull() {
+		return nil, ErrNullConfirmationSignature
+	}
+
+	return rc.contract.Transact(a.TransactOpts(), "challengeExit", blkNum, txIndex, oIndex, encodedSpendingTxBytes, spendingTxIn.ConfirmationSignature.Bytes())
+}
+
 func (rc *RootChain) ProcessExits(a *types.Account) (*gethtypes.Transaction, error) {
 	return rc.contract.Transact(a.TransactOpts(), "processExits")
 }

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 
@@ -51,6 +52,14 @@ func HexToSignature(s string) (Signature, error) {
 	return BytesToSignature(b)
 }
 
+func (sig Signature) MarshalText() ([]byte, error) {
+	b := make([]byte, len(sig[:])*2+2)
+	copy(b, `0x`)
+	hex.Encode(b[2:], sig[:])
+
+	return b, nil
+}
+
 func (sig Signature) Bytes() []byte {
 	return sig[:]
 }
@@ -59,12 +68,8 @@ func (sig Signature) Hex() string {
 	return utils.EncodeToHex(sig.Bytes())
 }
 
-func (sig Signature) MarshalText() ([]byte, error) {
-	b := make([]byte, len(sig[:])*2+2)
-	copy(b, `0x`)
-	hex.Encode(b[2:], sig[:])
-
-	return b, nil
+func (sig Signature) IsNull() bool {
+	return bytes.Equal(sig.Bytes(), NullSignature.Bytes())
 }
 
 func (sig Signature) SignerAddress(h common.Hash) (common.Address, error) {
