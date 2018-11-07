@@ -175,11 +175,11 @@ func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (types.Position, error) {
 	return types.NewTxPosition(cc.currentBlock.Number, cc.currentBlock.LastTxIndex()), nil
 }
 
-func (cc *ChildChain) ConfirmTx(txPos types.Position, iIndex *big.Int, confSig types.Signature) error {
+func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature) error {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
-	blkNum, txIndex := types.ParseTxPosition(txPos)
+	blkNum, txIndex, iIndex := types.ParseTxInPosition(txInPos)
 
 	// check tx existence
 	if !cc.isExistTx(blkNum, txIndex) {
