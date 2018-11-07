@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	BlockPositionOffset = big.NewInt(MaxBlockTxesNum + 1)
-	TxPositionOffset    = big.NewInt(10000)
+	BlockPositionOffset = big.NewInt(100000) // must be greater than MaxBlockTxesNum
+	TxPositionOffset    = big.NewInt(10000)  // must be greater than TxElementsNum
 
 	NullPosition = NewPosition(nil)
 )
