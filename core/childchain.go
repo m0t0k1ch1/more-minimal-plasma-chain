@@ -252,26 +252,6 @@ func (cc *ChildChain) addBlock(blk *types.Block) {
 	cc.chain[blk.Number.String()] = blk
 }
 
-func (cc *ChildChain) addTxToMempool(tx *types.Tx) error {
-	for _, txIn := range tx.Inputs {
-		if txIn.IsNull() {
-			continue
-		}
-
-		// spend utxo
-		if err := cc.spendUTXO(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex); err != nil {
-			return err
-		}
-	}
-
-	// add tx to current block
-	if err := cc.currentBlock.AddTx(tx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (cc *ChildChain) getTx(blkNum, txIndex *big.Int) *types.Tx {
 	return cc.chain[blkNum.String()].Txes[txIndex.Int64()]
 }
@@ -331,6 +311,26 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 	// check in/out balance
 	if iAmount.Cmp(oAmount) < 0 {
 		return ErrInvalidTxBalance
+	}
+
+	return nil
+}
+
+func (cc *ChildChain) addTxToMempool(tx *types.Tx) error {
+	for _, txIn := range tx.Inputs {
+		if txIn.IsNull() {
+			continue
+		}
+
+		// spend utxo
+		if err := cc.spendUTXO(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex); err != nil {
+			return err
+		}
+	}
+
+	// add tx to current block
+	if err := cc.currentBlock.AddTx(tx); err != nil {
+		return err
 	}
 
 	return nil
