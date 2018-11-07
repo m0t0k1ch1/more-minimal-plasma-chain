@@ -1,13 +1,11 @@
-package core
+package types
 
 import (
 	"math/big"
-
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 var (
-	BlockPositionOffset = big.NewInt(types.MaxBlockTxesNum + 1)
+	BlockPositionOffset = big.NewInt(MaxBlockTxesNum + 1)
 	TxPositionOffset    = big.NewInt(10000)
 )
 
