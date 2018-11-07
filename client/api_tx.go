@@ -15,7 +15,7 @@ import (
 type PostTxResponse struct {
 	State  string `json:"state"`
 	Result struct {
-		TxPos *big.Int `json:"txpos"`
+		PosBig *big.Int `json:"pos"`
 	} `json:"result"`
 }
 
@@ -39,7 +39,7 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (types.Position, erro
 		return types.NullPosition, err
 	}
 
-	return types.NewPosition(resp.Result.TxPos), nil
+	return types.NewPosition(resp.Result.PosBig), nil
 }
 
 type GetTxResponse struct {
@@ -94,30 +94,4 @@ func (c *Client) GetTxProof(ctx context.Context, txPos types.Position) ([]byte, 
 	}
 
 	return utils.DecodeHex(resp.Result.ProofStr)
-}
-
-type PutTxResponse struct {
-	State  string `json:"state"`
-	Result struct {
-		TxPos *big.Int `json:"txpos"`
-	} `json:"result"`
-}
-
-func (c *Client) PutTx(ctx context.Context, txPos types.Position, iIndex *big.Int, confSig types.Signature) (types.Position, error) {
-	v := url.Values{}
-	v.Set("index", iIndex.String())
-	v.Set("confsig", confSig.Hex())
-
-	var resp PutTxResponse
-	if err := c.doAPI(
-		ctx,
-		http.MethodPut,
-		fmt.Sprintf("txes/%s", txPos.String()),
-		v,
-		&resp,
-	); err != nil {
-		return types.NullPosition, err
-	}
-
-	return types.NewPosition(resp.Result.TxPos), nil
 }
