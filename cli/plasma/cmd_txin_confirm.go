@@ -27,7 +27,7 @@ var cmdTxInConfirm = cli.Command{
 		clnt := newClient()
 		ctx := context.Background()
 
-		blkNum, txIndex, iIndex := types.ParseTxInPosition(txInPos)
+		blkNum, txIndex, inIndex := types.ParseTxInPosition(txInPos)
 		txPos := types.NewTxPosition(blkNum, txIndex)
 
 		// get tx
@@ -37,12 +37,12 @@ var cmdTxInConfirm = cli.Command{
 		}
 
 		// confirm tx
-		if err := tx.Confirm(iIndex, types.NewAccount(privKey)); err != nil {
+		if err := tx.Confirm(inIndex, types.NewAccount(privKey)); err != nil {
 			return err
 		}
 
 		// update confirmation signature
-		if _, err := clnt.PutTxIn(ctx, txInPos, tx.GetInput(iIndex).ConfirmationSignature); err != nil {
+		if _, err := clnt.PutTxIn(ctx, txInPos, tx.GetInput(inIndex).ConfirmationSignature); err != nil {
 			return err
 		}
 

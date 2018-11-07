@@ -18,7 +18,7 @@ var cmdTxSign = cli.Command{
 		if err != nil {
 			return err
 		}
-		iIndex, err := getBigInt(c, indexFlag)
+		inIndex, err := getBigInt(c, indexFlag)
 		if err != nil {
 			return err
 		}
@@ -27,7 +27,7 @@ var cmdTxSign = cli.Command{
 			return err
 		}
 
-		if err := tx.Sign(iIndex, types.NewAccount(privKey)); err != nil {
+		if err := tx.Sign(inIndex, types.NewAccount(privKey)); err != nil {
 			return err
 		}
 

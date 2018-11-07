@@ -162,7 +162,7 @@ func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature)
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
-	blkNum, txIndex, iIndex := types.ParseTxInPosition(txInPos)
+	blkNum, txIndex, inIndex := types.ParseTxInPosition(txInPos)
 
 	// check tx existence
 	if !cc.isExistTx(blkNum, txIndex) {
@@ -172,11 +172,11 @@ func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature)
 	tx := cc.getTx(blkNum, txIndex)
 
 	// check txin existence
-	if !tx.IsExistInput(iIndex) {
+	if !tx.IsExistInput(inIndex) {
 		return ErrTxInNotFound
 	}
 
-	txIn := tx.GetInput(iIndex)
+	txIn := tx.GetInput(inIndex)
 
 	// check txin validity
 	if txIn.IsNull() {
@@ -199,7 +199,7 @@ func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature)
 	}
 
 	// update confirmation signature
-	if err := cc.setConfirmationSignature(blkNum, txIndex, iIndex, confSig); err != nil {
+	if err := cc.setConfirmationSignature(blkNum, txIndex, inIndex, confSig); err != nil {
 		return err
 	}
 
@@ -318,22 +318,22 @@ func (cc *ChildChain) addTxToMempool(tx *types.Tx) error {
 	return nil
 }
 
-func (cc *ChildChain) getTxOut(blkNum, txIndex, oIndex *big.Int) *types.TxOut {
-	return cc.getTx(blkNum, txIndex).GetOutput(oIndex)
+func (cc *ChildChain) getTxOut(blkNum, txIndex, outIndex *big.Int) *types.TxOut {
+	return cc.getTx(blkNum, txIndex).GetOutput(outIndex)
 }
 
-func (cc *ChildChain) isExistTxOut(blkNum, txIndex, oIndex *big.Int) bool {
+func (cc *ChildChain) isExistTxOut(blkNum, txIndex, outIndex *big.Int) bool {
 	if !cc.isExistTx(blkNum, txIndex) {
 		return false
 	}
 
-	return cc.getTx(blkNum, txIndex).IsExistOutput(oIndex)
+	return cc.getTx(blkNum, txIndex).IsExistOutput(outIndex)
 }
 
-func (cc *ChildChain) spendUTXO(blkNum, txIndex, oIndex *big.Int) error {
-	return cc.getTx(blkNum, txIndex).SpendOutput(oIndex)
+func (cc *ChildChain) spendUTXO(blkNum, txIndex, outIndex *big.Int) error {
+	return cc.getTx(blkNum, txIndex).SpendOutput(outIndex)
 }
 
-func (cc *ChildChain) setConfirmationSignature(blkNum, txIndex, iIndex *big.Int, confSig types.Signature) error {
-	return cc.getTx(blkNum, txIndex).SetConfirmationSignature(iIndex, confSig)
+func (cc *ChildChain) setConfirmationSignature(blkNum, txIndex, inIndex *big.Int, confSig types.Signature) error {
+	return cc.getTx(blkNum, txIndex).SetConfirmationSignature(inIndex, confSig)
 }

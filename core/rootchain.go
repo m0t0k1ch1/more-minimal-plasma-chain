@@ -144,7 +144,7 @@ func (rc *RootChain) Deposit(a *types.Account, amount *big.Int) (*gethtypes.Tran
 }
 
 func (rc *RootChain) StartExit(a *types.Account, txOutPos types.Position, tx *types.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {
-	blkNum, txIndex, oIndex := types.ParseTxOutPosition(txOutPos)
+	blkNum, txIndex, outIndex := types.ParseTxOutPosition(txOutPos)
 
 	encodedTxBytes, err := tx.Encode()
 	if err != nil {
@@ -164,18 +164,18 @@ func (rc *RootChain) StartExit(a *types.Account, txOutPos types.Position, tx *ty
 	opts := a.TransactOpts()
 	opts.Value = DefaultExitBondAmount
 
-	return rc.contract.Transact(opts, "startExit", blkNum, txIndex, oIndex, encodedTxBytes, txProofBytes, sigsBytes, confSigsBytes)
+	return rc.contract.Transact(opts, "startExit", blkNum, txIndex, outIndex, encodedTxBytes, txProofBytes, sigsBytes, confSigsBytes)
 }
 
-func (rc *RootChain) ChallengeExit(a *types.Account, txOutPos types.Position, spendingTx *types.Tx, spendingIIndex *big.Int) (*gethtypes.Transaction, error) {
-	blkNum, txIndex, oIndex := types.ParseTxOutPosition(txOutPos)
+func (rc *RootChain) ChallengeExit(a *types.Account, txOutPos types.Position, spendingTx *types.Tx, spendingInIndex *big.Int) (*gethtypes.Transaction, error) {
+	blkNum, txIndex, outIndex := types.ParseTxOutPosition(txOutPos)
 
 	encodedSpendingTxBytes, err := spendingTx.Encode()
 	if err != nil {
 		return nil, err
 	}
 
-	spendingTxIn := spendingTx.GetInput(spendingIIndex)
+	spendingTxIn := spendingTx.GetInput(spendingInIndex)
 	if spendingTxIn == nil {
 		return nil, ErrTxInNotFound
 	}
@@ -183,7 +183,7 @@ func (rc *RootChain) ChallengeExit(a *types.Account, txOutPos types.Position, sp
 		return nil, ErrNullConfirmationSignature
 	}
 
-	return rc.contract.Transact(a.TransactOpts(), "challengeExit", blkNum, txIndex, oIndex, encodedSpendingTxBytes, spendingTxIn.ConfirmationSignature.Bytes())
+	return rc.contract.Transact(a.TransactOpts(), "challengeExit", blkNum, txIndex, outIndex, encodedSpendingTxBytes, spendingTxIn.ConfirmationSignature.Bytes())
 }
 
 func (rc *RootChain) ProcessExits(a *types.Account) (*gethtypes.Transaction, error) {

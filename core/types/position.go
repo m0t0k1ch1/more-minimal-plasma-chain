@@ -25,12 +25,12 @@ func NewTxPosition(blkNum, txIndex *big.Int) Position {
 	return NewPosition(pos)
 }
 
-func NewTxInPosition(blkNum, txIndex, iIndex *big.Int) Position {
-	return newTxElementPosition(blkNum, txIndex, iIndex)
+func NewTxInPosition(blkNum, txIndex, inIndex *big.Int) Position {
+	return newTxElementPosition(blkNum, txIndex, inIndex)
 }
 
-func NewTxOutPosition(blkNum, txIndex, oIndex *big.Int) Position {
-	return newTxElementPosition(blkNum, txIndex, oIndex)
+func NewTxOutPosition(blkNum, txIndex, outIndex *big.Int) Position {
+	return newTxElementPosition(blkNum, txIndex, outIndex)
 }
 
 func newTxElementPosition(blkNum, txIndex, index *big.Int) Position {
