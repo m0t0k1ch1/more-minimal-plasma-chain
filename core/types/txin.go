@@ -14,12 +14,12 @@ type TxIn struct {
 	ConfirmationSignature Signature `json:"confsig"`
 }
 
-func NewTxIn(blkNum, txIndex, oIndex *big.Int) *TxIn {
+func NewTxIn(blkNum, txIndex, outIndex *big.Int) *TxIn {
 	return &TxIn{
 		TxInCore: &TxInCore{
 			BlockNumber: blkNum,
 			TxIndex:     txIndex,
-			OutputIndex: oIndex,
+			OutputIndex: outIndex,
 		},
 		Signature:             NullSignature,
 		ConfirmationSignature: NullSignature,

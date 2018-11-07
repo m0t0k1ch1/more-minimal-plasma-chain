@@ -11,7 +11,7 @@ func TestNewTxOutPosition(t *testing.T) {
 	type input struct {
 		blkNum  *big.Int
 		txIndex *big.Int
-		oIndex  *big.Int
+		outIndex  *big.Int
 	}
 	type output struct {
 		pos Position
@@ -26,7 +26,7 @@ func TestNewTxOutPosition(t *testing.T) {
 			input{
 				blkNum:  big.NewInt(1),
 				txIndex: big.NewInt(23456),
-				oIndex:  big.NewInt(7890),
+				outIndex:  big.NewInt(7890),
 			},
 			output{
 				pos: Position{big.NewInt(1234567890)},
@@ -38,7 +38,7 @@ func TestNewTxOutPosition(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			in, out := tc.in, tc.out
 
-			pos := NewTxOutPosition(in.blkNum, in.txIndex, in.oIndex)
+			pos := NewTxOutPosition(in.blkNum, in.txIndex, in.outIndex)
 			assert.Equal(t, out.pos, pos)
 		})
 	}
@@ -51,7 +51,7 @@ func TestParseTxOutPosition(t *testing.T) {
 	type output struct {
 		blkNum  *big.Int
 		txIndex *big.Int
-		oIndex  *big.Int
+		outIndex  *big.Int
 	}
 	testCases := []struct {
 		name string
@@ -75,10 +75,10 @@ func TestParseTxOutPosition(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			in, out := tc.in, tc.out
 
-			blkNum, txIndex, oIndex := ParseTxOutPosition(in.pos)
+			blkNum, txIndex, outIndex := ParseTxOutPosition(in.pos)
 			assert.Equal(t, out.blkNum, blkNum)
 			assert.Equal(t, out.txIndex, txIndex)
-			assert.Equal(t, out.oIndex, oIndex)
+			assert.Equal(t, out.outIndex, outIndex)
 		})
 	}
 }

@@ -34,7 +34,7 @@ var cmdTxCreate = cli.Command{
 		clnt := newClient()
 		ctx := context.Background()
 
-		blkNum, txIndex, oIndex := types.ParseTxOutPosition(txOutPos)
+		blkNum, txIndex, outIndex := types.ParseTxOutPosition(txOutPos)
 		txPos := types.NewTxPosition(blkNum, txIndex)
 
 		// get input tx
@@ -44,7 +44,7 @@ var cmdTxCreate = cli.Command{
 		}
 
 		// get input UTXO
-		inTxOut := inTx.GetOutput(oIndex)
+		inTxOut := inTx.GetOutput(outIndex)
 
 		// validate amount
 		if amount.Cmp(inTxOut.Amount) > 0 {
@@ -56,7 +56,7 @@ var cmdTxCreate = cli.Command{
 
 		// create tx
 		tx := types.NewTx()
-		if err := tx.SetInput(big.NewInt(0), types.NewTxIn(blkNum, txIndex, oIndex)); err != nil {
+		if err := tx.SetInput(big.NewInt(0), types.NewTxIn(blkNum, txIndex, outIndex)); err != nil {
 			return err
 		}
 		if err := tx.SetOutput(big.NewInt(0), types.NewTxOut(toAddr, amount)); err != nil {

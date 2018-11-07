@@ -34,7 +34,7 @@ var cmdExitChallenge = cli.Command{
 			return err
 		}
 
-		spendingBlkNum, spendingTxIndex, spendingIIndex := types.ParseTxInPosition(spendingTxInPos)
+		spendingBlkNum, spendingTxIndex, spendingInIndex := types.ParseTxInPosition(spendingTxInPos)
 		spendingTxPos := types.NewTxPosition(spendingBlkNum, spendingTxIndex)
 
 		// get spending tx
@@ -44,7 +44,7 @@ var cmdExitChallenge = cli.Command{
 		}
 
 		// challenge exit
-		txn, err := rc.ChallengeExit(types.NewAccount(privKey), txOutPos, spendingTx, spendingIIndex)
+		txn, err := rc.ChallengeExit(types.NewAccount(privKey), txOutPos, spendingTx, spendingInIndex)
 		if err != nil {
 			return err
 		}
