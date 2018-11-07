@@ -21,24 +21,6 @@ var (
 	ErrBlockTxesNumExceedsLimit = errors.New("block txes num exceeds the limit")
 )
 
-type LightBlock struct {
-	TxHashes  []common.Hash
-	Number    *big.Int
-	Signature Signature
-}
-
-func (lblk *LightBlock) GetTxHash(txIndex *big.Int) common.Hash {
-	if !lblk.IsExistTxHash(txIndex) {
-		return NullHash
-	}
-
-	return lblk.TxHashes[txIndex.Uint64()]
-}
-
-func (lblk *LightBlock) IsExistTxHash(txIndex *big.Int) bool {
-	return txIndex.Cmp(big.NewInt(int64(len(lblk.TxHashes)))) < 0
-}
-
 type Block struct {
 	Txes      []*Tx     `json:"txes"`
 	Number    *big.Int  `json:"blknum"`
@@ -104,6 +86,10 @@ func (blk *Block) Root() (common.Hash, error) {
 	return utils.BytesToHash(tree.Root().Bytes()), nil
 }
 
+func (blk *Block) LastTxIndex() *big.Int {
+	return big.NewInt(int64(len(blk.Txes)))
+}
+
 func (blk *Block) AddTx(tx *Tx) error {
 	if len(blk.Txes) >= MaxBlockTxesNum {
 		return ErrBlockTxesNumExceedsLimit
@@ -112,6 +98,10 @@ func (blk *Block) AddTx(tx *Tx) error {
 	blk.Txes = append(blk.Txes, tx)
 
 	return nil
+}
+
+func (blk *Block) IsExistTx(txIndex *big.Int) bool {
+	return txIndex.Cmp(big.NewInt(int64(len(blk.Txes)))) < 0
 }
 
 func (blk *Block) Sign(signer *Account) error {
@@ -145,23 +135,4 @@ func (blk *Block) SignerAddress() (common.Address, error) {
 	}
 
 	return blk.Signature.SignerAddress(h)
-}
-
-func (blk *Block) Lighten() (*LightBlock, error) {
-	lblk := &LightBlock{
-		TxHashes:  make([]common.Hash, len(blk.Txes)),
-		Number:    blk.Number,
-		Signature: blk.Signature,
-	}
-
-	for i, tx := range blk.Txes {
-		txHash, err := tx.Hash()
-		if err != nil {
-			return nil, err
-		}
-
-		lblk.TxHashes[i] = txHash
-	}
-
-	return lblk, nil
 }

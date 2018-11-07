@@ -9,28 +9,32 @@ var (
 	TxPositionOffset    = big.NewInt(10000)
 )
 
-func TxPosition(blkNum, txIndex *big.Int) *big.Int {
+type Position struct {
+	*big.Int
+}
+
+func TxPosition(blkNum, txIndex *big.Int) Position {
 	pos := new(big.Int).Mul(blkNum, BlockPositionOffset)
 	pos.Add(pos, txIndex)
-	return pos
+	return Position{pos}
 }
 
-func TxOutPosition(blkNum, txIndex, oIndex *big.Int) *big.Int {
+func TxElementPosition(blkNum, txIndex, index *big.Int) Position {
 	pos := TxPosition(blkNum, txIndex)
-	pos.Mul(pos, TxPositionOffset)
-	pos.Add(pos, oIndex)
+	pos.Mul(pos.Int, TxPositionOffset)
+	pos.Add(pos.Int, index)
 	return pos
 }
 
-func ParseTxPosition(pos *big.Int) (blkNum, txIndex *big.Int) {
-	blkNum = new(big.Int).Div(pos, BlockPositionOffset)
-	txIndex = new(big.Int).Mod(pos, BlockPositionOffset)
+func ParseTxPosition(pos Position) (blkNum, txIndex *big.Int) {
+	blkNum = new(big.Int).Div(pos.Int, BlockPositionOffset)
+	txIndex = new(big.Int).Mod(pos.Int, BlockPositionOffset)
 	return
 }
 
-func ParseTxOutPosition(pos *big.Int) (blkNum, txIndex, oIndex *big.Int) {
-	txPos := new(big.Int).Div(pos, TxPositionOffset)
-	blkNum, txIndex = ParseTxPosition(txPos)
-	oIndex = new(big.Int).Mod(pos, txPos)
+func ParseTxElementPosition(pos Position) (blkNum, txIndex, index *big.Int) {
+	txPos := new(big.Int).Div(pos.Int, TxPositionOffset)
+	blkNum, txIndex = ParseTxPosition(Position{txPos})
+	index = new(big.Int).Mod(pos.Int, txPos)
 	return
 }

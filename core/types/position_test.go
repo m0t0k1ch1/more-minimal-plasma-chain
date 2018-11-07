@@ -7,14 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTxOutPosition(t *testing.T) {
+func TestTxElementPosition(t *testing.T) {
 	type input struct {
 		blkNum  *big.Int
 		txIndex *big.Int
 		oIndex  *big.Int
 	}
 	type output struct {
-		pos *big.Int
+		pos Position
 	}
 	testCases := []struct {
 		name string
@@ -29,7 +29,7 @@ func TestTxOutPosition(t *testing.T) {
 				oIndex:  big.NewInt(7890),
 			},
 			output{
-				pos: big.NewInt(1234567890),
+				pos: Position{big.NewInt(1234567890)},
 			},
 		},
 	}
@@ -38,15 +38,15 @@ func TestTxOutPosition(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			in, out := tc.in, tc.out
 
-			pos := TxOutPosition(in.blkNum, in.txIndex, in.oIndex)
+			pos := TxElementPosition(in.blkNum, in.txIndex, in.oIndex)
 			assert.Equal(t, out.pos, pos)
 		})
 	}
 }
 
-func TestParseTxOutPosition(t *testing.T) {
+func TestParseTxElementPosition(t *testing.T) {
 	type input struct {
-		pos *big.Int
+		pos Position
 	}
 	type output struct {
 		blkNum  *big.Int
@@ -61,7 +61,7 @@ func TestParseTxOutPosition(t *testing.T) {
 		{
 			"1234567890",
 			input{
-				big.NewInt(1234567890),
+				Position{big.NewInt(1234567890)},
 			},
 			output{
 				big.NewInt(1),
@@ -75,7 +75,7 @@ func TestParseTxOutPosition(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			in, out := tc.in, tc.out
 
-			blkNum, txIndex, oIndex := ParseTxOutPosition(in.pos)
+			blkNum, txIndex, oIndex := ParseTxElementPosition(in.pos)
 			assert.Equal(t, out.blkNum, blkNum)
 			assert.Equal(t, out.txIndex, txIndex)
 			assert.Equal(t, out.oIndex, oIndex)

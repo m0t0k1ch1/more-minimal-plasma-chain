@@ -125,7 +125,7 @@ func (rc *RootChain) CurrentPlasmaBlockNumber() (*big.Int, error) {
 
 func (rc *RootChain) PlasmaExits(blkNum, txIndex, oIndex *big.Int) (mmpctypes.Exit, error) {
 	exit := new(mmpctypes.Exit)
-	if err := rc.contract.Call(nil, exit, "plasmaExits", TxOutPosition(blkNum, txIndex, oIndex)); err != nil {
+	if err := rc.contract.Call(nil, exit, "plasmaExits", mmpctypes.TxElementPosition(blkNum, txIndex, oIndex)); err != nil {
 		return mmpctypes.Exit{}, err
 	}
 
