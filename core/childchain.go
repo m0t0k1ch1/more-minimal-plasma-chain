@@ -156,6 +156,11 @@ func (cc *ChildChain) GetTxProof(txPos *types.Position) ([]byte, error) {
 }
 
 func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) error {
+	// check mempool capacity
+	if cc.countTxesInMempool(txn).Uint64() >= types.MaxBlockTxesNum {
+		return types.ErrBlockTxesNumExceedsLimit
+	}
+
 	// validate tx
 	if err := cc.validateTx(tx); err != nil {
 		return err
@@ -320,6 +325,21 @@ func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
 	}
 
 	return txn.Set([]byte(fmt.Sprintf("blk_%s", blk.Number.String())), blkBytes)
+}
+
+func (cc *ChildChain) countTxesInMempool(txn *badger.Txn) *big.Int {
+	opts := badger.DefaultIteratorOptions
+	opts.PrefetchValues = false // key-only iteration
+
+	it := txn.NewIterator(opts)
+	defer it.Close()
+
+	prefix, cnt, one := []byte("tx_mempool_"), big.NewInt(0), big.NewInt(1)
+	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+		cnt.Add(cnt, one)
+	}
+
+	return cnt
 }
 
 func (cc *ChildChain) validateTx(tx *types.Tx) error {
