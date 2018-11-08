@@ -5,12 +5,15 @@ import (
 	"math/big"
 	"sync"
 
+	"github.com/dgraph-io/badger"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 const (
 	DefaultBlockNumber = 1
+
+	CurrentBlockNumberKey = "current_blknum"
 )
 
 type ChildChain struct {
@@ -19,17 +22,33 @@ type ChildChain struct {
 	chain        map[string]*types.Block // key: blkNum
 }
 
-func NewChildChain() (*ChildChain, error) {
+func NewChildChain(txn *badger.Txn) (*ChildChain, error) {
 	blk, err := types.NewBlock(nil, big.NewInt(DefaultBlockNumber))
 	if err != nil {
 		return nil, err
 	}
 
-	return &ChildChain{
+	cc := &ChildChain{
 		mu:           &sync.RWMutex{},
 		currentBlock: blk,
 		chain:        map[string]*types.Block{},
-	}, nil
+	}
+
+	if _, err := cc.getCurrentBlockNumber(txn); err != nil {
+		if err == badger.ErrKeyNotFound {
+			if err := cc.setCurrentBlockNumber(txn, big.NewInt(DefaultBlockNumber)); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	return cc, nil
+}
+
+func (cc *ChildChain) GetCurrentBlockNumber(txn *badger.Txn) (*big.Int, error) {
+	return cc.getCurrentBlockNumber(txn)
 }
 
 func (cc *ChildChain) CurrentBlockNumber() *big.Int {
@@ -204,6 +223,24 @@ func (cc *ChildChain) ConfirmTx(txInPos *types.Position, confSig types.Signature
 	}
 
 	return nil
+}
+
+func (cc *ChildChain) getCurrentBlockNumber(txn *badger.Txn) (*big.Int, error) {
+	item, err := txn.Get([]byte(CurrentBlockNumberKey))
+	if err != nil {
+		return nil, err
+	}
+
+	val, err := item.Value()
+	if err != nil {
+		return nil, err
+	}
+
+	return new(big.Int).SetBytes(val), nil
+}
+
+func (cc *ChildChain) setCurrentBlockNumber(txn *badger.Txn, blkNum *big.Int) error {
+	return txn.Set([]byte(CurrentBlockNumberKey), blkNum.Bytes())
 }
 
 func (cc *ChildChain) currentBlockNumber() *big.Int {

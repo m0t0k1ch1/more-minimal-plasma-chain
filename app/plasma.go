@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/dgraph-io/badger"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
@@ -97,12 +98,14 @@ func (p *Plasma) initOperator() error {
 }
 
 func (p *Plasma) initChildChain() error {
-	cc, err := core.NewChildChain()
-	if err != nil {
-		return err
-	}
-	p.childChain = cc
-	return nil
+	return p.db.Update(func(txn *badger.Txn) error {
+		cc, err := core.NewChildChain(txn)
+		if err != nil {
+			return err
+		}
+		p.childChain = cc
+		return nil
+	})
 }
 
 func (p *Plasma) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
