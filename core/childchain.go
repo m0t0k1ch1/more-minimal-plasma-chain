@@ -58,7 +58,7 @@ func (cc *ChildChain) GetBlock(blkNum *big.Int) (*types.Block, error) {
 
 func (cc *ChildChain) AddBlock(txn *badger.Txn, signer *types.Account) (*big.Int, error) {
 	// get current block
-	blk, err := cc.getCurrentBlock(txn)
+	blk, err := cc.createNewBlock(txn)
 	if err != nil {
 		return nil, err
 	}
@@ -267,15 +267,17 @@ func (cc *ChildChain) incrementCurrentBlockNumber(txn *badger.Txn) (*big.Int, er
 	return nextBlkNum, nil
 }
 
-func (cc *ChildChain) getCurrentBlock(txn *badger.Txn) (*types.Block, error) {
+func (cc *ChildChain) createNewBlock(txn *badger.Txn) (*types.Block, error) {
 	it := txn.NewIterator(badger.DefaultIteratorOptions)
 	defer it.Close()
 
+	// get current block number
 	currentBlkNum, err := cc.getCurrentBlockNumber(txn)
 	if err != nil {
 		return nil, err
 	}
 
+	// create new block
 	blk, err := types.NewBlock(nil, currentBlkNum)
 	if err != nil {
 		return nil, err
@@ -294,7 +296,13 @@ func (cc *ChildChain) getCurrentBlock(txn *badger.Txn) (*types.Block, error) {
 			return nil, err
 		}
 
+		// add tx to block
 		if err := blk.AddTx(&tx); err != nil {
+			return nil, err
+		}
+
+		// remove tx from mempool
+		if err := txn.Delete(item.Key()); err != nil {
 			return nil, err
 		}
 	}
