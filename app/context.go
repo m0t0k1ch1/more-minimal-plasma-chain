@@ -22,11 +22,11 @@ func (c *Context) GetBlockNumberFromPath() (*big.Int, error) {
 	return c.getBigIntFromPath("blkNum")
 }
 
-func (c *Context) GetTxPositionFromPath() (types.Position, error) {
+func (c *Context) GetTxPositionFromPath() (*types.Position, error) {
 	return c.getPositionFromPath("txPos")
 }
 
-func (c *Context) GetTxInPositionFromPath() (types.Position, error) {
+func (c *Context) GetTxInPositionFromPath() (*types.Position, error) {
 	return c.getPositionFromPath("txInPos")
 }
 
@@ -39,7 +39,7 @@ func (c *Context) getBigIntFromPath(key string) (*big.Int, error) {
 	return i, nil
 }
 
-func (c *Context) getPositionFromPath(key string) (types.Position, error) {
+func (c *Context) getPositionFromPath(key string) (*types.Position, error) {
 	i, err := c.getBigIntFromPath(key)
 	if err != nil {
 		return types.NullPosition, err

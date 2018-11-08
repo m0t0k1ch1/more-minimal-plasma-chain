@@ -110,7 +110,7 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 	return blk.Number, nil
 }
 
-func (cc *ChildChain) GetTx(txPos types.Position) (*types.Tx, error) {
+func (cc *ChildChain) GetTx(txPos *types.Position) (*types.Tx, error) {
 	cc.mu.RLock()
 	defer cc.mu.RUnlock()
 
@@ -123,7 +123,7 @@ func (cc *ChildChain) GetTx(txPos types.Position) (*types.Tx, error) {
 	return cc.getTx(blkNum, txIndex), nil
 }
 
-func (cc *ChildChain) GetTxProof(txPos types.Position) ([]byte, error) {
+func (cc *ChildChain) GetTxProof(txPos *types.Position) ([]byte, error) {
 	cc.mu.RLock()
 	defer cc.mu.RUnlock()
 
@@ -141,7 +141,7 @@ func (cc *ChildChain) GetTxProof(txPos types.Position) ([]byte, error) {
 	return tree.CreateMembershipProof(txIndex.Uint64())
 }
 
-func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (types.Position, error) {
+func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (*types.Position, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -158,7 +158,7 @@ func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (types.Position, error) {
 	return types.NewTxPosition(cc.currentBlock.Number, cc.currentBlock.LastTxIndex()), nil
 }
 
-func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature) error {
+func (cc *ChildChain) ConfirmTx(txInPos *types.Position, confSig types.Signature) error {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 

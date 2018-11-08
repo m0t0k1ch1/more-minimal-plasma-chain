@@ -17,7 +17,7 @@ type PutTxInResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) PutTxIn(ctx context.Context, txInPos types.Position, confSig types.Signature) (types.Position, error) {
+func (c *Client) PutTxIn(ctx context.Context, txInPos *types.Position, confSig types.Signature) (*types.Position, error) {
 	v := url.Values{}
 	v.Set("confsig", confSig.Hex())
 

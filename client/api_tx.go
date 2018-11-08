@@ -19,7 +19,7 @@ type PostTxResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (types.Position, error) {
+func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (*types.Position, error) {
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		return types.NullPosition, err
@@ -49,7 +49,7 @@ type GetTxResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetTx(ctx context.Context, txPos types.Position) (*types.Tx, error) {
+func (c *Client) GetTx(ctx context.Context, txPos *types.Position) (*types.Tx, error) {
 	var resp GetTxResponse
 	if err := c.doAPI(
 		ctx,
@@ -81,7 +81,7 @@ type GetTxProofResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetTxProof(ctx context.Context, txPos types.Position) ([]byte, error) {
+func (c *Client) GetTxProof(ctx context.Context, txPos *types.Position) ([]byte, error) {
 	var resp GetTxProofResponse
 	if err := c.doAPI(
 		ctx,
