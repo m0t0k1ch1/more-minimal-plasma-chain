@@ -29,7 +29,7 @@ func (p *Plasma) PutTxInHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(map[string]types.Position{
+	return c.JSONSuccess(map[string]*types.Position{
 		"pos": txInPos,
 	})
 }

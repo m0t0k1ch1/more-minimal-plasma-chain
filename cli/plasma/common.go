@@ -46,7 +46,7 @@ func getBigInt(c *cli.Context, f cli.Flag) (*big.Int, error) {
 	return i, nil
 }
 
-func getPosition(c *cli.Context, f cli.Flag) (types.Position, error) {
+func getPosition(c *cli.Context, f cli.Flag) (*types.Position, error) {
 	i, err := getBigInt(c, f)
 	if err != nil {
 		return types.NullPosition, err
