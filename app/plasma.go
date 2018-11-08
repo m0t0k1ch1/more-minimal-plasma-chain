@@ -156,17 +156,22 @@ func (p *Plasma) watchRootChain() error {
 	go func() {
 		defer sub.Unsubscribe()
 		for log := range sink {
-			blkNum, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
-			if err != nil {
+			if err := p.db.Update(func(txn *badger.Txn) error {
+				blkNum, err := p.childChain.AddDepositBlock(txn, log.Owner, log.Amount, p.operator)
+				if err != nil {
+					p.Logger().Error(err)
+				} else {
+					p.Logger().Infof(
+						"[DEPOSIT] blknum: %d, txpos: %d, owner: %s, amount: %d",
+						blkNum,
+						types.NewTxPosition(blkNum, big.NewInt(0)),
+						utils.AddressToHex(log.Owner),
+						log.Amount,
+					)
+				}
+				return nil
+			}); err != nil {
 				p.Logger().Error(err)
-			} else {
-				p.Logger().Infof(
-					"[DEPOSIT] blknum: %d, txpos: %d, owner: %s, amount: %d",
-					blkNum,
-					types.NewTxPosition(blkNum, big.NewInt(0)),
-					utils.AddressToHex(log.Owner),
-					log.Amount,
-				)
 			}
 		}
 	}()

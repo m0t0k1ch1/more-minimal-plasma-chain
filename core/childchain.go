@@ -23,39 +23,31 @@ type ChildChain struct {
 }
 
 func NewChildChain(txn *badger.Txn) (*ChildChain, error) {
-	blk, err := types.NewBlock(nil, big.NewInt(DefaultBlockNumber))
-	if err != nil {
+	cc := &ChildChain{
+		mu:    &sync.RWMutex{},
+		chain: map[string]*types.Block{},
+	}
+
+	currentBlkNum, err := cc.getCurrentBlockNumber(txn)
+	if err == badger.ErrKeyNotFound {
+		if err := cc.setCurrentBlockNumber(txn, big.NewInt(DefaultBlockNumber)); err != nil {
+			return nil, err
+		}
+	} else if err != nil {
 		return nil, err
 	}
 
-	cc := &ChildChain{
-		mu:           &sync.RWMutex{},
-		currentBlock: blk,
-		chain:        map[string]*types.Block{},
+	blk, err := types.NewBlock(nil, currentBlkNum)
+	if err != nil {
+		return nil, err
 	}
-
-	if _, err := cc.getCurrentBlockNumber(txn); err != nil {
-		if err == badger.ErrKeyNotFound {
-			if err := cc.setCurrentBlockNumber(txn, big.NewInt(DefaultBlockNumber)); err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
-	}
+	cc.currentBlock = blk
 
 	return cc, nil
 }
 
 func (cc *ChildChain) GetCurrentBlockNumber(txn *badger.Txn) (*big.Int, error) {
 	return cc.getCurrentBlockNumber(txn)
-}
-
-func (cc *ChildChain) CurrentBlockNumber() *big.Int {
-	cc.mu.RLock()
-	defer cc.mu.RUnlock()
-
-	return cc.currentBlockNumber()
 }
 
 func (cc *ChildChain) GetBlock(blkNum *big.Int) (*types.Block, error) {
@@ -69,7 +61,7 @@ func (cc *ChildChain) GetBlock(blkNum *big.Int) (*types.Block, error) {
 	return cc.getBlock(blkNum), nil
 }
 
-func (cc *ChildChain) AddBlock(signer *types.Account) (*big.Int, error) {
+func (cc *ChildChain) AddBlock(txn *badger.Txn, signer *types.Account) (*big.Int, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -88,8 +80,14 @@ func (cc *ChildChain) AddBlock(signer *types.Account) (*big.Int, error) {
 	// add block
 	cc.addBlock(blk)
 
+	// increment current block number
+	nextBlkNum, err := cc.incrementCurrentBlockNumber(txn)
+	if err != nil {
+		return nil, err
+	}
+
 	// reset current block
-	blkNext, err := types.NewBlock(nil, cc.newNextBlockNumber())
+	blkNext, err := types.NewBlock(nil, nextBlkNum)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +96,7 @@ func (cc *ChildChain) AddBlock(signer *types.Account) (*big.Int, error) {
 	return blk.Number, nil
 }
 
-func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int, signer *types.Account) (*big.Int, error) {
+func (cc *ChildChain) AddDepositBlock(txn *badger.Txn, ownerAddr common.Address, amount *big.Int, signer *types.Account) (*big.Int, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -109,8 +107,14 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 		return nil, err
 	}
 
+	// get current block number
+	currentBlkNum, err := cc.getCurrentBlockNumber(txn)
+	if err != nil {
+		return nil, err
+	}
+
 	// create deposit block
-	blk, err := types.NewBlock([]*types.Tx{tx}, cc.newCurrentBlockNumber())
+	blk, err := types.NewBlock([]*types.Tx{tx}, currentBlkNum)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +128,11 @@ func (cc *ChildChain) AddDepositBlock(ownerAddr common.Address, amount *big.Int,
 	cc.addBlock(blk)
 
 	// increment current block number
-	cc.incrementBlockNumber()
+	nextBlkNum, err := cc.incrementCurrentBlockNumber(txn)
+	if err != nil {
+		return nil, err
+	}
+	cc.currentBlock.Number = nextBlkNum
 
 	return blk.Number, nil
 }
@@ -243,20 +251,26 @@ func (cc *ChildChain) setCurrentBlockNumber(txn *badger.Txn, blkNum *big.Int) er
 	return txn.Set([]byte(CurrentBlockNumberKey), blkNum.Bytes())
 }
 
-func (cc *ChildChain) currentBlockNumber() *big.Int {
-	return cc.currentBlock.Number
+func (cc *ChildChain) getNextBlockNumber(txn *badger.Txn) (*big.Int, error) {
+	currentBlkNum, err := cc.getCurrentBlockNumber(txn)
+	if err != nil {
+		return nil, err
+	}
+
+	return currentBlkNum.Add(currentBlkNum, big.NewInt(1)), nil
 }
 
-func (cc *ChildChain) newCurrentBlockNumber() *big.Int {
-	return new(big.Int).Set(cc.currentBlockNumber())
-}
+func (cc *ChildChain) incrementCurrentBlockNumber(txn *badger.Txn) (*big.Int, error) {
+	nextBlkNum, err := cc.getNextBlockNumber(txn)
+	if err != nil {
+		return nil, err
+	}
 
-func (cc *ChildChain) newNextBlockNumber() *big.Int {
-	return new(big.Int).Add(cc.currentBlockNumber(), big.NewInt(1))
-}
+	if err := cc.setCurrentBlockNumber(txn, nextBlkNum); err != nil {
+		return nil, err
+	}
 
-func (cc *ChildChain) incrementBlockNumber() {
-	cc.currentBlockNumber().Add(cc.currentBlockNumber(), big.NewInt(1))
+	return nextBlkNum, nil
 }
 
 func (cc *ChildChain) getBlock(blkNum *big.Int) *types.Block {
