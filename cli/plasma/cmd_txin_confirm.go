@@ -46,7 +46,7 @@ var cmdTxInConfirm = cli.Command{
 			return err
 		}
 
-		return printlnJSON(map[string]types.Position{
+		return printlnJSON(map[string]*types.Position{
 			"pos": txInPos,
 		})
 	},
