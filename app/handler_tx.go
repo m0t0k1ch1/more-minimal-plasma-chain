@@ -19,8 +19,7 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 	txn := p.db.NewTransaction(true)
 	defer txn.Discard()
 
-	txPos, err := p.childChain.AddTxToMempool(txn, tx)
-	if err != nil {
+	if err := p.childChain.AddTxToMempool(txn, tx); err != nil {
 		if err == core.ErrInvalidTxSignature {
 			return c.JSONError(ErrInvalidTxSignature)
 		} else if err == core.ErrInvalidTxBalance {
@@ -40,9 +39,7 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(map[string]*types.Position{
-		"pos": txPos,
-	})
+	return c.JSONSuccess(nil)
 }
 
 func (p *Plasma) GetTxHandler(c *Context) error {
