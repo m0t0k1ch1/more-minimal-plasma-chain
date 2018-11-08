@@ -71,6 +71,7 @@ func (p *Plasma) initDB() error {
 
 func (p *Plasma) initRoutes() {
 	p.GET("/ping", p.PingHandler)
+	p.GET("/addresses/:address/utxos", p.GetAddressUTXOsHandler)
 	p.POST("/blocks", p.PostBlockHandler)
 	p.GET("/blocks/:blkNum", p.GetBlockHandler)
 	p.POST("/txes", p.PostTxHandler)
