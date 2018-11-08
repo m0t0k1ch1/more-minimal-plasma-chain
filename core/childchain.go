@@ -2,18 +2,22 @@ package core
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"sync"
 
 	"github.com/dgraph-io/badger"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 const (
 	DefaultBlockNumber = 1
 
 	CurrentBlockNumberKey = "current_blknum"
+	TxMempoolKeyPrefix    = "tx_mempool_"
 )
 
 type ChildChain struct {
@@ -168,7 +172,7 @@ func (cc *ChildChain) GetTxProof(txPos *types.Position) ([]byte, error) {
 	return tree.CreateMembershipProof(txIndex.Uint64())
 }
 
-func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (*types.Position, error) {
+func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) (*types.Position, error) {
 	cc.mu.Lock()
 	defer cc.mu.Unlock()
 
@@ -177,8 +181,18 @@ func (cc *ChildChain) AddTxToMempool(tx *types.Tx) (*types.Position, error) {
 		return types.NullPosition, err
 	}
 
+	// spend utxo
+	for _, txIn := range tx.Inputs {
+		if txIn.IsNull() {
+			continue
+		}
+		if err := cc.spendUTXO(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex); err != nil {
+			return types.NullPosition, err
+		}
+	}
+
 	// add tx to mempool
-	if err := cc.addTxToMempool(tx); err != nil {
+	if err := cc.addTxToMempool(txn, tx); err != nil {
 		return types.NullPosition, err
 	}
 
@@ -349,24 +363,33 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 	return nil
 }
 
-func (cc *ChildChain) addTxToMempool(tx *types.Tx) error {
-	for _, txIn := range tx.Inputs {
-		if txIn.IsNull() {
-			continue
-		}
-
-		// spend utxo
-		if err := cc.spendUTXO(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex); err != nil {
-			return err
-		}
+func (cc *ChildChain) txMempoolKey(tx *types.Tx) ([]byte, error) {
+	txHash, err := tx.Hash()
+	if err != nil {
+		return nil, err
 	}
 
+	return []byte(fmt.Sprintf(TxMempoolKeyPrefix + utils.HashToHex(txHash))), nil
+}
+
+func (cc *ChildChain) addTxToMempool(txn *badger.Txn, tx *types.Tx) error {
+	// TODO: delete
 	// add tx to current block
 	if err := cc.currentBlock.AddTx(tx); err != nil {
 		return err
 	}
 
-	return nil
+	key, err := cc.txMempoolKey(tx)
+	if err != nil {
+		return err
+	}
+
+	txBytes, err := rlp.EncodeToBytes(tx)
+	if err != nil {
+		return err
+	}
+
+	return txn.Set(key, txBytes)
 }
 
 func (cc *ChildChain) getTxOut(blkNum, txIndex, outIndex *big.Int) *types.TxOut {

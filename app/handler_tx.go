@@ -15,7 +15,11 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	txPos, err := p.childChain.AddTxToMempool(tx)
+	// BEGIN TXN
+	txn := p.db.NewTransaction(true)
+	defer txn.Discard()
+
+	txPos, err := p.childChain.AddTxToMempool(txn, tx)
 	if err != nil {
 		if err == core.ErrInvalidTxSignature {
 			return c.JSONError(ErrInvalidTxSignature)
@@ -28,6 +32,11 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 		} else if err == types.ErrBlockTxesNumExceedsLimit {
 			return c.JSONError(ErrBlockTxesNumExceedsLimit)
 		}
+		return c.JSONError(err)
+	}
+
+	// COMMIT TX
+	if err := txn.Commit(nil); err != nil {
 		return c.JSONError(err)
 	}
 
