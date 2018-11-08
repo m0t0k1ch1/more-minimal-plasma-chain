@@ -49,7 +49,7 @@ func getBigInt(c *cli.Context, f cli.Flag) (*big.Int, error) {
 func getPosition(c *cli.Context, f cli.Flag) (*types.Position, error) {
 	i, err := getBigInt(c, f)
 	if err != nil {
-		return types.NullPosition, err
+		return nil, err
 	}
 
 	return types.NewPosition(i), nil

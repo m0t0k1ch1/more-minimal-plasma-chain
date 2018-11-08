@@ -56,7 +56,7 @@ func (c *Context) getBigIntFromPath(key string) (*big.Int, error) {
 func (c *Context) getPositionFromPath(key string) (*types.Position, error) {
 	i, err := c.getBigIntFromPath(key)
 	if err != nil {
-		return types.NullPosition, err
+		return nil, err
 	}
 
 	return types.NewPosition(i), nil

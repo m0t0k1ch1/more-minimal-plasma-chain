@@ -22,7 +22,7 @@ type PostTxResponse struct {
 func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (*types.Position, error) {
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
-		return types.NullPosition, err
+		return nil, err
 	}
 
 	v := url.Values{}
@@ -36,7 +36,7 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (*types.Position, err
 		v,
 		&resp,
 	); err != nil {
-		return types.NullPosition, err
+		return nil, err
 	}
 
 	return types.NewPosition(resp.Result.Pos), nil

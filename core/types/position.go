@@ -9,10 +9,6 @@ const (
 	TxPositionOffset    = 10000  // must be greater than TxElementsNum
 )
 
-var (
-	NullPosition = NewPosition(nil)
-)
-
 type Position struct {
 	*big.Int
 }

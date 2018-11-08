@@ -29,7 +29,7 @@ func (c *Client) PutTxIn(ctx context.Context, txInPos *types.Position, confSig t
 		v,
 		&resp,
 	); err != nil {
-		return types.NullPosition, err
+		return nil, err
 	}
 
 	return types.NewPosition(resp.Result.Pos), nil

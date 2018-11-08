@@ -178,7 +178,7 @@ func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) (*types.Posi
 
 	// validate tx
 	if err := cc.validateTx(tx); err != nil {
-		return types.NullPosition, err
+		return nil, err
 	}
 
 	// spend utxo
@@ -187,13 +187,13 @@ func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) (*types.Posi
 			continue
 		}
 		if err := cc.spendUTXO(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex); err != nil {
-			return types.NullPosition, err
+			return nil, err
 		}
 	}
 
 	// add tx to mempool
 	if err := cc.addTxToMempool(txn, tx); err != nil {
-		return types.NullPosition, err
+		return nil, err
 	}
 
 	return types.NewTxPosition(cc.currentBlock.Number, cc.currentBlock.LastTxIndex()), nil
