@@ -6,7 +6,6 @@ import (
 	"math/big"
 	"net/http"
 
-	"github.com/dgraph-io/badger"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
@@ -20,7 +19,7 @@ type HandlerFunc func(*Context) error
 type Plasma struct {
 	config     Config
 	server     *echo.Echo
-	db         *badger.DB
+	db         *DB
 	operator   *types.Account
 	rootChain  *core.RootChain
 	childChain *core.ChildChain
@@ -61,10 +60,7 @@ func (p *Plasma) initServer() {
 }
 
 func (p *Plasma) initDB() error {
-	opts := badger.DefaultOptions
-	opts.Dir = p.config.DB.Dir
-	opts.ValueDir = p.config.DB.Dir
-	db, err := badger.Open(opts)
+	db, err := NewDB(p.config.DB)
 	if err != nil {
 		return err
 	}
