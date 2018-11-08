@@ -22,11 +22,11 @@ var cmdExitProcess = cli.Command{
 			return err
 		}
 
-		txn, err := rc.ProcessExits(types.NewAccount(privKey))
+		rctx, err := rc.ProcessExits(types.NewAccount(privKey))
 		if err != nil {
 			return err
 		}
 
-		return printlnJSON(txn)
+		return printlnJSON(rctx)
 	},
 }

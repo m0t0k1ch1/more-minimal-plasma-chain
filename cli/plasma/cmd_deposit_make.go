@@ -26,11 +26,11 @@ var cmdDepositMake = cli.Command{
 			return err
 		}
 
-		txn, err := rc.Deposit(types.NewAccount(privKey), amount)
+		rctx, err := rc.Deposit(types.NewAccount(privKey), amount)
 		if err != nil {
 			return err
 		}
 
-		return printlnJSON(txn)
+		return printlnJSON(rctx)
 	},
 }

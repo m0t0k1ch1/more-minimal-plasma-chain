@@ -48,11 +48,11 @@ var cmdExitStart = cli.Command{
 		}
 
 		// start exit
-		txn, err := rc.StartExit(types.NewAccount(privKey), txOutPos, tx, txProofBytes)
+		rctx, err := rc.StartExit(types.NewAccount(privKey), txOutPos, tx, txProofBytes)
 		if err != nil {
 			return err
 		}
 
-		return printlnJSON(txn)
+		return printlnJSON(rctx)
 	},
 }

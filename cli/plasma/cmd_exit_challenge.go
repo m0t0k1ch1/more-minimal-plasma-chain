@@ -44,11 +44,11 @@ var cmdExitChallenge = cli.Command{
 		}
 
 		// challenge exit
-		txn, err := rc.ChallengeExit(types.NewAccount(privKey), txOutPos, spendingTx, spendingInIndex)
+		rctx, err := rc.ChallengeExit(types.NewAccount(privKey), txOutPos, spendingTx, spendingInIndex)
 		if err != nil {
 			return err
 		}
 
-		return printlnJSON(txn)
+		return printlnJSON(rctx)
 	},
 }
