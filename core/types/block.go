@@ -20,10 +20,14 @@ var (
 	ErrBlockTxesNumExceedsLimit = errors.New("block txes num exceeds the limit")
 )
 
+type BlockHeader struct {
+	Number    uint64
+	Signature Signature
+}
+
 type Block struct {
-	Txes      []*Tx     `json:"txes"`
-	Number    uint64    `json:"blknum"`
-	Signature Signature `json:"sig"`
+	*BlockHeader
+	Txes []*Tx `json:"txes"`
 }
 
 func NewBlock(txes []*Tx, blkNum uint64) (*Block, error) {
@@ -32,9 +36,11 @@ func NewBlock(txes []*Tx, blkNum uint64) (*Block, error) {
 	}
 
 	return &Block{
-		Txes:      txes,
-		Number:    blkNum,
-		Signature: NullSignature,
+		BlockHeader: &BlockHeader{
+			Number:    blkNum,
+			Signature: NullSignature,
+		},
+		Txes: txes,
 	}, nil
 }
 
