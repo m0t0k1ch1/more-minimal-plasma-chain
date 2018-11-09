@@ -19,16 +19,16 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 	defer txn.Discard()
 
 	if err := p.childChain.AddTxToMempool(txn, tx); err != nil {
-		if err == core.ErrInvalidTxSignature {
-			return c.JSONError(ErrInvalidTxSignature)
-		} else if err == core.ErrInvalidTxBalance {
-			return c.JSONError(ErrInvalidTxBalance)
+		if err == core.ErrMempoolFull {
+			return c.JSONError(ErrMempoolFull)
 		} else if err == core.ErrInvalidTxIn {
 			return c.JSONError(ErrInvalidTxIn)
 		} else if err == core.ErrTxOutAlreadySpent {
 			return c.JSONError(ErrTxOutAlreadySpent)
-		} else if err == core.ErrMempoolFull {
-			return c.JSONError(ErrMempoolFull)
+		} else if err == core.ErrInvalidTxSignature {
+			return c.JSONError(ErrInvalidTxSignature)
+		} else if err == core.ErrInvalidTxBalance {
+			return c.JSONError(ErrInvalidTxBalance)
 		}
 		return c.JSONError(err)
 	}
