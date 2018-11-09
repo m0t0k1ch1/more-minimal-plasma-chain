@@ -60,11 +60,6 @@ func (p *Plasma) GetTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	// COMMIT TXN
-	if err := txn.Commit(nil); err != nil {
-		return c.JSONError(err)
-	}
-
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		return c.JSONError(err)
@@ -90,11 +85,6 @@ func (p *Plasma) GetTxProofHandler(c *Context) error {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
 		}
-		return c.JSONError(err)
-	}
-
-	// COMMIT TXN
-	if err := txn.Commit(nil); err != nil {
 		return c.JSONError(err)
 	}
 
