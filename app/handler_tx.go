@@ -39,7 +39,7 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(true)
+	return c.JSONSuccess(nil)
 }
 
 func (p *Plasma) GetTxHandler(c *Context) error {

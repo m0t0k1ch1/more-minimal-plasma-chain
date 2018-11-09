@@ -13,7 +13,7 @@ import (
 
 type PostTxResponse struct {
 	*ResponseBase
-	Result bool `json:"result"`
+	Result struct{} `json:"result"`
 }
 
 func (c *Client) PostTx(ctx context.Context, tx *types.Tx) error {

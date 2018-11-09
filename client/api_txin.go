@@ -11,7 +11,7 @@ import (
 
 type PutTxInResponse struct {
 	*ResponseBase
-	Result bool `json:"result"`
+	Result struct{} `json:"result"`
 }
 
 func (c *Client) PutTxIn(ctx context.Context, txInPos types.Position, confSig types.Signature) error {

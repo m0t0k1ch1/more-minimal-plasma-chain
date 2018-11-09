@@ -28,5 +28,5 @@ func (p *Plasma) PutTxInHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(true)
+	return c.JSONSuccess(nil)
 }
