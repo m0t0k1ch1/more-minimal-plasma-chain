@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/dgraph-io/badger"
 	"github.com/ethereum/go-ethereum/common"
@@ -193,7 +194,7 @@ func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 			}
 		}
 
-		// spend UTXO
+		// spend txout
 		if err := tx.SpendOutput(txIn.OutputIndex); err != nil {
 			if err == types.ErrInvalidTxOutIndex {
 				return ErrInvalidTxIn
@@ -272,6 +273,40 @@ func (cc *ChildChain) ConfirmTx(txn *badger.Txn, txInPos types.Position, confSig
 
 	// update tx
 	return cc.setTx(txn, blkNum, txIndex, tx)
+}
+
+func (cc *ChildChain) GetUTXOPositions(txn *badger.Txn, addr common.Address) ([]types.Position, error) {
+	opts := badger.DefaultIteratorOptions
+	opts.PrefetchValues = false // key-only iteration
+
+	it := txn.NewIterator(opts)
+	defer it.Close()
+
+	prefix, poses := cc.tokenKeyPrefix(addr), []types.Position{}
+	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+		// get position
+		pos, err := types.StrToPosition(strings.TrimPrefix(string(it.Item().Key()), string(prefix)))
+		if err != nil {
+			return nil, err
+		}
+
+		blkNum, txIndex, outIndex := types.ParseTxOutPosition(pos)
+
+		// get txout
+		txOut, err := cc.getTxOut(txn, blkNum, txIndex, outIndex)
+		if err != nil {
+			return nil, err
+		}
+
+		// skip if txout was spent
+		if txOut.IsSpent {
+			continue
+		}
+
+		poses = append(poses, pos)
+	}
+
+	return poses, nil
 }
 
 func (cc *ChildChain) currentBlockNumberKey() []byte {
@@ -433,7 +468,6 @@ func (cc *ChildChain) fixCurrentBlock(txn *badger.Txn) (*types.Block, error) {
 
 func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
 	for i, tx := range blk.Txes {
-		// store txin positions
 		for j, txIn := range tx.Inputs {
 			if txIn.IsNull() {
 				continue
@@ -444,15 +478,18 @@ func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
 				return err
 			}
 
-			cc.setToken(txn,
+			// update position of txin by which token was spent
+			if err := cc.setToken(txn,
 				inTxOut.OwnerAddress,
 				types.NewTxOutPosition(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex),
 				types.NewTxInPosition(blk.Number, uint64(i), uint64(j)),
-			)
+			); err != nil {
+				return err
+			}
 		}
 
-		// store UTXOs
 		for j, txOut := range tx.Outputs {
+			// store unspent token
 			if err := cc.setToken(
 				txn,
 				txOut.OwnerAddress,
@@ -618,24 +655,14 @@ func (cc *ChildChain) getTxOut(txn *badger.Txn, blkNum, txIndex, outIndex uint64
 	return tx.GetOutput(outIndex), nil
 }
 
+func (cc *ChildChain) tokenKeyPrefix(addr common.Address) []byte {
+	return []byte(fmt.Sprintf("%s_%s_", tokenKeyPrefix, utils.AddressToHex(addr)))
+}
+
 func (cc *ChildChain) tokenKey(addr common.Address, txOutPos types.Position) []byte {
 	return []byte(fmt.Sprintf("%s_%s_%d", tokenKeyPrefix, utils.AddressToHex(addr), txOutPos))
 }
 
 func (cc *ChildChain) setToken(txn *badger.Txn, addr common.Address, txOutPos types.Position, spendingTxInPos types.Position) error {
-	return txn.Set(cc.tokenKey(addr, txOutPos), types.PositionToBytes(spendingTxInPos))
-}
-
-func (cc *ChildChain) getToken(txn *badger.Txn, addr common.Address, txOutPos types.Position) (types.Position, error) {
-	item, err := txn.Get(cc.tokenKey(addr, txOutPos))
-	if err != nil {
-		return 0, err
-	}
-
-	utxoBytes, err := item.Value()
-	if err != nil {
-		return 0, err
-	}
-
-	return types.BytesToPosition(utxoBytes)
+	return txn.Set(cc.tokenKey(addr, txOutPos), spendingTxInPos.Bytes())
 }
