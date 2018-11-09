@@ -114,18 +114,18 @@ func (rc *RootChain) initContract() {
 	)
 }
 
-func (rc *RootChain) CurrentPlasmaBlockNumber() (*big.Int, error) {
-	blkNum := new(*big.Int)
+func (rc *RootChain) CurrentPlasmaBlockNumber() (uint64, error) {
+	blkNum := new(uint64)
 	if err := rc.contract.Call(nil, blkNum, "currentPlasmaBlockNumber"); err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	return *blkNum, nil
 }
 
-func (rc *RootChain) PlasmaExits(txOutPos *types.Position) (types.Exit, error) {
+func (rc *RootChain) PlasmaExits(txOutPos types.Position) (types.Exit, error) {
 	exit := new(types.Exit)
-	if err := rc.contract.Call(nil, exit, "plasmaExits", txOutPos.Int); err != nil {
+	if err := rc.contract.Call(nil, exit, "plasmaExits", txOutPos.Uint64()); err != nil {
 		return types.Exit{}, err
 	}
 
@@ -136,14 +136,14 @@ func (rc *RootChain) CommitPlasmaBlockRoot(a *types.Account, rootHash common.Has
 	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootHash)
 }
 
-func (rc *RootChain) Deposit(a *types.Account, amount *big.Int) (*gethtypes.Transaction, error) {
+func (rc *RootChain) Deposit(a *types.Account, amount uint64) (*gethtypes.Transaction, error) {
 	opts := a.TransactOpts()
-	opts.Value = amount
+	opts.Value = new(big.Int).SetUint64(amount)
 
 	return rc.contract.Transact(opts, "deposit")
 }
 
-func (rc *RootChain) StartExit(a *types.Account, txOutPos *types.Position, tx *types.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {
+func (rc *RootChain) StartExit(a *types.Account, txOutPos types.Position, tx *types.Tx, txProofBytes []byte) (*gethtypes.Transaction, error) {
 	blkNum, txIndex, outIndex := types.ParseTxOutPosition(txOutPos)
 
 	encodedTxBytes, err := tx.Encode()
@@ -167,7 +167,7 @@ func (rc *RootChain) StartExit(a *types.Account, txOutPos *types.Position, tx *t
 	return rc.contract.Transact(opts, "startExit", blkNum, txIndex, outIndex, encodedTxBytes, txProofBytes, sigsBytes, confSigsBytes)
 }
 
-func (rc *RootChain) ChallengeExit(a *types.Account, txOutPos *types.Position, spendingTx *types.Tx, spendingInIndex *big.Int) (*gethtypes.Transaction, error) {
+func (rc *RootChain) ChallengeExit(a *types.Account, txOutPos types.Position, spendingTx *types.Tx, spendingInIndex uint64) (*gethtypes.Transaction, error) {
 	blkNum, txIndex, outIndex := types.ParseTxOutPosition(txOutPos)
 
 	encodedSpendingTxBytes, err := spendingTx.Encode()

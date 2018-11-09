@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 func (p *Plasma) PutTxInHandler(c *Context) error {
@@ -29,7 +28,5 @@ func (p *Plasma) PutTxInHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(map[string]*types.Position{
-		"pos": txInPos,
-	})
+	return c.JSONSuccess(true)
 }

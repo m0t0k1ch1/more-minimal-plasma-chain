@@ -18,7 +18,7 @@ var cmdTxSign = cli.Command{
 		if err != nil {
 			return err
 		}
-		inIndex, err := getBigInt(c, indexFlag)
+		inIndex, err := getUint64(c, indexFlag)
 		if err != nil {
 			return err
 		}

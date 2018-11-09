@@ -17,7 +17,7 @@ var cmdDepositMake = cli.Command{
 		if err != nil {
 			return err
 		}
-		amount, err := getBigInt(c, amountFlag)
+		amount, err := getUint64(c, amountFlag)
 		if err != nil {
 			return err
 		}

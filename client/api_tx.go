@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 	"net/url"
 
@@ -14,15 +13,13 @@ import (
 
 type PostTxResponse struct {
 	*ResponseBase
-	Result struct {
-		Pos *big.Int `json:"pos"`
-	} `json:"result"`
+	Result bool `json:"result"`
 }
 
-func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (*types.Position, error) {
+func (c *Client) PostTx(ctx context.Context, tx *types.Tx) error {
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	v := url.Values{}
@@ -36,10 +33,10 @@ func (c *Client) PostTx(ctx context.Context, tx *types.Tx) (*types.Position, err
 		v,
 		&resp,
 	); err != nil {
-		return nil, err
+		return err
 	}
 
-	return types.NewPosition(resp.Result.Pos), nil
+	return nil
 }
 
 type GetTxResponse struct {
@@ -49,7 +46,7 @@ type GetTxResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetTx(ctx context.Context, txPos *types.Position) (*types.Tx, error) {
+func (c *Client) GetTx(ctx context.Context, txPos types.Position) (*types.Tx, error) {
 	var resp GetTxResponse
 	if err := c.doAPI(
 		ctx,
@@ -81,7 +78,7 @@ type GetTxProofResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetTxProof(ctx context.Context, txPos *types.Position) ([]byte, error) {
+func (c *Client) GetTxProof(ctx context.Context, txPos types.Position) ([]byte, error) {
 	var resp GetTxProofResponse
 	if err := c.doAPI(
 		ctx,

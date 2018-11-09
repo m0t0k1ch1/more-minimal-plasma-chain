@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/rlp"
@@ -14,11 +13,11 @@ import (
 type PostBlockResponse struct {
 	*ResponseBase
 	Result struct {
-		BlockNumber *big.Int `json:"blknum"`
+		BlockNumber uint64 `json:"blknum"`
 	} `json:"result"`
 }
 
-func (c *Client) PostBlock(ctx context.Context) (*big.Int, error) {
+func (c *Client) PostBlock(ctx context.Context) (uint64, error) {
 	var resp PostBlockResponse
 	if err := c.doAPI(
 		ctx,
@@ -27,7 +26,7 @@ func (c *Client) PostBlock(ctx context.Context) (*big.Int, error) {
 		nil,
 		&resp,
 	); err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	return resp.Result.BlockNumber, nil
@@ -40,7 +39,7 @@ type GetBlockResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) GetBlock(ctx context.Context, blkNum *big.Int) (*types.Block, error) {
+func (c *Client) GetBlock(ctx context.Context, blkNum uint64) (*types.Block, error) {
 	var resp GetBlockResponse
 	if err := c.doAPI(
 		ctx,

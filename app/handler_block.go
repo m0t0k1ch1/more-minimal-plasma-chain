@@ -1,8 +1,6 @@
 package app
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
@@ -24,7 +22,7 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 	if err != nil {
 		return c.JSONError(err)
 	}
-	if rootBlkNum.Cmp(currentBlkNum) != 0 {
+	if rootBlkNum != currentBlkNum {
 		return c.JSONError(ErrBlockchainNotSynchronized)
 	}
 
@@ -59,7 +57,7 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 	}
 	p.Logger().Infof("[COMMIT] root: %s", utils.HashToHex(newBlkRootHash))
 
-	return c.JSONSuccess(map[string]*big.Int{
+	return c.JSONSuccess(map[string]uint64{
 		"blknum": newBlkNum,
 	})
 }

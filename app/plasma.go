@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 
 	"github.com/dgraph-io/badger"
@@ -158,14 +157,14 @@ func (p *Plasma) watchRootChain() error {
 		defer sub.Unsubscribe()
 		for log := range sink {
 			if err := p.db.Update(func(txn *badger.Txn) error {
-				newBlkNum, err := p.childChain.AddDepositBlock(txn, log.Owner, log.Amount, p.operator)
+				newBlkNum, err := p.childChain.AddDepositBlock(txn, log.Owner, log.Amount.Uint64(), p.operator)
 				if err != nil {
 					p.Logger().Error(err)
 				} else {
 					p.Logger().Infof(
 						"[DEPOSIT] blknum: %d, txpos: %d, owner: %s, amount: %d",
 						newBlkNum,
-						types.NewTxPosition(newBlkNum, big.NewInt(0)),
+						types.NewTxPosition(newBlkNum, 0),
 						utils.AddressToHex(log.Owner),
 						log.Amount,
 					)

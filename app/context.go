@@ -1,8 +1,8 @@
 package app
 
 import (
-	"math/big"
 	"net/http"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -23,15 +23,15 @@ func (c *Context) GetAddressFromPath() (common.Address, error) {
 	return c.getAddressFromPath("address")
 }
 
-func (c *Context) GetBlockNumberFromPath() (*big.Int, error) {
-	return c.getBigIntFromPath("blkNum")
+func (c *Context) GetBlockNumberFromPath() (uint64, error) {
+	return c.getUint64FromPath("blkNum")
 }
 
-func (c *Context) GetTxPositionFromPath() (*types.Position, error) {
+func (c *Context) GetTxPositionFromPath() (types.Position, error) {
 	return c.getPositionFromPath("txPos")
 }
 
-func (c *Context) GetTxInPositionFromPath() (*types.Position, error) {
+func (c *Context) GetTxInPositionFromPath() (types.Position, error) {
 	return c.getPositionFromPath("txInPos")
 }
 
@@ -44,22 +44,17 @@ func (c *Context) getAddressFromPath(key string) (common.Address, error) {
 	return utils.HexToAddress(addrStr), nil
 }
 
-func (c *Context) getBigIntFromPath(key string) (*big.Int, error) {
-	i, ok := new(big.Int).SetString(c.getPathParam(key), 10)
-	if !ok {
-		return big.NewInt(0), NewInvalidPathParamError(key)
-	}
-
-	return i, nil
+func (c *Context) getUint64FromPath(key string) (uint64, error) {
+	return strconv.ParseUint(c.getPathParam(key), 10, 64)
 }
 
-func (c *Context) getPositionFromPath(key string) (*types.Position, error) {
-	i, err := c.getBigIntFromPath(key)
+func (c *Context) getPositionFromPath(key string) (types.Position, error) {
+	i, err := c.getUint64FromPath(key)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	return types.NewPosition(i), nil
+	return types.Position(i), nil
 }
 
 func (c *Context) getPathParam(key string) string {

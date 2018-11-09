@@ -14,7 +14,7 @@ var cmdBlockGet = cli.Command{
 		encodedFlag,
 	),
 	Action: func(c *cli.Context) error {
-		blkNum, err := getBigInt(c, numFlag)
+		blkNum, err := getUint64(c, numFlag)
 		if err != nil {
 			return err
 		}
