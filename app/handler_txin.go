@@ -22,12 +22,16 @@ func (p *Plasma) PutTxInHandler(c *Context) error {
 	defer txn.Discard()
 
 	if err := p.childChain.ConfirmTx(txn, txInPos, confSig); err != nil {
-		if err == core.ErrInvalidTxConfirmationSignature {
-			return c.JSONError(ErrInvalidTxConfirmationSignature)
+		if err == core.ErrTxNotFound {
+			return c.JSONError(ErrTxNotFound)
 		} else if err == core.ErrTxInNotFound {
 			return c.JSONError(ErrTxInNotFound)
 		} else if err == core.ErrNullTxInConfirmation {
 			return c.JSONError(ErrNullTxInConfirmation)
+		} else if err == core.ErrInvalidTxIn {
+			return c.JSONError(ErrInvalidTxIn)
+		} else if err == core.ErrInvalidTxConfirmationSignature {
+			return c.JSONError(ErrInvalidTxConfirmationSignature)
 		}
 		return c.JSONError(err)
 	}

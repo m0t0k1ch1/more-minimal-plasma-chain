@@ -3,7 +3,6 @@ package app
 import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
@@ -20,16 +19,16 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 	defer txn.Discard()
 
 	if err := p.childChain.AddTxToMempool(txn, tx); err != nil {
-		if err == core.ErrInvalidTxSignature {
-			return c.JSONError(ErrInvalidTxSignature)
-		} else if err == core.ErrInvalidTxBalance {
-			return c.JSONError(ErrInvalidTxBalance)
+		if err == core.ErrMempoolFull {
+			return c.JSONError(ErrMempoolFull)
 		} else if err == core.ErrInvalidTxIn {
 			return c.JSONError(ErrInvalidTxIn)
 		} else if err == core.ErrTxOutAlreadySpent {
 			return c.JSONError(ErrTxOutAlreadySpent)
-		} else if err == types.ErrBlockTxesNumExceedsLimit {
-			return c.JSONError(ErrBlockTxesNumExceedsLimit)
+		} else if err == core.ErrInvalidTxSignature {
+			return c.JSONError(ErrInvalidTxSignature)
+		} else if err == core.ErrInvalidTxBalance {
+			return c.JSONError(ErrInvalidTxBalance)
 		}
 		return c.JSONError(err)
 	}

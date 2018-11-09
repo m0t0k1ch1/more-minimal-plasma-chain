@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 )
 
 const (
@@ -17,18 +16,17 @@ var (
 
 	ErrBlockchainNotSynchronized = NewError(10001, "blockchain is not synchronized")
 
-	ErrBlockNotFound                  = NewError(11001, core.ErrBlockNotFound.Error())
-	ErrEmptyBlock                     = NewError(11002, core.ErrEmptyBlock.Error())
-	ErrTxNotFound                     = NewError(11003, core.ErrTxNotFound.Error())
-	ErrInvalidTxSignature             = NewError(11004, core.ErrInvalidTxSignature.Error())
-	ErrInvalidTxConfirmationSignature = NewError(11005, core.ErrInvalidTxConfirmationSignature.Error())
-	ErrInvalidTxBalance               = NewError(11006, core.ErrInvalidTxBalance.Error())
-	ErrTxInNotFound                   = NewError(11007, core.ErrTxInNotFound.Error())
-	ErrInvalidTxIn                    = NewError(11008, core.ErrInvalidTxIn.Error())
-	ErrNullTxInConfirmation           = NewError(11009, core.ErrNullTxInConfirmation.Error())
-	ErrTxOutAlreadySpent              = NewError(11010, core.ErrTxOutAlreadySpent.Error())
-
-	ErrBlockTxesNumExceedsLimit = NewError(12001, types.ErrBlockTxesNumExceedsLimit.Error())
+	ErrMempoolFull                    = NewError(11001, core.ErrMempoolFull.Error())
+	ErrBlockNotFound                  = NewError(11002, core.ErrBlockNotFound.Error())
+	ErrEmptyBlock                     = NewError(11003, core.ErrEmptyBlock.Error())
+	ErrTxNotFound                     = NewError(11004, core.ErrTxNotFound.Error())
+	ErrInvalidTxSignature             = NewError(11005, core.ErrInvalidTxSignature.Error())
+	ErrInvalidTxConfirmationSignature = NewError(11006, core.ErrInvalidTxConfirmationSignature.Error())
+	ErrInvalidTxBalance               = NewError(11007, core.ErrInvalidTxBalance.Error())
+	ErrTxInNotFound                   = NewError(11008, core.ErrTxInNotFound.Error())
+	ErrInvalidTxIn                    = NewError(11009, core.ErrInvalidTxIn.Error())
+	ErrNullTxInConfirmation           = NewError(11010, core.ErrNullTxInConfirmation.Error())
+	ErrTxOutAlreadySpent              = NewError(11011, core.ErrTxOutAlreadySpent.Error())
 )
 
 type Error struct {
