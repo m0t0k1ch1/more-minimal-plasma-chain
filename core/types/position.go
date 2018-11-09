@@ -1,60 +1,49 @@
 package types
 
-import (
-	"math/big"
-)
-
 const (
 	BlockPositionOffset = 100000 // must be greater than MaxBlockTxesNum
 	TxPositionOffset    = 10000  // must be greater than TxElementsNum
 )
 
-type Position struct {
-	*big.Int
+type Position uint64
+
+func (pos Position) Uint64() uint64 {
+	return uint64(pos)
 }
 
-func NewPosition(i *big.Int) *Position {
-	return &Position{i}
+func NewTxPosition(blkNum, txIndex uint64) Position {
+	return Position(blkNum*BlockPositionOffset + txIndex)
 }
 
-func NewTxPosition(blkNum, txIndex *big.Int) *Position {
-	pos := new(big.Int).Mul(blkNum, big.NewInt(BlockPositionOffset))
-	pos.Add(pos, txIndex)
-	return NewPosition(pos)
-}
-
-func NewTxInPosition(blkNum, txIndex, inIndex *big.Int) *Position {
+func NewTxInPosition(blkNum, txIndex, inIndex uint64) Position {
 	return newTxElementPosition(blkNum, txIndex, inIndex)
 }
 
-func NewTxOutPosition(blkNum, txIndex, outIndex *big.Int) *Position {
+func NewTxOutPosition(blkNum, txIndex, outIndex uint64) Position {
 	return newTxElementPosition(blkNum, txIndex, outIndex)
 }
 
-func newTxElementPosition(blkNum, txIndex, index *big.Int) *Position {
-	pos := NewTxPosition(blkNum, txIndex)
-	pos.Mul(pos.Int, big.NewInt(TxPositionOffset))
-	pos.Add(pos.Int, index)
-	return pos
+func newTxElementPosition(blkNum, txIndex, elemIndex uint64) Position {
+	return NewTxPosition(blkNum, txIndex)*TxPositionOffset + Position(elemIndex)
 }
 
-func ParseTxPosition(pos *Position) (blkNum, txIndex *big.Int) {
-	blkNum = new(big.Int).Div(pos.Int, big.NewInt(BlockPositionOffset))
-	txIndex = new(big.Int).Mod(pos.Int, big.NewInt(BlockPositionOffset))
+func ParseTxPosition(pos Position) (blkNum, txIndex uint64) {
+	blkNum = pos.Uint64() / BlockPositionOffset
+	txIndex = pos.Uint64() % BlockPositionOffset
 	return
 }
 
-func ParseTxInPosition(pos *Position) (*big.Int, *big.Int, *big.Int) {
+func ParseTxInPosition(pos Position) (uint64, uint64, uint64) {
 	return parseTxElementPosition(pos)
 }
 
-func ParseTxOutPosition(pos *Position) (*big.Int, *big.Int, *big.Int) {
+func ParseTxOutPosition(pos Position) (uint64, uint64, uint64) {
 	return parseTxElementPosition(pos)
 }
 
-func parseTxElementPosition(pos *Position) (blkNum, txIndex, index *big.Int) {
-	txPos := new(big.Int).Div(pos.Int, big.NewInt(TxPositionOffset))
-	blkNum, txIndex = ParseTxPosition(NewPosition(txPos))
-	index = new(big.Int).Mod(pos.Int, txPos)
+func parseTxElementPosition(pos Position) (blkNum, txIndex, elemIndex uint64) {
+	txPos := pos / Position(TxPositionOffset)
+	blkNum, txIndex = ParseTxPosition(txPos)
+	elemIndex = pos.Uint64() % txPos.Uint64()
 	return
 }
