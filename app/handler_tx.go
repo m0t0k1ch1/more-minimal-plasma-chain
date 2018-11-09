@@ -3,7 +3,6 @@ package app
 import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
@@ -28,8 +27,8 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 			return c.JSONError(ErrInvalidTxIn)
 		} else if err == core.ErrTxOutAlreadySpent {
 			return c.JSONError(ErrTxOutAlreadySpent)
-		} else if err == types.ErrBlockTxesNumExceedsLimit {
-			return c.JSONError(ErrBlockTxesNumExceedsLimit)
+		} else if err == core.ErrMempoolFull {
+			return c.JSONError(ErrMempoolFull)
 		}
 		return c.JSONError(err)
 	}
