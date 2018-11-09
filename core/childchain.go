@@ -175,7 +175,7 @@ func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 	}
 
 	// validate tx
-	if err := cc.validateTx(txn, tx); err != nil {
+	if err := cc.ValidateTx(txn, tx); err != nil {
 		return err
 	}
 
@@ -213,6 +213,64 @@ func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 	// add tx to mempool
 	if err := cc.addTxToMempool(txn, tx); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (cc *ChildChain) ValidateTx(txn *badger.Txn, tx *types.Tx) error {
+	nullTxInNum := 0
+	iAmount, oAmount := uint64(0), uint64(0)
+
+	for _, txOut := range tx.Outputs {
+		oAmount += txOut.Amount
+	}
+
+	for i, txIn := range tx.Inputs {
+		// skip validation if txin is null (deposit)
+		if txIn.IsNull() {
+			nullTxInNum++
+			continue
+		}
+
+		// get input txout
+		inTxOut, err := cc.getTxOut(txn, txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+		if err != nil {
+			if err == badger.ErrKeyNotFound { // tx is not found
+				return ErrInvalidTxIn
+			} else {
+				return err
+			}
+		} else if inTxOut == nil { // tx does not have the output
+			return ErrInvalidTxIn
+		}
+
+		// check double spent
+		if inTxOut.IsSpent {
+			return ErrTxOutAlreadySpent
+		}
+
+		// verify signature
+		signerAddr, err := tx.SignerAddress(uint64(i))
+		if err != nil {
+			return ErrInvalidTxSignature
+		}
+		if txIn.Signature == types.NullSignature ||
+			!bytes.Equal(signerAddr.Bytes(), inTxOut.OwnerAddress.Bytes()) {
+			return ErrInvalidTxSignature
+		}
+
+		iAmount += inTxOut.Amount
+	}
+
+	// check txins validity
+	if nullTxInNum == len(tx.Inputs) {
+		return ErrInvalidTxIn
+	}
+
+	// check in/out balance
+	if iAmount < oAmount {
+		return ErrInvalidTxBalance
 	}
 
 	return nil
@@ -545,64 +603,6 @@ func (cc *ChildChain) getTx(txn *badger.Txn, blkNum, txIndex uint64) (*types.Tx,
 	}
 
 	return &tx, nil
-}
-
-func (cc *ChildChain) validateTx(txn *badger.Txn, tx *types.Tx) error {
-	nullTxInNum := 0
-	iAmount, oAmount := uint64(0), uint64(0)
-
-	for _, txOut := range tx.Outputs {
-		oAmount += txOut.Amount
-	}
-
-	for i, txIn := range tx.Inputs {
-		// skip validation if txin is null (deposit)
-		if txIn.IsNull() {
-			nullTxInNum++
-			continue
-		}
-
-		// get input txout
-		inTxOut, err := cc.getTxOut(txn, txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
-		if err != nil {
-			if err == badger.ErrKeyNotFound { // tx is not found
-				return ErrInvalidTxIn
-			} else {
-				return err
-			}
-		} else if inTxOut == nil { // tx does not have the output
-			return ErrInvalidTxIn
-		}
-
-		// check double spent
-		if inTxOut.IsSpent {
-			return ErrTxOutAlreadySpent
-		}
-
-		// verify signature
-		signerAddr, err := tx.SignerAddress(uint64(i))
-		if err != nil {
-			return ErrInvalidTxSignature
-		}
-		if txIn.Signature == types.NullSignature ||
-			!bytes.Equal(signerAddr.Bytes(), inTxOut.OwnerAddress.Bytes()) {
-			return ErrInvalidTxSignature
-		}
-
-		iAmount += inTxOut.Amount
-	}
-
-	// check txins validity
-	if nullTxInNum == len(tx.Inputs) {
-		return ErrInvalidTxIn
-	}
-
-	// check in/out balance
-	if iAmount < oAmount {
-		return ErrInvalidTxBalance
-	}
-
-	return nil
 }
 
 func (cc *ChildChain) mempoolTxKeyPrefix() []byte {
