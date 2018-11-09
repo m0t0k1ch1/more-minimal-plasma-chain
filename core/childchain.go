@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"sync"
 
 	"github.com/dgraph-io/badger"
 	"github.com/ethereum/go-ethereum/common"
@@ -16,16 +15,10 @@ const (
 	DefaultBlockNumber = 1
 )
 
-type ChildChain struct {
-	mu    *sync.RWMutex
-	chain map[uint64]*types.Block // key: blkNum
-}
+type ChildChain struct{}
 
 func NewChildChain(txn *badger.Txn) (*ChildChain, error) {
-	cc := &ChildChain{
-		mu:    &sync.RWMutex{},
-		chain: map[uint64]*types.Block{},
-	}
+	cc := &ChildChain{}
 
 	if _, err := cc.getCurrentBlockNumber(txn); err != nil {
 		if err == badger.ErrKeyNotFound {
@@ -44,20 +37,22 @@ func (cc *ChildChain) GetCurrentBlockNumber(txn *badger.Txn) (uint64, error) {
 	return cc.getCurrentBlockNumber(txn)
 }
 
-func (cc *ChildChain) GetBlock(blkNum uint64) (*types.Block, error) {
-	cc.mu.RLock()
-	defer cc.mu.RUnlock()
-
-	if !cc.isExistBlock(blkNum) {
-		return nil, ErrBlockNotFound
+func (cc *ChildChain) GetBlock(txn *badger.Txn, blkNum uint64) (*types.Block, error) {
+	blk, err := cc.getBlock(txn, blkNum)
+	if err != nil {
+		if err == badger.ErrKeyNotFound {
+			return nil, ErrBlockNotFound
+		} else {
+			return nil, err
+		}
 	}
 
-	return cc.getBlock(blkNum), nil
+	return blk, nil
 }
 
 func (cc *ChildChain) AddBlock(txn *badger.Txn, signer *types.Account) (uint64, error) {
 	// get current block
-	blk, err := cc.createNewBlock(txn)
+	blk, err := cc.fixCurrentBlock(txn)
 	if err != nil {
 		return 0, err
 	}
@@ -123,26 +118,29 @@ func (cc *ChildChain) AddDepositBlock(txn *badger.Txn, ownerAddr common.Address,
 	return blk.Number, nil
 }
 
-func (cc *ChildChain) GetTx(txPos types.Position) (*types.Tx, error) {
-	cc.mu.RLock()
-	defer cc.mu.RUnlock()
-
+func (cc *ChildChain) GetTx(txn *badger.Txn, txPos types.Position) (*types.Tx, error) {
 	blkNum, txIndex := types.ParseTxPosition(txPos)
 
-	if !cc.isExistTx(blkNum, txIndex) {
-		return nil, ErrTxNotFound
+	tx, err := cc.getTx(txn, blkNum, txIndex)
+	if err != nil {
+		if err == badger.ErrKeyNotFound {
+			return nil, ErrTxNotFound
+		} else {
+			return nil, err
+		}
 	}
 
-	return cc.getTx(blkNum, txIndex), nil
+	return tx, nil
 }
 
-func (cc *ChildChain) GetTxProof(txPos types.Position) ([]byte, error) {
-	cc.mu.RLock()
-	defer cc.mu.RUnlock()
-
+func (cc *ChildChain) GetTxProof(txn *badger.Txn, txPos types.Position) ([]byte, error) {
 	blkNum, txIndex := types.ParseTxPosition(txPos)
 
-	blk := cc.getBlock(blkNum)
+	// get block
+	blk, err := cc.getBlock(txn, blkNum)
+	if err != nil {
+		return nil, err
+	}
 
 	// build tx Merkle tree
 	tree, err := blk.MerkleTree()
@@ -161,16 +159,37 @@ func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 	}
 
 	// validate tx
-	if err := cc.validateTx(tx); err != nil {
+	if err := cc.validateTx(txn, tx); err != nil {
 		return err
 	}
 
-	// spend input utxos
 	for _, txIn := range tx.Inputs {
+		// skip if txin is null
 		if txIn.IsNull() {
 			continue
 		}
-		if err := cc.spendUTXO(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex); err != nil {
+
+		// get tx
+		tx, err := cc.getTx(txn, txIn.BlockNumber, txIn.TxIndex)
+		if err != nil {
+			if err == badger.ErrKeyNotFound {
+				return ErrInvalidTxIn
+			} else {
+				return err
+			}
+		}
+
+		// spend UTXO
+		if err := tx.SpendOutput(txIn.OutputIndex); err != nil {
+			if err == types.ErrInvalidTxOutIndex {
+				return ErrInvalidTxIn
+			} else {
+				return err
+			}
+		}
+
+		// update tx
+		if err := cc.setTx(txn, txIn.BlockNumber, txIn.TxIndex, tx); err != nil {
 			return err
 		}
 	}
@@ -183,24 +202,25 @@ func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 	return nil
 }
 
-func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature) error {
-	cc.mu.Lock()
-	defer cc.mu.Unlock()
-
+func (cc *ChildChain) ConfirmTx(txn *badger.Txn, txInPos types.Position, confSig types.Signature) error {
 	blkNum, txIndex, inIndex := types.ParseTxInPosition(txInPos)
 
 	// check tx existence
-	if !cc.isExistTx(blkNum, txIndex) {
-		return ErrTxNotFound
+	tx, err := cc.getTx(txn, blkNum, txIndex)
+	if err != nil {
+		if err == badger.ErrKeyNotFound {
+			return ErrTxNotFound
+		} else {
+			return err
+		}
 	}
-
-	tx := cc.getTx(blkNum, txIndex)
 
 	// check txin existence
 	if !tx.IsExistInput(inIndex) {
 		return ErrTxInNotFound
 	}
 
+	// get txin
 	txIn := tx.GetInput(inIndex)
 
 	// check txin validity
@@ -208,7 +228,11 @@ func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature)
 		return ErrNullTxInConfirmation
 	}
 
-	inTxOut := cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+	// get input txout
+	inTxOut, err := cc.getTxOut(txn, txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+	if err != nil || inTxOut == nil {
+		return ErrInvalidTxIn
+	}
 
 	// verify confirmation signature
 	h, err := tx.ConfirmationHash()
@@ -224,11 +248,16 @@ func (cc *ChildChain) ConfirmTx(txInPos types.Position, confSig types.Signature)
 	}
 
 	// update confirmation signature
-	if err := cc.setConfirmationSignature(blkNum, txIndex, inIndex, confSig); err != nil {
-		return err
+	if err := tx.SetConfirmationSignature(inIndex, confSig); err != nil {
+		if err == types.ErrInvalidTxInIndex {
+			return ErrInvalidTxIn
+		} else {
+			return err
+		}
 	}
 
-	return nil
+	// update tx
+	return cc.setTx(txn, blkNum, txIndex, tx)
 }
 
 func (cc *ChildChain) getCurrentBlockNumber(txn *badger.Txn) (uint64, error) {
@@ -271,10 +300,71 @@ func (cc *ChildChain) incrementCurrentBlockNumber(txn *badger.Txn) (uint64, erro
 	return nextBlkNum, nil
 }
 
-func (cc *ChildChain) createNewBlock(txn *badger.Txn) (*types.Block, error) {
+func (cc *ChildChain) setBlockHeader(txn *badger.Txn, blkNum uint64, blkHeader *types.BlockHeader) error {
+	blkHeaderBytes, err := rlp.EncodeToBytes(blkHeader)
+	if err != nil {
+		return err
+	}
+
+	return txn.Set([]byte(fmt.Sprintf("blk_header_%d", blkNum)), blkHeaderBytes)
+}
+
+func (cc *ChildChain) getBlockHeader(txn *badger.Txn, blkNum uint64) (*types.BlockHeader, error) {
+	item, err := txn.Get([]byte(fmt.Sprintf("blk_header_%d", blkNum)))
+	if err != nil {
+		return nil, err
+	}
+
+	blkHeaderBytes, err := item.Value()
+	if err != nil {
+		return nil, err
+	}
+
+	var blkHeader types.BlockHeader
+	if err := rlp.DecodeBytes(blkHeaderBytes, &blkHeader); err != nil {
+		return nil, err
+	}
+
+	return &blkHeader, nil
+}
+
+func (cc *ChildChain) getBlock(txn *badger.Txn, blkNum uint64) (*types.Block, error) {
+	// get block header
+	blkHeader, err := cc.getBlockHeader(txn, blkNum)
+	if err != nil {
+		return nil, err
+	}
+
+	blk := &types.Block{
+		BlockHeader: blkHeader,
+		Txes:        nil,
+	}
+
 	it := txn.NewIterator(badger.DefaultIteratorOptions)
 	defer it.Close()
 
+	prefix := []byte(fmt.Sprintf("tx_%d_", blk.Number))
+	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+		// get tx
+		var tx types.Tx
+		txBytes, err := it.Item().Value()
+		if err != nil {
+			return nil, err
+		}
+		if err := rlp.DecodeBytes(txBytes, &tx); err != nil {
+			return nil, err
+		}
+
+		// add tx to block
+		if err := blk.AddTx(&tx); err != nil {
+			return nil, err
+		}
+	}
+
+	return blk, nil
+}
+
+func (cc *ChildChain) fixCurrentBlock(txn *badger.Txn) (*types.Block, error) {
 	// get current block number
 	currentBlkNum, err := cc.getCurrentBlockNumber(txn)
 	if err != nil {
@@ -287,16 +377,20 @@ func (cc *ChildChain) createNewBlock(txn *badger.Txn) (*types.Block, error) {
 		return nil, err
 	}
 
+	it := txn.NewIterator(badger.DefaultIteratorOptions)
+	defer it.Close()
+
 	prefix := []byte("tx_mempool_")
 	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 		item := it.Item()
-		val, err := item.Value()
+
+		// get tx
+		var tx types.Tx
+		txBytes, err := item.Value()
 		if err != nil {
 			return nil, err
 		}
-
-		var tx types.Tx
-		if err := rlp.DecodeBytes(val, &tx); err != nil {
+		if err := rlp.DecodeBytes(txBytes, &tx); err != nil {
 			return nil, err
 		}
 
@@ -315,39 +409,48 @@ func (cc *ChildChain) createNewBlock(txn *badger.Txn) (*types.Block, error) {
 }
 
 func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
-	// TODO: delete
-	cc.chain[blk.Number] = blk
+	for i, tx := range blk.Txes {
+		// store tx
+		if err := cc.setTx(txn, blk.Number, uint64(i), tx); err != nil {
+			return err
+		}
 
-	// TODO: save txes
-	// TODO: save utxos
+		// TODO: store UTXO
+	}
 
-	// TODO: remove txes from block
-	blkBytes, err := rlp.EncodeToBytes(blk)
+	// store block header
+	return cc.setBlockHeader(txn, blk.Number, blk.BlockHeader)
+}
+
+func (cc *ChildChain) setTx(txn *badger.Txn, blkNum, txIndex uint64, tx *types.Tx) error {
+	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		return err
 	}
 
-	return txn.Set([]byte(fmt.Sprintf("blk_%d", blk.Number)), blkBytes)
+	return txn.Set([]byte(fmt.Sprintf("tx_%d_%d", blkNum, txIndex)), txBytes)
 }
 
-func (cc *ChildChain) countTxesInMempool(txn *badger.Txn) uint64 {
-	opts := badger.DefaultIteratorOptions
-	opts.PrefetchValues = false // key-only iteration
-
-	it := txn.NewIterator(opts)
-	defer it.Close()
-
-	cnt := uint64(0)
-
-	prefix := []byte("tx_mempool_")
-	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-		cnt++
+func (cc *ChildChain) getTx(txn *badger.Txn, blkNum, txIndex uint64) (*types.Tx, error) {
+	item, err := txn.Get([]byte(fmt.Sprintf("tx_%d_%d", blkNum, txIndex)))
+	if err != nil {
+		return nil, err
 	}
 
-	return cnt
+	txBytes, err := item.Value()
+	if err != nil {
+		return nil, err
+	}
+
+	var tx types.Tx
+	if err := rlp.DecodeBytes(txBytes, &tx); err != nil {
+		return nil, err
+	}
+
+	return &tx, nil
 }
 
-func (cc *ChildChain) validateTx(tx *types.Tx) error {
+func (cc *ChildChain) validateTx(txn *badger.Txn, tx *types.Tx) error {
 	nullTxInNum := 0
 	iAmount, oAmount := uint64(0), uint64(0)
 
@@ -356,16 +459,23 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 	}
 
 	for i, txIn := range tx.Inputs {
-		// check spending txout existence
-		if !cc.isExistTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex) {
-			if txIn.IsNull() {
-				nullTxInNum++
-				continue
-			}
-			return ErrInvalidTxIn
+		// skip validation if txin is null (deposit)
+		if txIn.IsNull() {
+			nullTxInNum++
+			continue
 		}
 
-		inTxOut := cc.getTxOut(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+		// get input txout
+		inTxOut, err := cc.getTxOut(txn, txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+		if err != nil {
+			if err == badger.ErrKeyNotFound { // tx is not found
+				return ErrInvalidTxIn
+			} else {
+				return err
+			}
+		} else if inTxOut == nil { // tx does not have the output
+			return ErrInvalidTxIn
+		}
 
 		// check double spent
 		if inTxOut.IsSpent {
@@ -398,6 +508,21 @@ func (cc *ChildChain) validateTx(tx *types.Tx) error {
 	return nil
 }
 
+func (cc *ChildChain) countTxesInMempool(txn *badger.Txn) uint64 {
+	opts := badger.DefaultIteratorOptions
+	opts.PrefetchValues = false // key-only iteration
+
+	it := txn.NewIterator(opts)
+	defer it.Close()
+
+	prefix, cnt := []byte("tx_mempool_"), uint64(0)
+	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+		cnt++
+	}
+
+	return cnt
+}
+
 func (cc *ChildChain) addTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 	txHash, err := tx.Hash()
 	if err != nil {
@@ -412,43 +537,11 @@ func (cc *ChildChain) addTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 	return txn.Set([]byte(fmt.Sprintf("tx_mempool_%s", utils.HashToHex(txHash))), txBytes)
 }
 
-func (cc *ChildChain) getBlock(blkNum uint64) *types.Block {
-	return cc.chain[blkNum]
-}
-
-func (cc *ChildChain) isExistBlock(blkNum uint64) bool {
-	_, ok := cc.chain[blkNum]
-	return ok
-}
-
-func (cc *ChildChain) getTx(blkNum, txIndex uint64) *types.Tx {
-	return cc.getBlock(blkNum).GetTx(txIndex)
-}
-
-func (cc *ChildChain) isExistTx(blkNum, txIndex uint64) bool {
-	if !cc.isExistBlock(blkNum) {
-		return false
+func (cc *ChildChain) getTxOut(txn *badger.Txn, blkNum, txIndex, outIndex uint64) (*types.TxOut, error) {
+	tx, err := cc.getTx(txn, blkNum, txIndex)
+	if err != nil {
+		return nil, err
 	}
 
-	return cc.getBlock(blkNum).IsExistTx(txIndex)
-}
-
-func (cc *ChildChain) getTxOut(blkNum, txIndex, outIndex uint64) *types.TxOut {
-	return cc.getTx(blkNum, txIndex).GetOutput(outIndex)
-}
-
-func (cc *ChildChain) isExistTxOut(blkNum, txIndex, outIndex uint64) bool {
-	if !cc.isExistTx(blkNum, txIndex) {
-		return false
-	}
-
-	return cc.getTx(blkNum, txIndex).IsExistOutput(outIndex)
-}
-
-func (cc *ChildChain) spendUTXO(blkNum, txIndex, outIndex uint64) error {
-	return cc.getTx(blkNum, txIndex).SpendOutput(outIndex)
-}
-
-func (cc *ChildChain) setConfirmationSignature(blkNum, txIndex, inIndex uint64, confSig types.Signature) error {
-	return cc.getTx(blkNum, txIndex).SetConfirmationSignature(inIndex, confSig)
+	return tx.GetOutput(outIndex), nil
 }
