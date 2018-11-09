@@ -12,11 +12,11 @@ import (
 )
 
 /*
-blknum_current                  => uint64
-blk_header_<block number>       => *types.BlockHeader
-tx_<block_number>_<tx index>    => *types.Tx
-tx_mempool_<tx hash>            => *types.Tx
-utxo_<address>_<txout position> => types.Position
+blknum_current                   => uint64
+blk_header_<block number>        => *types.BlockHeader
+tx_<block_number>_<tx index>     => *types.Tx
+tx_mempool_<tx hash>             => *types.Tx
+token_<address>_<txout position> => types.Position
 */
 
 const (
@@ -26,7 +26,7 @@ const (
 	blockHeaderKeyPrefix  = "blk_header"
 	txKeyPrefix           = "tx"
 	mempoolTxKeyPrefix    = "mempool_tx"
-	utxoKeyPrefix         = "utxo"
+	tokenKeyPrefix        = "token"
 )
 
 type ChildChain struct{}
@@ -444,7 +444,7 @@ func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
 				return err
 			}
 
-			cc.setUTXO(txn,
+			cc.setToken(txn,
 				inTxOut.OwnerAddress,
 				types.NewTxOutPosition(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex),
 				types.NewTxInPosition(blk.Number, uint64(i), uint64(j)),
@@ -453,7 +453,7 @@ func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
 
 		// store UTXOs
 		for j, txOut := range tx.Outputs {
-			if err := cc.setUTXO(
+			if err := cc.setToken(
 				txn,
 				txOut.OwnerAddress,
 				types.NewTxOutPosition(blk.Number, uint64(i), uint64(j)),
@@ -618,16 +618,16 @@ func (cc *ChildChain) getTxOut(txn *badger.Txn, blkNum, txIndex, outIndex uint64
 	return tx.GetOutput(outIndex), nil
 }
 
-func (cc *ChildChain) utxoKey(addr common.Address, txOutPos types.Position) []byte {
-	return []byte(fmt.Sprintf("%s_%s_%d", utxoKeyPrefix, utils.AddressToHex(addr), txOutPos))
+func (cc *ChildChain) tokenKey(addr common.Address, txOutPos types.Position) []byte {
+	return []byte(fmt.Sprintf("%s_%s_%d", tokenKeyPrefix, utils.AddressToHex(addr), txOutPos))
 }
 
-func (cc *ChildChain) setUTXO(txn *badger.Txn, addr common.Address, txOutPos types.Position, spendingTxInPos types.Position) error {
-	return txn.Set(cc.utxoKey(addr, txOutPos), types.PositionToBytes(spendingTxInPos))
+func (cc *ChildChain) setToken(txn *badger.Txn, addr common.Address, txOutPos types.Position, spendingTxInPos types.Position) error {
+	return txn.Set(cc.tokenKey(addr, txOutPos), types.PositionToBytes(spendingTxInPos))
 }
 
-func (cc *ChildChain) getUTXO(txn *badger.Txn, addr common.Address, txOutPos types.Position) (types.Position, error) {
-	item, err := txn.Get(cc.utxoKey(addr, txOutPos))
+func (cc *ChildChain) getToken(txn *badger.Txn, addr common.Address, txOutPos types.Position) (types.Position, error) {
+	item, err := txn.Get(cc.tokenKey(addr, txOutPos))
 	if err != nil {
 		return 0, err
 	}
