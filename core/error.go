@@ -3,6 +3,8 @@ package core
 import "errors"
 
 var (
+	ErrMempoolFull = errors.New("mempool is full")
+
 	ErrBlockNotFound = errors.New("block is not found")
 	ErrEmptyBlock    = errors.New("block is empty")
 

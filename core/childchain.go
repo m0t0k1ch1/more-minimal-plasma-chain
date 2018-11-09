@@ -22,6 +22,7 @@ token_<address>_<txout position> => types.Position
 
 const (
 	FirstBlockNumber = 1
+	MempoolSize      = 99999 // must be less than or equal to types.MaxBlockTxesNum
 
 	currentBlockNumberKey = "current_blknum"
 	blockHeaderKeyPrefix  = "blk_header"
@@ -169,8 +170,8 @@ func (cc *ChildChain) GetTxProof(txn *badger.Txn, txPos types.Position) ([]byte,
 
 func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 	// check mempool capacity
-	if cc.countTxesInMempool(txn) >= types.MaxBlockTxesNum {
-		return types.ErrBlockTxesNumExceedsLimit
+	if cc.countTxesInMempool(txn) >= MempoolSize {
+		return ErrMempoolFull
 	}
 
 	// validate tx
