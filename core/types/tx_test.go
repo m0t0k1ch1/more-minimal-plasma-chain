@@ -1,7 +1,6 @@
 package types
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -19,7 +18,7 @@ func newTestDepositTx(t *testing.T) *Tx {
 	tx := NewTx()
 	tx.Outputs[0] = NewTxOut(
 		utils.HexToAddress("0x1111111111111111111111111111111111111111"),
-		big.NewInt(1),
+		1,
 	)
 	return tx
 }
@@ -118,11 +117,11 @@ func TestTx_Sign(t *testing.T) {
 	tx := newTestNullTx(t)
 
 	// sign
-	require.NoError(t, tx.Sign(big.NewInt(0), signer))
+	require.NoError(t, tx.Sign(0, signer))
 
 	// verify
 	for i := 0; i < len(tx.Inputs); i++ {
-		signerAddr, err := tx.SignerAddress(big.NewInt(int64(i)))
+		signerAddr, err := tx.SignerAddress(uint64(i))
 		require.NoError(t, err)
 		if i == 0 {
 			assert.Equal(t, signer.Address(), signerAddr)
@@ -140,11 +139,11 @@ func TestTx_Confirm(t *testing.T) {
 	tx := newTestNullTx(t)
 
 	// sign
-	require.NoError(t, tx.Confirm(big.NewInt(0), signer))
+	require.NoError(t, tx.Confirm(0, signer))
 
 	// verify
 	for i := 0; i < len(tx.Inputs); i++ {
-		signerAddr, err := tx.ConfirmationSignerAddress(big.NewInt(int64(i)))
+		signerAddr, err := tx.ConfirmationSignerAddress(uint64(i))
 		require.NoError(t, err)
 		if i == 0 {
 			assert.Equal(t, signer.Address(), signerAddr)
