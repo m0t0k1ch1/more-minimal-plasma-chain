@@ -152,6 +152,15 @@ func (cc *ChildChain) GetTx(txn *badger.Txn, txPos types.Position) (*types.Tx, e
 func (cc *ChildChain) GetTxProof(txn *badger.Txn, txPos types.Position) ([]byte, error) {
 	blkNum, txIndex := types.ParseTxPosition(txPos)
 
+	// check tx existence
+	if _, err := cc.getTx(txn, blkNum, txIndex); err != nil {
+		if err == badger.ErrKeyNotFound {
+			return nil, ErrTxNotFound
+		} else {
+			return nil, err
+		}
+	}
+
 	// get block
 	blk, err := cc.getBlock(txn, blkNum)
 	if err != nil {
