@@ -26,6 +26,10 @@
 
 
 [[constraint]]
+  name = "github.com/dgraph-io/badger"
+  version = "1.5.3"
+
+[[constraint]]
   name = "github.com/ethereum/go-ethereum"
   version = "1.8.17"
 

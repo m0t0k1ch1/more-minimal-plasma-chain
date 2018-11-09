@@ -9,8 +9,13 @@ import (
 
 type Config struct {
 	Port      int                  `json:"port"`
+	DB        DBConfig             `json:"db"`
 	Operator  OperatorConfig       `json:"operator"`
 	RootChain core.RootChainConfig `json:"rootchain"`
+}
+
+type DBConfig struct {
+	Dir string `json:"dir"`
 }
 
 type OperatorConfig struct {

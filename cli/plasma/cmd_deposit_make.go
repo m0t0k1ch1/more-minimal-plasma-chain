@@ -17,7 +17,7 @@ var cmdDepositMake = cli.Command{
 		if err != nil {
 			return err
 		}
-		amount, err := getBigInt(c, amountFlag)
+		amount, err := getUint64(c, amountFlag)
 		if err != nil {
 			return err
 		}
@@ -26,11 +26,11 @@ var cmdDepositMake = cli.Command{
 			return err
 		}
 
-		txn, err := rc.Deposit(types.NewAccount(privKey), amount)
+		rctx, err := rc.Deposit(types.NewAccount(privKey), amount)
 		if err != nil {
 			return err
 		}
 
-		return printlnJSON(txn)
+		return printlnJSON(rctx)
 	},
 }

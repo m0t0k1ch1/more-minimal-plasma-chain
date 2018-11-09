@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 	"net/url"
 
@@ -12,12 +11,10 @@ import (
 
 type PutTxInResponse struct {
 	*ResponseBase
-	Result struct {
-		Pos *big.Int `json:"pos"`
-	} `json:"result"`
+	Result struct{} `json:"result"`
 }
 
-func (c *Client) PutTxIn(ctx context.Context, txInPos *types.Position, confSig types.Signature) (*types.Position, error) {
+func (c *Client) PutTxIn(ctx context.Context, txInPos types.Position, confSig types.Signature) error {
 	v := url.Values{}
 	v.Set("confsig", confSig.Hex())
 
@@ -29,8 +26,8 @@ func (c *Client) PutTxIn(ctx context.Context, txInPos *types.Position, confSig t
 		v,
 		&resp,
 	); err != nil {
-		return types.NullPosition, err
+		return err
 	}
 
-	return types.NewPosition(resp.Result.Pos), nil
+	return nil
 }

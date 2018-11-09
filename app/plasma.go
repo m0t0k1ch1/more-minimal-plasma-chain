@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 
+	"github.com/dgraph-io/badger"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
@@ -19,6 +19,7 @@ type HandlerFunc func(*Context) error
 type Plasma struct {
 	config     Config
 	server     *echo.Echo
+	db         *DB
 	operator   *types.Account
 	rootChain  *core.RootChain
 	childChain *core.ChildChain
@@ -30,6 +31,9 @@ func NewPlasma(conf Config) (*Plasma, error) {
 	}
 
 	p.initServer()
+	if err := p.initDB(); err != nil {
+		return nil, err
+	}
 	if err := p.initRootChain(); err != nil {
 		return nil, err
 	}
@@ -55,8 +59,18 @@ func (p *Plasma) initServer() {
 	p.initRoutes()
 }
 
+func (p *Plasma) initDB() error {
+	db, err := NewDB(p.config.DB)
+	if err != nil {
+		return err
+	}
+	p.db = db
+	return nil
+}
+
 func (p *Plasma) initRoutes() {
 	p.GET("/ping", p.PingHandler)
+	p.GET("/addresses/:address/utxos", p.GetAddressUTXOsHandler)
 	p.POST("/blocks", p.PostBlockHandler)
 	p.GET("/blocks/:blkNum", p.GetBlockHandler)
 	p.POST("/txes", p.PostTxHandler)
@@ -84,12 +98,14 @@ func (p *Plasma) initOperator() error {
 }
 
 func (p *Plasma) initChildChain() error {
-	cc, err := core.NewChildChain()
-	if err != nil {
-		return err
-	}
-	p.childChain = cc
-	return nil
+	return p.db.Update(func(txn *badger.Txn) error {
+		cc, err := core.NewChildChain(txn)
+		if err != nil {
+			return err
+		}
+		p.childChain = cc
+		return nil
+	})
 }
 
 func (p *Plasma) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
@@ -114,12 +130,20 @@ func (p *Plasma) Logger() echo.Logger {
 	return p.server.Logger
 }
 
+func (p *Plasma) Finalize() {
+	p.db.Close()
+}
+
 func (p *Plasma) Start() error {
 	if err := p.watchRootChain(); err != nil {
 		return err
 	}
 
 	return p.server.Start(fmt.Sprintf(":%d", p.config.Port))
+}
+
+func (p *Plasma) Shutdown(ctx context.Context) error {
+	return p.server.Shutdown(ctx)
 }
 
 func (p *Plasma) watchRootChain() error {
@@ -132,17 +156,22 @@ func (p *Plasma) watchRootChain() error {
 	go func() {
 		defer sub.Unsubscribe()
 		for log := range sink {
-			blkNum, err := p.childChain.AddDepositBlock(log.Owner, log.Amount, p.operator)
-			if err != nil {
+			if err := p.db.Update(func(txn *badger.Txn) error {
+				newBlkNum, err := p.childChain.AddDepositBlock(txn, log.Owner, log.Amount.Uint64(), p.operator)
+				if err != nil {
+					p.Logger().Error(err)
+				} else {
+					p.Logger().Infof(
+						"[DEPOSIT] blknum: %d, txpos: %d, owner: %s, amount: %d",
+						newBlkNum,
+						types.NewTxPosition(newBlkNum, 0),
+						utils.AddressToHex(log.Owner),
+						log.Amount,
+					)
+				}
+				return nil
+			}); err != nil {
 				p.Logger().Error(err)
-			} else {
-				p.Logger().Infof(
-					"[DEPOSIT] blknum: %d, txpos: %d, owner: %s, amount: %d",
-					blkNum,
-					types.NewTxPosition(blkNum, big.NewInt(0)),
-					utils.AddressToHex(log.Owner),
-					log.Amount,
-				)
 			}
 		}
 	}()

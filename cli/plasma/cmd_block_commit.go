@@ -27,11 +27,11 @@ var cmdBlockCommit = cli.Command{
 			return err
 		}
 
-		txn, err := rc.CommitPlasmaBlockRoot(types.NewAccount(privKey), blkRootHash)
+		rctx, err := rc.CommitPlasmaBlockRoot(types.NewAccount(privKey), blkRootHash)
 		if err != nil {
 			return err
 		}
 
-		return printlnJSON(txn)
+		return printlnJSON(rctx)
 	},
 }

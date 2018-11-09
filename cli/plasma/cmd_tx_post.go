@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 
-	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/urfave/cli"
 )
 
@@ -19,13 +18,10 @@ var cmdTxPost = cli.Command{
 			return err
 		}
 
-		txPos, err := newClient().PostTx(context.Background(), tx)
-		if err != nil {
+		if err := newClient().PostTx(context.Background(), tx); err != nil {
 			return err
 		}
 
-		return printlnJSON(map[string]*types.Position{
-			"pos": txPos,
-		})
+		return printlnJSON(nil)
 	},
 }

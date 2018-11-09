@@ -1,7 +1,6 @@
 package types
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,12 +8,12 @@ import (
 
 func TestNewTxOutPosition(t *testing.T) {
 	type input struct {
-		blkNum   *big.Int
-		txIndex  *big.Int
-		outIndex *big.Int
+		blkNum   uint64
+		txIndex  uint64
+		outIndex uint64
 	}
 	type output struct {
-		pos *Position
+		pos Position
 	}
 	testCases := []struct {
 		name string
@@ -24,12 +23,12 @@ func TestNewTxOutPosition(t *testing.T) {
 		{
 			"1234567890",
 			input{
-				blkNum:   big.NewInt(1),
-				txIndex:  big.NewInt(23456),
-				outIndex: big.NewInt(7890),
+				blkNum:   1,
+				txIndex:  23456,
+				outIndex: 7890,
 			},
 			output{
-				pos: &Position{big.NewInt(1234567890)},
+				pos: Position(1234567890),
 			},
 		},
 	}
@@ -46,12 +45,12 @@ func TestNewTxOutPosition(t *testing.T) {
 
 func TestParseTxOutPosition(t *testing.T) {
 	type input struct {
-		pos *Position
+		pos Position
 	}
 	type output struct {
-		blkNum   *big.Int
-		txIndex  *big.Int
-		outIndex *big.Int
+		blkNum   uint64
+		txIndex  uint64
+		outIndex uint64
 	}
 	testCases := []struct {
 		name string
@@ -61,12 +60,12 @@ func TestParseTxOutPosition(t *testing.T) {
 		{
 			"1234567890",
 			input{
-				&Position{big.NewInt(1234567890)},
+				Position(1234567890),
 			},
 			output{
-				big.NewInt(1),
-				big.NewInt(23456),
-				big.NewInt(7890),
+				1,
+				23456,
+				7890,
 			},
 		},
 	}

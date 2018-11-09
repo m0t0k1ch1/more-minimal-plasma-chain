@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"math/big"
 
 	"github.com/urfave/cli"
 )
@@ -17,7 +16,7 @@ var cmdBlockFix = cli.Command{
 			return err
 		}
 
-		return printlnJSON(map[string]*big.Int{
+		return printlnJSON(map[string]uint64{
 			"blknum": blkNum,
 		})
 	},

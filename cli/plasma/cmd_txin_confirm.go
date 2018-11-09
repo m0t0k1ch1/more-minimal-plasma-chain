@@ -42,11 +42,11 @@ var cmdTxInConfirm = cli.Command{
 		}
 
 		// update confirmation signature
-		if _, err := clnt.PutTxIn(ctx, txInPos, tx.GetInput(inIndex).ConfirmationSignature); err != nil {
+		if err := clnt.PutTxIn(ctx, txInPos, tx.GetInput(inIndex).ConfirmationSignature); err != nil {
 			return err
 		}
 
-		return printlnJSON(map[string]*types.Position{
+		return printlnJSON(map[string]types.Position{
 			"pos": txInPos,
 		})
 	},

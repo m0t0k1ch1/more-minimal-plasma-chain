@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -32,8 +31,8 @@ func NewTx() *Tx {
 	}
 
 	for i := 0; i < TxElementsNum; i++ {
-		tx.Inputs[i] = NewTxIn(big.NewInt(0), big.NewInt(0), big.NewInt(0))
-		tx.Outputs[i] = NewTxOut(NullAddress, big.NewInt(0))
+		tx.Inputs[i] = NewTxIn(0, 0, 0)
+		tx.Outputs[i] = NewTxOut(NullAddress, 0)
 	}
 
 	return tx
@@ -125,61 +124,61 @@ func (tx *Tx) ConfirmationSignaturesBytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (tx *Tx) GetInput(inIndex *big.Int) *TxIn {
+func (tx *Tx) GetInput(inIndex uint64) *TxIn {
 	if !tx.IsExistInput(inIndex) {
 		return nil
 	}
 
-	return tx.Inputs[inIndex.Uint64()]
+	return tx.Inputs[inIndex]
 }
 
-func (tx *Tx) SetInput(inIndex *big.Int, txIn *TxIn) error {
+func (tx *Tx) SetInput(inIndex uint64, txIn *TxIn) error {
 	if !tx.IsExistInput(inIndex) {
 		return ErrInvalidTxInIndex
 	}
 
-	tx.Inputs[inIndex.Uint64()] = txIn
+	tx.Inputs[inIndex] = txIn
 
 	return nil
 }
 
-func (tx *Tx) IsExistInput(inIndex *big.Int) bool {
-	return inIndex.Uint64() < TxElementsNum
+func (tx *Tx) IsExistInput(inIndex uint64) bool {
+	return inIndex < TxElementsNum
 }
 
-func (tx *Tx) GetOutput(outIndex *big.Int) *TxOut {
+func (tx *Tx) GetOutput(outIndex uint64) *TxOut {
 	if !tx.IsExistOutput(outIndex) {
 		return nil
 	}
 
-	return tx.Outputs[outIndex.Uint64()]
+	return tx.Outputs[outIndex]
 }
 
-func (tx *Tx) SetOutput(outIndex *big.Int, txOut *TxOut) error {
+func (tx *Tx) SetOutput(outIndex uint64, txOut *TxOut) error {
 	if !tx.IsExistOutput(outIndex) {
 		return ErrInvalidTxOutIndex
 	}
 
-	tx.Outputs[outIndex.Uint64()] = txOut
+	tx.Outputs[outIndex] = txOut
 
 	return nil
 }
 
-func (tx *Tx) SpendOutput(outIndex *big.Int) error {
+func (tx *Tx) SpendOutput(outIndex uint64) error {
 	if !tx.IsExistOutput(outIndex) {
 		return ErrInvalidTxOutIndex
 	}
 
-	tx.Outputs[outIndex.Uint64()].IsSpent = true
+	tx.GetOutput(outIndex).IsSpent = true
 
 	return nil
 }
 
-func (tx *Tx) IsExistOutput(outIndex *big.Int) bool {
-	return outIndex.Uint64() < TxElementsNum
+func (tx *Tx) IsExistOutput(outIndex uint64) bool {
+	return outIndex < TxElementsNum
 }
 
-func (tx *Tx) Sign(inIndex *big.Int, signer *Account) error {
+func (tx *Tx) Sign(inIndex uint64, signer *Account) error {
 	if !tx.IsExistInput(inIndex) {
 		return ErrInvalidTxInIndex
 	}
@@ -198,12 +197,12 @@ func (tx *Tx) Sign(inIndex *big.Int, signer *Account) error {
 		return err
 	}
 
-	tx.Inputs[inIndex.Uint64()].Signature = sig
+	tx.GetInput(inIndex).Signature = sig
 
 	return nil
 }
 
-func (tx *Tx) Confirm(inIndex *big.Int, signer *Account) error {
+func (tx *Tx) Confirm(inIndex uint64, signer *Account) error {
 	if !tx.IsExistInput(inIndex) {
 		return ErrInvalidTxInIndex
 	}
@@ -222,12 +221,12 @@ func (tx *Tx) Confirm(inIndex *big.Int, signer *Account) error {
 		return err
 	}
 
-	tx.Inputs[inIndex.Uint64()].ConfirmationSignature = sig
+	tx.GetInput(inIndex).ConfirmationSignature = sig
 
 	return nil
 }
 
-func (tx *Tx) SignerAddress(inIndex *big.Int) (common.Address, error) {
+func (tx *Tx) SignerAddress(inIndex uint64) (common.Address, error) {
 	if !tx.IsExistInput(inIndex) {
 		return NullAddress, ErrInvalidTxInIndex
 	}
@@ -237,10 +236,10 @@ func (tx *Tx) SignerAddress(inIndex *big.Int) (common.Address, error) {
 		return NullAddress, err
 	}
 
-	return tx.signerAddress(h, tx.Inputs[inIndex.Uint64()].Signature)
+	return tx.signerAddress(h, tx.GetInput(inIndex).Signature)
 }
 
-func (tx *Tx) ConfirmationSignerAddress(inIndex *big.Int) (common.Address, error) {
+func (tx *Tx) ConfirmationSignerAddress(inIndex uint64) (common.Address, error) {
 	if !tx.IsExistInput(inIndex) {
 		return NullAddress, ErrInvalidTxInIndex
 	}
@@ -250,7 +249,7 @@ func (tx *Tx) ConfirmationSignerAddress(inIndex *big.Int) (common.Address, error
 		return NullAddress, err
 	}
 
-	return tx.signerAddress(h, tx.Inputs[inIndex.Uint64()].ConfirmationSignature)
+	return tx.signerAddress(h, tx.GetInput(inIndex).ConfirmationSignature)
 }
 
 func (tx *Tx) signerAddress(h common.Hash, sig Signature) (common.Address, error) {
@@ -261,12 +260,12 @@ func (tx *Tx) signerAddress(h common.Hash, sig Signature) (common.Address, error
 	return sig.SignerAddress(h)
 }
 
-func (tx *Tx) SetConfirmationSignature(inIndex *big.Int, confSig Signature) error {
+func (tx *Tx) SetConfirmationSignature(inIndex uint64, confSig Signature) error {
 	if !tx.IsExistInput(inIndex) {
 		return ErrInvalidTxInIndex
 	}
 
-	tx.Inputs[inIndex.Uint64()].ConfirmationSignature = confSig
+	tx.GetInput(inIndex).ConfirmationSignature = confSig
 
 	return nil
 }

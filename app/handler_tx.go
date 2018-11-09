@@ -15,8 +15,11 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	txPos, err := p.childChain.AddTxToMempool(tx)
-	if err != nil {
+	// BEGIN TXN
+	txn := p.db.NewTransaction(true)
+	defer txn.Discard()
+
+	if err := p.childChain.AddTxToMempool(txn, tx); err != nil {
 		if err == core.ErrInvalidTxSignature {
 			return c.JSONError(ErrInvalidTxSignature)
 		} else if err == core.ErrInvalidTxBalance {
@@ -31,9 +34,12 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	return c.JSONSuccess(map[string]*types.Position{
-		"pos": txPos,
-	})
+	// COMMIT TX
+	if err := txn.Commit(nil); err != nil {
+		return c.JSONError(err)
+	}
+
+	return c.JSONSuccess(nil)
 }
 
 func (p *Plasma) GetTxHandler(c *Context) error {
@@ -42,11 +48,20 @@ func (p *Plasma) GetTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	tx, err := p.childChain.GetTx(txPos)
+	// BEGIN TXN
+	txn := p.db.NewTransaction(false)
+	defer txn.Discard()
+
+	tx, err := p.childChain.GetTx(txn, txPos)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
 		}
+		return c.JSONError(err)
+	}
+
+	// COMMIT TXN
+	if err := txn.Commit(nil); err != nil {
 		return c.JSONError(err)
 	}
 
@@ -66,11 +81,20 @@ func (p *Plasma) GetTxProofHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	txProofBytes, err := p.childChain.GetTxProof(txPos)
+	// BEGIN TXN
+	txn := p.db.NewTransaction(false)
+	defer txn.Discard()
+
+	txProofBytes, err := p.childChain.GetTxProof(txn, txPos)
 	if err != nil {
 		if err == core.ErrTxNotFound {
 			return c.JSONError(ErrTxNotFound)
 		}
+		return c.JSONError(err)
+	}
+
+	// COMMIT TXN
+	if err := txn.Commit(nil); err != nil {
 		return c.JSONError(err)
 	}
 

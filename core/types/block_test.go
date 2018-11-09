@@ -1,7 +1,6 @@
 package types
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -12,12 +11,12 @@ import (
 )
 
 func newTestNullBlock(t *testing.T) *Block {
-	blk, err := NewBlock(nil, big.NewInt(0))
+	blk, err := NewBlock(nil, 0)
 	require.NoError(t, err)
 	return blk
 }
 
-func newTestBlock(t *testing.T, txes []*Tx, blkNum *big.Int) *Block {
+func newTestBlock(t *testing.T, txes []*Tx, blkNum uint64) *Block {
 	blk, err := NewBlock(txes, blkNum)
 	require.NoError(t, err)
 	return blk
@@ -43,7 +42,7 @@ func TestBlock_Hash(t *testing.T) {
 		},
 		{
 			"deposit block",
-			newTestBlock(t, []*Tx{newTestDepositTx(t)}, big.NewInt(1)),
+			newTestBlock(t, []*Tx{newTestDepositTx(t)}, 1),
 			output{
 				utils.HexToHash("0xde3e0e2864dfae133ca62399c2e194e813ede8ff7723e43c9c4660841d32b144"),
 				nil,
@@ -86,7 +85,7 @@ func TestBlock_Root(t *testing.T) {
 		},
 		{
 			"deposit block",
-			newTestBlock(t, []*Tx{newTestDepositTx(t)}, big.NewInt(1)),
+			newTestBlock(t, []*Tx{newTestDepositTx(t)}, 1),
 			output{
 				utils.HexToHash("0xf88f3819a6a679a60f8d5070af717bdfb41a87ab9eceb631136273928fb30560"),
 				nil,

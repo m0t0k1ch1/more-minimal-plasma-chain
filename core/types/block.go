@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"errors"
-	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -21,21 +20,27 @@ var (
 	ErrBlockTxesNumExceedsLimit = errors.New("block txes num exceeds the limit")
 )
 
-type Block struct {
-	Txes      []*Tx     `json:"txes"`
-	Number    *big.Int  `json:"blknum"`
-	Signature Signature `json:"sig"`
+type BlockHeader struct {
+	Number    uint64
+	Signature Signature
 }
 
-func NewBlock(txes []*Tx, blkNum *big.Int) (*Block, error) {
+type Block struct {
+	*BlockHeader
+	Txes []*Tx `json:"txes"`
+}
+
+func NewBlock(txes []*Tx, blkNum uint64) (*Block, error) {
 	if len(txes) >= MaxBlockTxesNum {
 		return nil, ErrBlockTxesNumExceedsLimit
 	}
 
 	return &Block{
-		Txes:      txes,
-		Number:    blkNum,
-		Signature: NullSignature,
+		BlockHeader: &BlockHeader{
+			Number:    blkNum,
+			Signature: NullSignature,
+		},
+		Txes: txes,
 	}, nil
 }
 
@@ -86,20 +91,16 @@ func (blk *Block) Root() (common.Hash, error) {
 	return utils.BytesToHash(tree.Root().Bytes()), nil
 }
 
-func (blk *Block) LastTxIndex() *big.Int {
-	return big.NewInt(int64(len(blk.Txes) - 1))
+func (blk *Block) IsExistTx(txIndex uint64) bool {
+	return txIndex < uint64(len(blk.Txes))
 }
 
-func (blk *Block) IsExistTx(txIndex *big.Int) bool {
-	return txIndex.Cmp(big.NewInt(int64(len(blk.Txes)))) < 0
-}
-
-func (blk *Block) GetTx(txIndex *big.Int) *Tx {
+func (blk *Block) GetTx(txIndex uint64) *Tx {
 	if !blk.IsExistTx(txIndex) {
 		return nil
 	}
 
-	return blk.Txes[txIndex.Uint64()]
+	return blk.Txes[txIndex]
 }
 
 func (blk *Block) AddTx(tx *Tx) error {

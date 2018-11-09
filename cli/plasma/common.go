@@ -4,8 +4,8 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"os"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -37,22 +37,17 @@ func getString(c *cli.Context, f cli.Flag) string {
 	return c.String(f.GetName())
 }
 
-func getBigInt(c *cli.Context, f cli.Flag) (*big.Int, error) {
-	i, ok := new(big.Int).SetString(getString(c, f), 10)
-	if !ok {
-		return nil, fmt.Errorf("invalid int")
-	}
-
-	return i, nil
+func getUint64(c *cli.Context, f cli.Flag) (uint64, error) {
+	return strconv.ParseUint(getString(c, f), 10, 64)
 }
 
-func getPosition(c *cli.Context, f cli.Flag) (*types.Position, error) {
-	i, err := getBigInt(c, f)
+func getPosition(c *cli.Context, f cli.Flag) (types.Position, error) {
+	i, err := getUint64(c, f)
 	if err != nil {
-		return types.NullPosition, err
+		return 0, err
 	}
 
-	return types.NewPosition(i), nil
+	return types.Position(i), nil
 }
 
 func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
