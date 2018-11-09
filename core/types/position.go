@@ -1,5 +1,9 @@
 package types
 
+import (
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
+)
+
 const (
 	BlockPositionOffset = 100000 // must be greater than MaxBlockTxesNum
 	TxPositionOffset    = 10000  // must be greater than TxElementsNum
@@ -46,4 +50,16 @@ func parseTxElementPosition(pos Position) (blkNum, txIndex, elemIndex uint64) {
 	blkNum, txIndex = ParseTxPosition(txPos)
 	elemIndex = pos.Uint64() % txPos.Uint64()
 	return
+}
+
+func PositionToBytes(pos Position) []byte {
+	return utils.Uint64ToBytes(pos.Uint64())
+}
+
+func BytesToPosition(b []byte) (Position, error) {
+	i, err := utils.BytesToUint64(b)
+	if err != nil {
+		return 0, err
+	}
+	return Position(i), nil
 }

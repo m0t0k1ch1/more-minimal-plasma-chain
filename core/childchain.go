@@ -11,8 +11,22 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
+/*
+blknum_current                  => uint64
+blk_header_<block number>       => *types.BlockHeader
+tx_<block_number>_<tx index>    => *types.Tx
+tx_mempool_<tx hash>            => *types.Tx
+utxo_<address>_<txout position> => types.Position
+*/
+
 const (
 	DefaultBlockNumber = 1
+
+	currentBlockNumberKey = "current_blknum"
+	blockHeaderKeyPrefix  = "blk_header"
+	txKeyPrefix           = "tx"
+	mempoolTxKeyPrefix    = "mempool_tx"
+	utxoKeyPrefix         = "utxo"
 )
 
 type ChildChain struct{}
@@ -260,8 +274,12 @@ func (cc *ChildChain) ConfirmTx(txn *badger.Txn, txInPos types.Position, confSig
 	return cc.setTx(txn, blkNum, txIndex, tx)
 }
 
+func (cc *ChildChain) currentBlockNumberKey() []byte {
+	return []byte(currentBlockNumberKey)
+}
+
 func (cc *ChildChain) getCurrentBlockNumber(txn *badger.Txn) (uint64, error) {
-	item, err := txn.Get([]byte("blknum_current"))
+	item, err := txn.Get(cc.currentBlockNumberKey())
 	if err != nil {
 		return 0, err
 	}
@@ -275,7 +293,7 @@ func (cc *ChildChain) getCurrentBlockNumber(txn *badger.Txn) (uint64, error) {
 }
 
 func (cc *ChildChain) setCurrentBlockNumber(txn *badger.Txn, blkNum uint64) error {
-	return txn.Set([]byte("blknum_current"), utils.Uint64ToBytes(blkNum))
+	return txn.Set(cc.currentBlockNumberKey(), utils.Uint64ToBytes(blkNum))
 }
 
 func (cc *ChildChain) getNextBlockNumber(txn *badger.Txn) (uint64, error) {
@@ -300,17 +318,21 @@ func (cc *ChildChain) incrementCurrentBlockNumber(txn *badger.Txn) (uint64, erro
 	return nextBlkNum, nil
 }
 
+func (cc *ChildChain) blockHeaderKey(blkNum uint64) []byte {
+	return []byte(fmt.Sprintf("%s_%d", blockHeaderKeyPrefix, blkNum))
+}
+
 func (cc *ChildChain) setBlockHeader(txn *badger.Txn, blkNum uint64, blkHeader *types.BlockHeader) error {
 	blkHeaderBytes, err := rlp.EncodeToBytes(blkHeader)
 	if err != nil {
 		return err
 	}
 
-	return txn.Set([]byte(fmt.Sprintf("blk_header_%d", blkNum)), blkHeaderBytes)
+	return txn.Set(cc.blockHeaderKey(blkNum), blkHeaderBytes)
 }
 
 func (cc *ChildChain) getBlockHeader(txn *badger.Txn, blkNum uint64) (*types.BlockHeader, error) {
-	item, err := txn.Get([]byte(fmt.Sprintf("blk_header_%d", blkNum)))
+	item, err := txn.Get(cc.blockHeaderKey(blkNum))
 	if err != nil {
 		return nil, err
 	}
@@ -335,6 +357,7 @@ func (cc *ChildChain) getBlock(txn *badger.Txn, blkNum uint64) (*types.Block, er
 		return nil, err
 	}
 
+	// convert block header to block
 	blk := &types.Block{
 		BlockHeader: blkHeader,
 		Txes:        nil,
@@ -343,7 +366,7 @@ func (cc *ChildChain) getBlock(txn *badger.Txn, blkNum uint64) (*types.Block, er
 	it := txn.NewIterator(badger.DefaultIteratorOptions)
 	defer it.Close()
 
-	prefix := []byte(fmt.Sprintf("tx_%d_", blk.Number))
+	prefix := cc.txKeyPrefix(blkNum)
 	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 		// get tx
 		var tx types.Tx
@@ -380,7 +403,7 @@ func (cc *ChildChain) fixCurrentBlock(txn *badger.Txn) (*types.Block, error) {
 	it := txn.NewIterator(badger.DefaultIteratorOptions)
 	defer it.Close()
 
-	prefix := []byte("tx_mempool_")
+	prefix := cc.mempoolTxKeyPrefix()
 	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 		item := it.Item()
 
@@ -415,11 +438,42 @@ func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
 			return err
 		}
 
-		// TODO: store UTXO
+		// store txin positions
+		for j, txIn := range tx.Inputs {
+			inTxOut, err := cc.getTxOut(txn, txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
+			if err != nil {
+				return err
+			}
+			cc.setUTXO(txn,
+				inTxOut.OwnerAddress,
+				types.NewTxOutPosition(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex),
+				types.NewTxInPosition(blk.Number, uint64(i), uint64(j)),
+			)
+		}
+
+		// store UTXOs
+		for j, txOut := range tx.Outputs {
+			if err := cc.setUTXO(
+				txn,
+				txOut.OwnerAddress,
+				types.NewTxOutPosition(blk.Number, uint64(i), uint64(j)),
+				0,
+			); err != nil {
+				return err
+			}
+		}
 	}
 
 	// store block header
 	return cc.setBlockHeader(txn, blk.Number, blk.BlockHeader)
+}
+
+func (cc *ChildChain) txKeyPrefix(blkNum uint64) []byte {
+	return []byte(fmt.Sprintf("%s_%d_", txKeyPrefix, blkNum))
+}
+
+func (cc *ChildChain) txKey(blkNum, txIndex uint64) []byte {
+	return []byte(fmt.Sprintf("%s_%d_%d", txKeyPrefix, blkNum, txIndex))
 }
 
 func (cc *ChildChain) setTx(txn *badger.Txn, blkNum, txIndex uint64, tx *types.Tx) error {
@@ -428,11 +482,11 @@ func (cc *ChildChain) setTx(txn *badger.Txn, blkNum, txIndex uint64, tx *types.T
 		return err
 	}
 
-	return txn.Set([]byte(fmt.Sprintf("tx_%d_%d", blkNum, txIndex)), txBytes)
+	return txn.Set(cc.txKey(blkNum, txIndex), txBytes)
 }
 
 func (cc *ChildChain) getTx(txn *badger.Txn, blkNum, txIndex uint64) (*types.Tx, error) {
-	item, err := txn.Get([]byte(fmt.Sprintf("tx_%d_%d", blkNum, txIndex)))
+	item, err := txn.Get(cc.txKey(blkNum, txIndex))
 	if err != nil {
 		return nil, err
 	}
@@ -508,6 +562,19 @@ func (cc *ChildChain) validateTx(txn *badger.Txn, tx *types.Tx) error {
 	return nil
 }
 
+func (cc *ChildChain) mempoolTxKeyPrefix() []byte {
+	return []byte(fmt.Sprintf("%s_", mempoolTxKeyPrefix))
+}
+
+func (cc *ChildChain) mempoolTxKey(tx *types.Tx) ([]byte, error) {
+	txHash, err := tx.Hash()
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(fmt.Sprintf("%s_%s", mempoolTxKeyPrefix, utils.HashToHex(txHash))), nil
+}
+
 func (cc *ChildChain) countTxesInMempool(txn *badger.Txn) uint64 {
 	opts := badger.DefaultIteratorOptions
 	opts.PrefetchValues = false // key-only iteration
@@ -515,7 +582,7 @@ func (cc *ChildChain) countTxesInMempool(txn *badger.Txn) uint64 {
 	it := txn.NewIterator(opts)
 	defer it.Close()
 
-	prefix, cnt := []byte("tx_mempool_"), uint64(0)
+	prefix, cnt := cc.mempoolTxKeyPrefix(), uint64(0)
 	for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 		cnt++
 	}
@@ -524,17 +591,17 @@ func (cc *ChildChain) countTxesInMempool(txn *badger.Txn) uint64 {
 }
 
 func (cc *ChildChain) addTxToMempool(txn *badger.Txn, tx *types.Tx) error {
-	txHash, err := tx.Hash()
-	if err != nil {
-		return err
-	}
-
 	txBytes, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		return err
 	}
 
-	return txn.Set([]byte(fmt.Sprintf("tx_mempool_%s", utils.HashToHex(txHash))), txBytes)
+	key, err := cc.mempoolTxKey(tx)
+	if err != nil {
+		return err
+	}
+
+	return txn.Set(key, txBytes)
 }
 
 func (cc *ChildChain) getTxOut(txn *badger.Txn, blkNum, txIndex, outIndex uint64) (*types.TxOut, error) {
@@ -544,4 +611,26 @@ func (cc *ChildChain) getTxOut(txn *badger.Txn, blkNum, txIndex, outIndex uint64
 	}
 
 	return tx.GetOutput(outIndex), nil
+}
+
+func (cc *ChildChain) utxoKey(addr common.Address, txOutPos types.Position) []byte {
+	return []byte(fmt.Sprintf("%s_%s_%d", utxoKeyPrefix, utils.AddressToHex(addr), txOutPos))
+}
+
+func (cc *ChildChain) setUTXO(txn *badger.Txn, addr common.Address, txOutPos types.Position, spendingTxInPos types.Position) error {
+	return txn.Set(cc.utxoKey(addr, txOutPos), types.PositionToBytes(spendingTxInPos))
+}
+
+func (cc *ChildChain) getUTXO(txn *badger.Txn, addr common.Address, txOutPos types.Position) (types.Position, error) {
+	item, err := txn.Get(cc.utxoKey(addr, txOutPos))
+	if err != nil {
+		return 0, err
+	}
+
+	utxoBytes, err := item.Value()
+	if err != nil {
+		return 0, err
+	}
+
+	return types.BytesToPosition(utxoBytes)
 }
