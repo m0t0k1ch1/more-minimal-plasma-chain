@@ -115,17 +115,17 @@ func (rc *RootChain) initContract() {
 }
 
 func (rc *RootChain) CurrentPlasmaBlockNumber() (uint64, error) {
-	blkNum := new(uint64)
+	blkNum := new(*big.Int)
 	if err := rc.contract.Call(nil, blkNum, "currentPlasmaBlockNumber"); err != nil {
 		return 0, err
 	}
 
-	return *blkNum, nil
+	return (*blkNum).Uint64(), nil
 }
 
 func (rc *RootChain) PlasmaExits(txOutPos types.Position) (types.Exit, error) {
 	exit := new(types.Exit)
-	if err := rc.contract.Call(nil, exit, "plasmaExits", txOutPos.Uint64()); err != nil {
+	if err := rc.contract.Call(nil, exit, "plasmaExits", new(big.Int).SetUint64(txOutPos.Uint64())); err != nil {
 		return types.Exit{}, err
 	}
 
@@ -164,7 +164,14 @@ func (rc *RootChain) StartExit(a *types.Account, txOutPos types.Position, tx *ty
 	opts := a.TransactOpts()
 	opts.Value = big.NewInt(DefaultExitBondAmount)
 
-	return rc.contract.Transact(opts, "startExit", blkNum, txIndex, outIndex, encodedTxBytes, txProofBytes, sigsBytes, confSigsBytes)
+	return rc.contract.Transact(
+		opts,
+		"startExit",
+		new(big.Int).SetUint64(blkNum), new(big.Int).SetUint64(txIndex), new(big.Int).SetUint64(outIndex),
+		encodedTxBytes,
+		txProofBytes,
+		sigsBytes, confSigsBytes,
+	)
 }
 
 func (rc *RootChain) ChallengeExit(a *types.Account, txOutPos types.Position, spendingTx *types.Tx, spendingInIndex uint64) (*gethtypes.Transaction, error) {
@@ -183,7 +190,13 @@ func (rc *RootChain) ChallengeExit(a *types.Account, txOutPos types.Position, sp
 		return nil, ErrNullConfirmationSignature
 	}
 
-	return rc.contract.Transact(a.TransactOpts(), "challengeExit", blkNum, txIndex, outIndex, encodedSpendingTxBytes, spendingTxIn.ConfirmationSignature.Bytes())
+	return rc.contract.Transact(
+		a.TransactOpts(),
+		"challengeExit",
+		new(big.Int).SetUint64(blkNum), new(big.Int).SetUint64(txIndex), new(big.Int).SetUint64(outIndex),
+		encodedSpendingTxBytes,
+		spendingTxIn.ConfirmationSignature.Bytes(),
+	)
 }
 
 func (rc *RootChain) ProcessExits(a *types.Account) (*gethtypes.Transaction, error) {
