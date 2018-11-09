@@ -21,7 +21,7 @@ token_<address>_<txout position> => types.Position
 */
 
 const (
-	DefaultBlockNumber = 1
+	FirstBlockNumber = 1
 
 	currentBlockNumberKey = "current_blknum"
 	blockHeaderKeyPrefix  = "blk_header"
@@ -37,7 +37,7 @@ func NewChildChain(txn *badger.Txn) (*ChildChain, error) {
 
 	if _, err := cc.getCurrentBlockNumber(txn); err != nil {
 		if err == badger.ErrKeyNotFound {
-			if err := cc.setCurrentBlockNumber(txn, DefaultBlockNumber); err != nil {
+			if err := cc.setCurrentBlockNumber(txn, FirstBlockNumber); err != nil {
 				return nil, err
 			}
 		} else {
