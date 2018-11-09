@@ -80,11 +80,6 @@ func (p *Plasma) GetBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	// COMMIT TXN
-	if err := txn.Commit(nil); err != nil {
-		return c.JSONError(err)
-	}
-
 	blkBytes, err := rlp.EncodeToBytes(blk)
 	if err != nil {
 		return c.JSONError(err)

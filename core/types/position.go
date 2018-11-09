@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strconv"
+
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
@@ -13,6 +15,10 @@ type Position uint64
 
 func (pos Position) Uint64() uint64 {
 	return uint64(pos)
+}
+
+func (pos Position) Bytes() []byte {
+	return PositionToBytes(pos)
 }
 
 func NewTxPosition(blkNum, txIndex uint64) Position {
@@ -58,6 +64,14 @@ func PositionToBytes(pos Position) []byte {
 
 func BytesToPosition(b []byte) (Position, error) {
 	i, err := utils.BytesToUint64(b)
+	if err != nil {
+		return 0, err
+	}
+	return Position(i), nil
+}
+
+func StrToPosition(s string) (Position, error) {
+	i, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
 		return 0, err
 	}
