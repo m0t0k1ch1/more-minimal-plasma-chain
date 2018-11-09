@@ -34,7 +34,7 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	newBlk, err := p.childChain.GetBlock(newBlkNum)
+	newBlk, err := p.childChain.GetBlock(txn, newBlkNum)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)
@@ -68,11 +68,20 @@ func (p *Plasma) GetBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	blk, err := p.childChain.GetBlock(blkNum)
+	// BEGIN TXN
+	txn := p.db.NewTransaction(false)
+	defer txn.Discard()
+
+	blk, err := p.childChain.GetBlock(txn, blkNum)
 	if err != nil {
 		if err == core.ErrBlockNotFound {
 			return c.JSONError(ErrBlockNotFound)
 		}
+		return c.JSONError(err)
+	}
+
+	// COMMIT TXN
+	if err := txn.Commit(nil); err != nil {
 		return c.JSONError(err)
 	}
 

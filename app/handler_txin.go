@@ -17,7 +17,11 @@ func (p *Plasma) PutTxInHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	if err := p.childChain.ConfirmTx(txInPos, confSig); err != nil {
+	// BEGIN TXN
+	txn := p.db.NewTransaction(true)
+	defer txn.Discard()
+
+	if err := p.childChain.ConfirmTx(txn, txInPos, confSig); err != nil {
 		if err == core.ErrInvalidTxConfirmationSignature {
 			return c.JSONError(ErrInvalidTxConfirmationSignature)
 		} else if err == core.ErrTxInNotFound {
@@ -25,6 +29,11 @@ func (p *Plasma) PutTxInHandler(c *Context) error {
 		} else if err == core.ErrNullTxInConfirmation {
 			return c.JSONError(ErrNullTxInConfirmation)
 		}
+		return c.JSONError(err)
+	}
+
+	// COMMIT TXN
+	if err := txn.Commit(nil); err != nil {
 		return c.JSONError(err)
 	}
 
