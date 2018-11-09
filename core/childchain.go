@@ -433,17 +433,17 @@ func (cc *ChildChain) fixCurrentBlock(txn *badger.Txn) (*types.Block, error) {
 
 func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
 	for i, tx := range blk.Txes {
-		// store tx
-		if err := cc.setTx(txn, blk.Number, uint64(i), tx); err != nil {
-			return err
-		}
-
 		// store txin positions
 		for j, txIn := range tx.Inputs {
+			if txIn.IsNull() {
+				continue
+			}
+
 			inTxOut, err := cc.getTxOut(txn, txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex)
 			if err != nil {
 				return err
 			}
+
 			cc.setUTXO(txn,
 				inTxOut.OwnerAddress,
 				types.NewTxOutPosition(txIn.BlockNumber, txIn.TxIndex, txIn.OutputIndex),
@@ -461,6 +461,11 @@ func (cc *ChildChain) addBlock(txn *badger.Txn, blk *types.Block) error {
 			); err != nil {
 				return err
 			}
+		}
+
+		// store tx
+		if err := cc.setTx(txn, blk.Number, uint64(i), tx); err != nil {
+			return err
 		}
 	}
 
