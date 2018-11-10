@@ -24,13 +24,13 @@ var cmdExitStart = cli.Command{
 			return err
 		}
 
+		clnt := newClient()
+		ctx := context.Background()
+
 		rc, err := newRootChain()
 		if err != nil {
 			return err
 		}
-
-		clnt := newClient()
-		ctx := context.Background()
 
 		blkNum, txIndex, _ := types.ParseTxOutPosition(txOutPos)
 		txPos := types.NewTxPosition(blkNum, txIndex)
