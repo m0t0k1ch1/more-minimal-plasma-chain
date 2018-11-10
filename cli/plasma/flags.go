@@ -17,7 +17,6 @@ var (
 	numFlag     = cli.StringFlag{Name: "num", Value: "0"}
 	posFlag     = cli.StringFlag{Name: "pos", Value: "0"}
 	privKeyFlag = cli.StringFlag{Name: "privkey", Value: ""}
-	rootFlag    = cli.StringFlag{Name: "root", Value: nullHashStr}
 	txFlag      = cli.StringFlag{Name: "tx", Value: ""}
 	vsPosFlag   = cli.StringFlag{Name: "vspos", Value: "0"}
 )
