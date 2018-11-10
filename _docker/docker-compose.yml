@@ -1,0 +1,8 @@
+version: '3'
+services:
+  ganache:
+    build: ganache
+    image: mmpc-ganache
+    container_name: mmpc-ganache
+    ports:
+      - "8545:8545"
