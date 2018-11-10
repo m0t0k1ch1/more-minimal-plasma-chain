@@ -36,10 +36,10 @@ func HexToHash(s string) common.Hash {
 }
 
 func HexToPrivateKey(s string) (*ecdsa.PrivateKey, error) {
-	if hasHexPrefix(s) {
-		s = s[2:]
+	if !hasHexPrefix(s) {
+		return nil, hexutil.ErrMissingPrefix
 	}
-	return crypto.HexToECDSA(s)
+	return crypto.HexToECDSA(s[2:])
 }
 
 func AddressToHex(addr common.Address) string {
