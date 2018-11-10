@@ -12,12 +12,12 @@ func (p *Plasma) GetAddressUTXOsHandler(c *Context) error {
 	txn := p.db.NewTransaction(false)
 	defer txn.Discard()
 
-	poses, err := p.childChain.GetUTXOPositions(txn, addr)
+	utxoPoses, err := p.childChain.GetUTXOPositions(txn, addr)
 	if err != nil {
 		return c.JSONError(err)
 	}
 
 	return c.JSONSuccess(map[string][]types.Position{
-		"utxos": poses,
+		"utxos": utxoPoses,
 	})
 }

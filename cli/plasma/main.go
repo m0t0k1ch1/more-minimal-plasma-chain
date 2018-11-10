@@ -23,6 +23,7 @@ func loadConfig(path string) error {
 func main() {
 	app := cli.NewApp()
 	app.Commands = []cli.Command{
+		cmdAddress,
 		cmdBlock,
 		cmdDeposit,
 		cmdExit,
