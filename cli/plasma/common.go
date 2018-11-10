@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/client"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
@@ -61,12 +60,7 @@ func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
 }
 
 func getPrivateKey(c *cli.Context, f cli.Flag) (*ecdsa.PrivateKey, error) {
-	privKeyBytes, err := utils.DecodeHex(getString(c, f))
-	if err != nil {
-		return nil, err
-	}
-
-	return crypto.ToECDSA(privKeyBytes)
+	return utils.HexToPrivateKey(getString(c, f))
 }
 
 func getTx(c *cli.Context, f cli.Flag) (*types.Tx, error) {

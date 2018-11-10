@@ -1,0 +1,16 @@
+version: '3'
+services:
+  childchain:
+    build: childchain
+    image: mmpc-childchain
+    container_name: mmpc-childchain
+    ports:
+      - "1323:1323"
+    depends_on:
+      - ganache
+  ganache:
+    build: ganache
+    image: mmpc-ganache
+    container_name: mmpc-ganache
+    ports:
+      - "8545:8545"
