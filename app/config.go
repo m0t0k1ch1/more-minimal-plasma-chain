@@ -3,8 +3,8 @@ package app
 import (
 	"crypto/ecdsa"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core"
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 type Config struct {
@@ -23,5 +23,5 @@ type OperatorConfig struct {
 }
 
 func (conf OperatorConfig) PrivateKey() (*ecdsa.PrivateKey, error) {
-	return crypto.HexToECDSA(conf.PrivateKeyStr)
+	return utils.HexToPrivateKey(conf.PrivateKeyStr)
 }
