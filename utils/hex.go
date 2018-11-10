@@ -19,6 +19,10 @@ func IsHexHash(s string) bool {
 	return len(s) == 2*common.HashLength && isHex(s)
 }
 
+func HexToBytes(s string) ([]byte, error) {
+	return hexutil.Decode(s)
+}
+
 func BytesToAddress(b []byte) common.Address {
 	return common.BytesToAddress(b)
 }
