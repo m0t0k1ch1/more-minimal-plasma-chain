@@ -13,7 +13,7 @@ var cmdTxCreate = cli.Command{
 	Usage: "create tx",
 	Flags: flags(
 		posFlag,
-		toFlag,
+		addressFlag,
 		amountFlag,
 	),
 	Action: func(c *cli.Context) error {
@@ -21,7 +21,7 @@ var cmdTxCreate = cli.Command{
 		if err != nil {
 			return err
 		}
-		toAddr, err := getAddress(c, toFlag)
+		addr, err := getAddress(c, addressFlag)
 		if err != nil {
 			return err
 		}
@@ -58,7 +58,7 @@ var cmdTxCreate = cli.Command{
 		if err := tx.SetInput(0, types.NewTxIn(blkNum, txIndex, outIndex)); err != nil {
 			return err
 		}
-		if err := tx.SetOutput(0, types.NewTxOut(toAddr, amount)); err != nil {
+		if err := tx.SetOutput(0, types.NewTxOut(addr, amount)); err != nil {
 			return err
 		}
 		if changeAmount > 0 {
