@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"crypto/ecdsa"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func IsHexAddress(s string) bool {
@@ -30,6 +33,13 @@ func HexToAddress(s string) common.Address {
 
 func HexToHash(s string) common.Hash {
 	return common.HexToHash(s)
+}
+
+func HexToPrivateKey(s string) (*ecdsa.PrivateKey, error) {
+	if hasHexPrefix(s) {
+		s = s[2:]
+	}
+	return crypto.HexToECDSA(s)
 }
 
 func AddressToHex(addr common.Address) string {

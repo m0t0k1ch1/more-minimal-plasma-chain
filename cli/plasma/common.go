@@ -60,16 +60,6 @@ func getAddress(c *cli.Context, f cli.Flag) (common.Address, error) {
 	return utils.HexToAddress(addrStr), nil
 }
 
-func getHash(c *cli.Context, f cli.Flag) (common.Hash, error) {
-	hashStr := getString(c, f)
-
-	if !utils.IsHexHash(hashStr) {
-		return types.NullHash, fmt.Errorf("invalid hash hex")
-	}
-
-	return utils.HexToHash(hashStr), nil
-}
-
 func getPrivateKey(c *cli.Context, f cli.Flag) (*ecdsa.PrivateKey, error) {
 	privKeyBytes, err := utils.DecodeHex(getString(c, f))
 	if err != nil {

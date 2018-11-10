@@ -13,15 +13,16 @@ var cmdDepositMake = cli.Command{
 		privKeyFlag,
 	),
 	Action: func(c *cli.Context) error {
-		rc, err := newRootChain()
-		if err != nil {
-			return err
-		}
 		amount, err := getUint64(c, amountFlag)
 		if err != nil {
 			return err
 		}
 		privKey, err := getPrivateKey(c, privKeyFlag)
+		if err != nil {
+			return err
+		}
+
+		rc, err := newRootChain()
 		if err != nil {
 			return err
 		}
