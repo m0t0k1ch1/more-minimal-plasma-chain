@@ -68,7 +68,7 @@ func (p *Plasma) GetBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	// BEGIN TXN
+	// BEGIN RO TXN
 	txn := p.db.NewTransaction(false)
 	defer txn.Discard()
 

@@ -47,7 +47,7 @@ func (p *Plasma) GetTxHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	// BEGIN TXN
+	// BEGIN RO TXN
 	txn := p.db.NewTransaction(false)
 	defer txn.Discard()
 
@@ -75,7 +75,7 @@ func (p *Plasma) GetTxProofHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	// BEGIN TXN
+	// BEGIN RO TXN
 	txn := p.db.NewTransaction(false)
 	defer txn.Discard()
 
