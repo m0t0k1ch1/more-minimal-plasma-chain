@@ -42,11 +42,6 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 		return c.JSONError(err)
 	}
 
-	// COMMIT TXN
-	if err := txn.Commit(nil); err != nil {
-		return c.JSONError(err)
-	}
-
 	newBlkRootHash, err := newBlk.Root()
 	if err != nil {
 		return c.JSONError(err)
@@ -55,6 +50,12 @@ func (p *Plasma) PostBlockHandler(c *Context) error {
 	if _, err := p.rootChain.CommitPlasmaBlockRoot(p.operator, newBlkRootHash); err != nil {
 		return c.JSONError(err)
 	}
+
+	// COMMIT TXN
+	if err := txn.Commit(nil); err != nil {
+		return c.JSONError(err)
+	}
+
 	p.Logger().Infof("[COMMIT] root: %s", utils.HashToHex(newBlkRootHash))
 
 	return c.JSONSuccess(map[string]uint64{
