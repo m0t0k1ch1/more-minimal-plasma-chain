@@ -25,6 +25,7 @@ func main() {
 	app.Commands = []cli.Command{
 		cmdAddress,
 		cmdBlock,
+		cmdDeploy,
 		cmdDeposit,
 		cmdExit,
 		cmdTx,
