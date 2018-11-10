@@ -1,0 +1,14 @@
+{
+    "port": 1323,
+    "db": {
+        "dir": "/var/lib/mmpc"
+    },
+    "operator": {
+        "privkey": "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d"
+    },
+    "rootchain": {
+        "rpc": "http://ganache:8545",
+        "ws": "ws://ganache:8545",
+        "address": "0xe78a0f7e598cc8b0bb87894b0f60dd2a88d6a8ab"
+    }
+}
