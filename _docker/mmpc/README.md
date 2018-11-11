@@ -1,7 +1,7 @@
 ## Build & Run
 
 ``` sh
-$ docker-compose up -d
+$ docker-compose up --build -d
 ```
 
 ## Deploy root chain contract
