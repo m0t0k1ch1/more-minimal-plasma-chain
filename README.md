@@ -65,6 +65,8 @@ $ docker-compose exec child plasma txin confirm --pos 2000000000 --privkey 0x6cb
 
 Alice starts invalid 1 ETH exit.
 
+ref. [Why do/don't we need two phase sends plus confirmation](https://ethresear.ch/t/why-do-dont-we-need-two-phase-sends-plus-confirmation/1866/14?u=m0t0k1ch1)
+
 ``` sh
 $ docker-compose exec child plasma exit start --pos 1000000000 --privkey 0x6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1
 ```
