@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
 	"github.com/urfave/cli"
 )
 
@@ -10,18 +12,76 @@ var cmdTxPost = cli.Command{
 	Name:  "post",
 	Usage: "post tx",
 	Flags: flags(
-		txFlag,
+		posFlag,
+		addressFlag,
+		amountFlag,
+		privKeyFlag,
 	),
 	Action: func(c *cli.Context) error {
-		tx, err := getTx(c, txFlag)
+		txOutPos, err := getPosition(c, posFlag)
+		if err != nil {
+			return err
+		}
+		addr, err := getAddress(c, addressFlag)
+		if err != nil {
+			return err
+		}
+		amount, err := getUint64(c, amountFlag)
+		if err != nil {
+			return err
+		}
+		privKey, err := getPrivateKey(c, privKeyFlag)
 		if err != nil {
 			return err
 		}
 
-		if err := newClient().PostTx(context.Background(), tx); err != nil {
+		clnt := newClient()
+		ctx := context.Background()
+
+		blkNum, txIndex, outIndex := types.ParseTxOutPosition(txOutPos)
+		txPos := types.NewTxPosition(blkNum, txIndex)
+
+		// get input tx
+		inTx, err := clnt.GetTx(ctx, txPos)
+		if err != nil {
 			return err
 		}
 
-		return printlnJSON(nil)
+		// get input UTXO
+		inTxOut := inTx.GetOutput(outIndex)
+
+		// validate amount
+		if amount > inTxOut.Amount {
+			return fmt.Errorf("invalid amount")
+		}
+
+		// calculate change amount
+		changeAmount := inTxOut.Amount - amount
+
+		// create tx
+		tx := types.NewTx()
+		if err := tx.SetInput(0, types.NewTxIn(blkNum, txIndex, outIndex)); err != nil {
+			return err
+		}
+		if err := tx.SetOutput(0, types.NewTxOut(addr, amount)); err != nil {
+			return err
+		}
+		if changeAmount > 0 {
+			if err := tx.SetOutput(1, types.NewTxOut(inTxOut.OwnerAddress, changeAmount)); err != nil {
+				return err
+			}
+		}
+
+		// sign tx
+		if err := tx.Sign(0, types.NewAccount(privKey)); err != nil {
+			return err
+		}
+
+		// post tx
+		if err := clnt.PostTx(ctx, tx); err != nil {
+			return err
+		}
+
+		return printlnJSON(tx)
 	},
 }
