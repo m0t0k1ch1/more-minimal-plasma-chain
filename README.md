@@ -63,7 +63,7 @@ Alice confirms the tx.
 $ docker-compose exec child plasma txin confirm --pos 2000000000 --privkey 0x6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1
 ```
 
-### Start Exit (invalid)
+### Start exit (invalid)
 
 Alice starts invalid 1 ETH exit.
 
@@ -71,7 +71,7 @@ Alice starts invalid 1 ETH exit.
 $ docker-compose exec child plasma exit start --pos 1000000000 --privkey 0x6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1
 ```
 
-### Challenge Exit
+### Challenge exit
 
 Bob challenges the invalid exit.
 
@@ -79,7 +79,7 @@ Bob challenges the invalid exit.
 $ docker-compose exec child plasma exit challenge --pos 1000000000 --vspos 2000000000 --privkey 0x6370fd033278c143179d81c5526140625662b8daa446c22ee2d73db3707e620c
 ```
 
-### Start Exit (valid)
+### Start exit (valid)
 
 Bob starts valid 0.5 ETH exit.
 
@@ -87,7 +87,7 @@ Bob starts valid 0.5 ETH exit.
 $ docker-compose exec child plasma exit start --pos 2000000000 --privkey 0x6370fd033278c143179d81c5526140625662b8daa446c22ee2d73db3707e620c
 ```
 
-### Process Exits
+### Process exits
 
 2 weeks have passed.
 
