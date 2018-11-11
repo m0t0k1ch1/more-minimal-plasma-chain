@@ -1,7 +1,7 @@
 {
     "rootchain": {
-        "rpc": "http://ganache:8545",
-        "ws": "ws://ganache:8545",
+        "rpc": "http://root:8545",
+        "ws": "ws://root:8545",
         "address": "0xe78a0f7e598cc8b0bb87894b0f60dd2a88d6a8ab"
     },
     "childchain": {

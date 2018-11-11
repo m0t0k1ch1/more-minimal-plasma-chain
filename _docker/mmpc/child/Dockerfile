@@ -1,28 +1,21 @@
 FROM golang:1.11.2-alpine
 
-# Install tools
-RUN apk --update add gcc git jq musl-dev
+WORKDIR /root
 
-# Install dep
-RUN go get -u -v github.com/golang/dep/cmd/dep
+RUN apk --update add bash jq
+
+# Install wait-for-it.sh
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh ./
+RUN chmod +x /root/wait-for-it.sh
 
 # Install
-RUN mkdir -p $GOPATH/src/github.com/m0t0k1ch1
-WORKDIR $GOPATH/src/github.com/m0t0k1ch1/
-RUN git clone https://github.com/m0t0k1ch1/more-minimal-plasma-chain.git
-WORKDIR $GOPATH/src/github.com/m0t0k1ch1/more-minimal-plasma-chain/
-RUN dep ensure -v
-RUN go install -v ./...
-
-# Copy configs
-RUN mkdir -p /usr/local/etc/mmpc
+RUN mkdir -p /usr/local/etc/mmpc /var/lib/mmpc
+COPY ./app/more-minimal-plasma-chain /usr/local/bin/
 COPY ./app/config.json /usr/local/etc/mmpc/
-COPY ./cli/config.json $HOME/
 
-# Make data directory
-RUN mkdir -p /var/lib/mmpc
+# Install CLI
+COPY ./cli/plasma /usr/local/bin/
+COPY ./cli/config.json ./
 
-WORKDIR $HOME/
-
-ENTRYPOINT ["more-minimal-plasma-chain"]
+ENTRYPOINT ["./wait-for-it.sh", "root:8545", "--", "more-minimal-plasma-chain"]
 CMD ["--conf", "/usr/local/etc/mmpc/config.json"]
