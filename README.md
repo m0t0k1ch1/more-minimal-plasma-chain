@@ -96,7 +96,7 @@ $ curl -X POST http://127.0.0.1:8545 --data '{"jsonrpc": "2.0", "method": "evm_i
 $ curl -X POST http://127.0.0.1:8545 --data '{"jsonrpc": "2.0", "method": "evm_mine", "params": [], "id": 0}'
 ```
 
-Operator processes exits.
+Operator processes exits. Bob receives 0.5 ETH.
 
 ``` sh
 $ docker-compose exec child plasma exit process --privkey 0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d
