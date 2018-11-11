@@ -2,7 +2,7 @@ FROM golang:1.11.2-alpine
 
 WORKDIR /root
 
-RUN apk --update add bash jq
+RUN apk --update add bash
 
 # Install wait-for-it.sh
 ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh ./
