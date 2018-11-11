@@ -71,7 +71,7 @@ $ docker-compose exec child plasma exit start --pos 1000000000 --privkey 0x6cbed
 
 ### Challenge exit
 
-Bob challenges the Alice's invalid exit.
+Bob challenges the Alice's invalid exit successfully.
 
 ``` sh
 $ docker-compose exec child plasma exit challenge --pos 1000000000 --vspos 2000000000 --privkey 0x6370fd033278c143179d81c5526140625662b8daa446c22ee2d73db3707e620c
