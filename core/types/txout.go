@@ -11,7 +11,8 @@ type TxOutCore struct {
 
 type TxOut struct {
 	*TxOutCore
-	IsSpent bool `json:"spent"`
+	IsSpent  bool `json:"spent"`
+	IsExited bool `json:"exited"`
 }
 
 func NewTxOut(ownerAddr common.Address, amount uint64) *TxOut {
@@ -20,6 +21,7 @@ func NewTxOut(ownerAddr common.Address, amount uint64) *TxOut {
 			OwnerAddress: ownerAddr,
 			Amount:       amount,
 		},
-		IsSpent: false,
+		IsSpent:  false,
+		IsExited: false,
 	}
 }
