@@ -29,6 +29,7 @@ type Plasma struct {
 
 type plasmaSubscription struct {
 	depositCreated event.Subscription
+	exitStarted    event.Subscription
 }
 
 func NewPlasma(conf Config) (*Plasma, error) {
@@ -141,6 +142,9 @@ func (p *Plasma) Start() error {
 	if err := p.watchDepositCreated(); err != nil {
 		return err
 	}
+	if err := p.watchExitStarted(); err != nil {
+		return err
+	}
 
 	return p.server.Start(fmt.Sprintf(":%d", p.config.Port))
 }
@@ -156,6 +160,7 @@ func (p *Plasma) Finalize() {
 
 func (p *Plasma) Unsubscribe() {
 	p.subscription.depositCreated.Unsubscribe()
+	p.subscription.exitStarted.Unsubscribe()
 }
 
 func (p *Plasma) watchDepositCreated() error {
@@ -173,11 +178,11 @@ func (p *Plasma) watchDepositCreated() error {
 					p.Logger().Error(err)
 				} else {
 					p.Logger().Infof(
-						"[DEPOSIT] blknum: %d, txpos: %d, owner: %s, amount: %d",
-						newBlkNum,
-						types.NewTxPosition(newBlkNum, 0),
+						"[DEPOSIT] owner: %s, amount: %d, blkNum: %d, txPos: %d",
 						utils.AddressToHex(log.Owner),
 						log.Amount,
+						newBlkNum,
+						types.NewTxPosition(newBlkNum, 0),
 					)
 				}
 				return nil
@@ -188,6 +193,39 @@ func (p *Plasma) watchDepositCreated() error {
 	}()
 
 	p.subscription.depositCreated = sub
+
+	return nil
+}
+
+func (p *Plasma) watchExitStarted() error {
+	sink := make(chan *core.RootChainExitStarted)
+	sub, err := p.rootChain.WatchExitStarted(context.Background(), sink)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for log := range sink {
+			if err := p.db.Update(func(txn *badger.Txn) error {
+				txOutPos := types.Position(log.UTXOPosition.Uint64())
+				if err := p.childChain.ExitTxOut(txn, txOutPos); err != nil {
+					p.Logger().Error(err)
+				} else {
+					p.Logger().Infof(
+						"[EXIT] owner: %s, amount: %d, txOutPos: %d",
+						utils.AddressToHex(log.Owner),
+						log.Amount,
+						txOutPos,
+					)
+				}
+				return nil
+			}); err != nil {
+				p.Logger().Error(err)
+			}
+		}
+	}()
+
+	p.subscription.exitStarted = sub
 
 	return nil
 }
