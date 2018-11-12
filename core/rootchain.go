@@ -252,3 +252,55 @@ func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *RootC
 		}
 	}), nil
 }
+
+type RootChainExitStarted struct {
+	Owner        common.Address
+	UtxoPosition *big.Int
+	Amount       *big.Int
+	Raw          gethtypes.Log
+}
+
+func (rc *RootChain) WatchExitStarted(ctx context.Context, sink chan<- *RootChainExitStarted) (event.Subscription, error) {
+	logs := make(chan gethtypes.Log)
+	arg := map[string]interface{}{
+		"fromBlock": "0x0",
+		"toBlock":   "latest",
+		"address":   rc.config.AddressStr,
+		"topics": []interface{}{
+			rc.abi.Events["ExitStarted"].Id().Hex(),
+			nil,
+		},
+	}
+
+	sub, err := rc.wsClient.EthSubscribe(ctx, logs, "logs", arg)
+	if err != nil {
+		return nil, err
+	}
+
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				event := new(RootChainExitStarted)
+				if err := rc.contract.UnpackLog(event, "ExitStarted", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
