@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dgraph-io/badger"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
@@ -17,17 +18,23 @@ import (
 type HandlerFunc func(*Context) error
 
 type Plasma struct {
-	config     Config
-	server     *echo.Echo
-	db         *DB
-	operator   *types.Account
-	rootChain  *core.RootChain
-	childChain *core.ChildChain
+	config       Config
+	server       *echo.Echo
+	db           *DB
+	operator     *types.Account
+	rootChain    *core.RootChain
+	childChain   *core.ChildChain
+	subscription *plasmaSubscription
+}
+
+type plasmaSubscription struct {
+	depositCreated event.Subscription
 }
 
 func NewPlasma(conf Config) (*Plasma, error) {
 	p := &Plasma{
-		config: conf,
+		config:       conf,
+		subscription: &plasmaSubscription{},
 	}
 
 	p.initServer()
@@ -130,12 +137,8 @@ func (p *Plasma) Logger() echo.Logger {
 	return p.server.Logger
 }
 
-func (p *Plasma) Finalize() {
-	p.db.Close()
-}
-
 func (p *Plasma) Start() error {
-	if err := p.watchRootChain(); err != nil {
+	if err := p.watchDepositCreated(); err != nil {
 		return err
 	}
 
@@ -146,7 +149,16 @@ func (p *Plasma) Shutdown(ctx context.Context) error {
 	return p.server.Shutdown(ctx)
 }
 
-func (p *Plasma) watchRootChain() error {
+func (p *Plasma) Finalize() {
+	p.Unsubscribe() // should be unsubscribed before closing DB
+	p.db.Close()
+}
+
+func (p *Plasma) Unsubscribe() {
+	p.subscription.depositCreated.Unsubscribe()
+}
+
+func (p *Plasma) watchDepositCreated() error {
 	sink := make(chan *core.RootChainDepositCreated)
 	sub, err := p.rootChain.WatchDepositCreated(context.Background(), sink)
 	if err != nil {
@@ -154,7 +166,6 @@ func (p *Plasma) watchRootChain() error {
 	}
 
 	go func() {
-		defer sub.Unsubscribe()
 		for log := range sink {
 			if err := p.db.Update(func(txn *badger.Txn) error {
 				newBlkNum, err := p.childChain.AddDepositBlock(txn, log.Owner, log.Amount.Uint64(), p.operator)
@@ -175,6 +186,8 @@ func (p *Plasma) watchRootChain() error {
 			}
 		}
 	}()
+
+	p.subscription.depositCreated = sub
 
 	return nil
 }
