@@ -17,8 +17,9 @@ var (
 	ErrInvalidTxIn          = errors.New("txin is invalid")
 	ErrNullTxInConfirmation = errors.New("null txin cannot be confirmed")
 
-	ErrTxOutNotFound     = errors.New("txout is not found")
-	ErrTxOutAlreadySpent = errors.New("txout is already spent")
+	ErrTxOutNotFound      = errors.New("txout is not found")
+	ErrTxOutAlreadySpent  = errors.New("txout was already spent")
+	ErrTxOutAlreadyExited = errors.New("txout was already exited")
 
 	ErrNullConfirmationSignature = errors.New("confirmation signature is null")
 )

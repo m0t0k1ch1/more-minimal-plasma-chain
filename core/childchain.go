@@ -254,9 +254,14 @@ func (cc *ChildChain) ValidateTx(txn *badger.Txn, tx *types.Tx) error {
 			return ErrInvalidTxIn
 		}
 
-		// check double spent
+		// check if input txout is not spent
 		if inTxOut.IsSpent {
 			return ErrTxOutAlreadySpent
+		}
+
+		// check if input txout is not exited
+		if inTxOut.IsExited {
+			return ErrTxOutAlreadyExited
 		}
 
 		// verify signature

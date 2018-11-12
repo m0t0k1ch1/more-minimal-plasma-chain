@@ -27,6 +27,7 @@ var (
 	ErrInvalidTxIn                    = NewError(11009, core.ErrInvalidTxIn.Error())
 	ErrNullTxInConfirmation           = NewError(11010, core.ErrNullTxInConfirmation.Error())
 	ErrTxOutAlreadySpent              = NewError(11011, core.ErrTxOutAlreadySpent.Error())
+	ErrTxOutAlreadyExited             = NewError(11012, core.ErrTxOutAlreadyExited.Error())
 )
 
 type Error struct {
