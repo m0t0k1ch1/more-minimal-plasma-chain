@@ -9,7 +9,7 @@ a Plasma chain for https://github.com/kfichter/more-minimal-plasma
 Please install [Docker Compose](https://docs.docker.com/compose/install) in advance.
 
 ``` sh
-$ cd _docker/mmpc
+$ cd _docker
 $ docker-compose up --build -d
 ```
 
