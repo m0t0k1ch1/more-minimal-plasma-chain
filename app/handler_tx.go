@@ -25,6 +25,8 @@ func (p *Plasma) PostTxHandler(c *Context) error {
 			return c.JSONError(ErrInvalidTxIn)
 		} else if err == core.ErrTxOutAlreadySpent {
 			return c.JSONError(ErrTxOutAlreadySpent)
+		} else if err == core.ErrTxOutAlreadyExited {
+			return c.JSONError(ErrTxOutAlreadyExited)
 		} else if err == core.ErrInvalidTxSignature {
 			return c.JSONError(ErrInvalidTxSignature)
 		} else if err == core.ErrInvalidTxBalance {

@@ -254,9 +254,14 @@ func (cc *ChildChain) ValidateTx(txn *badger.Txn, tx *types.Tx) error {
 			return ErrInvalidTxIn
 		}
 
-		// check double spent
+		// check if input txout is not spent
 		if inTxOut.IsSpent {
 			return ErrTxOutAlreadySpent
+		}
+
+		// check if input txout is not exited
+		if inTxOut.IsExited {
+			return ErrTxOutAlreadyExited
 		}
 
 		// verify signature
@@ -375,6 +380,32 @@ func (cc *ChildChain) GetUTXOPositions(txn *badger.Txn, addr common.Address) ([]
 	}
 
 	return poses, nil
+}
+
+func (cc *ChildChain) ExitTxOut(txn *badger.Txn, txOutPos types.Position) error {
+	blkNum, txIndex, outIndex := types.ParseTxInPosition(txOutPos)
+
+	// check tx existence
+	tx, err := cc.getTx(txn, blkNum, txIndex)
+	if err != nil {
+		if err == badger.ErrKeyNotFound {
+			return ErrTxNotFound
+		} else {
+			return err
+		}
+	}
+
+	// exit txout
+	if err := tx.ExitOutput(outIndex); err != nil {
+		if err == types.ErrInvalidTxOutIndex {
+			return ErrTxOutNotFound
+		} else {
+			return err
+		}
+	}
+
+	// update tx
+	return cc.setTx(txn, blkNum, txIndex, tx)
 }
 
 func (cc *ChildChain) currentBlockNumberKey() []byte {
