@@ -255,7 +255,7 @@ func (rc *RootChain) WatchDepositCreated(ctx context.Context, sink chan<- *RootC
 
 type RootChainExitStarted struct {
 	Owner        common.Address
-	UTXOPosition *big.Int
+	UtxoPosition *big.Int
 	Amount       *big.Int
 	Raw          gethtypes.Log
 }

@@ -207,7 +207,7 @@ func (p *Plasma) watchExitStarted() error {
 	go func() {
 		for log := range sink {
 			if err := p.db.Update(func(txn *badger.Txn) error {
-				txOutPos := types.Position(log.UTXOPosition.Uint64())
+				txOutPos := types.Position(log.UtxoPosition.Uint64())
 				if err := p.childChain.ExitTxOut(txn, txOutPos); err != nil {
 					p.Logger().Error(err)
 				} else {
