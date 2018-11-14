@@ -4,6 +4,8 @@
 
 a Plasma chain for https://github.com/kfichter/more-minimal-plasma
 
+__NOTICE: This is an experimental software, don't run in production.__
+
 ## Quickstart
 
 Please install [Docker Compose](https://docs.docker.com/compose/install) in advance.
