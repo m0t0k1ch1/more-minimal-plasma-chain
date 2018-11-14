@@ -69,6 +69,14 @@ func (c *Context) GetTxFromForm() (*types.Tx, error) {
 	return c.getRequiredTxFromForm("tx")
 }
 
+func (c *Context) GetOwnerAddressFromForm() (common.Address, error) {
+	return c.getRequiredAddressFromForm("owner")
+}
+
+func (c *Context) GetAmountFromForm() (uint64, error) {
+	return c.getRequiredUint64FromForm("amount")
+}
+
 func (c *Context) getRequiredSignatureFromForm(key string) (types.Signature, error) {
 	sigStr, err := c.getRequiredFormParam(key)
 	if err != nil {
@@ -100,6 +108,28 @@ func (c *Context) getRequiredTxFromForm(key string) (*types.Tx, error) {
 	}
 
 	return &tx, nil
+}
+
+func (c *Context) getRequiredAddressFromForm(key string) (common.Address, error) {
+	addrStr, err := c.getRequiredFormParam(key)
+	if err != nil {
+		return types.NullAddress, err
+	}
+
+	if !utils.IsHexAddress(addrStr) {
+		return types.NullAddress, NewInvalidFormParamError(key)
+	}
+
+	return utils.HexToAddress(addrStr), nil
+}
+
+func (c *Context) getRequiredUint64FromForm(key string) (uint64, error) {
+	s, err := c.getRequiredFormParam(key)
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.ParseUint(s, 64, 10)
 }
 
 func (c *Context) getRequiredFormParam(key string) (string, error) {
