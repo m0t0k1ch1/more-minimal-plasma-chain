@@ -12,6 +12,7 @@ var (
 
 	addressFlag = cli.StringFlag{Name: "address", Value: nullAddressStr}
 	amountFlag  = cli.StringFlag{Name: "amount", Value: "0"}
+	directFlag  = cli.BoolFlag{Name: "direct"}
 	encodedFlag = cli.BoolFlag{Name: "encoded"}
 	indexFlag   = cli.StringFlag{Name: "index", Value: "0"}
 	numFlag     = cli.StringFlag{Name: "num", Value: "0"}
