@@ -1,0 +1,36 @@
+module github.com/m0t0k1ch1/more-minimal-plasma-chain
+
+require (
+	github.com/AndreasBriese/bbloom v0.0.0-20180913140656-343706a395b7
+	github.com/aristanetworks/goarista v0.0.0-20181101003910-5bb443fba8e0
+	github.com/btcsuite/btcd v0.0.0-20181013004428-67e573d211ac
+	github.com/davecgh/go-spew v1.1.1
+	github.com/deckarep/golang-set v1.7.1
+	github.com/dgraph-io/badger v1.5.4
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/dgryski/go-farm v0.0.0-20180109070241-2de33835d102
+	github.com/ethereum/go-ethereum v1.8.17
+	github.com/go-stack/stack v1.8.0
+	github.com/golang/protobuf v1.2.0
+	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
+	github.com/google/uuid v1.0.0
+	github.com/labstack/echo v0.0.0-20180911044237-1abaa3049251
+	github.com/labstack/gommon v0.2.7
+	github.com/m0t0k1ch1/fixed-merkle v0.3.0
+	github.com/mattn/go-colorable v0.0.9
+	github.com/mattn/go-isatty v0.0.4
+	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709
+	github.com/pkg/errors v0.8.0
+	github.com/pmezard/go-difflib v1.0.0
+	github.com/rjeczalik/notify v0.9.2
+	github.com/rs/cors v1.6.0
+	github.com/stretchr/testify v1.2.2
+	github.com/syndtr/goleveldb v0.0.0-20181012014443-6b91fda63f2e
+	github.com/urfave/cli v1.20.0
+	github.com/valyala/bytebufferpool v1.0.0
+	github.com/valyala/fasttemplate v0.0.0-20170224212429-dcecefd839c4
+	golang.org/x/crypto v0.0.0-20181025213731-e84da0312774
+	golang.org/x/net v0.0.0-20181102091132-c10e9556a7bc
+	golang.org/x/sys v0.0.0-20181026203630-95b1ffbd15a5
+	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
+)

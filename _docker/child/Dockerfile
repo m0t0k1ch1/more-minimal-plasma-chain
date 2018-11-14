@@ -1,4 +1,4 @@
-FROM m0t0k1ch1/mmpc-child-base:v0.2.0
+FROM m0t0k1ch1/mmpc-child-base:v0.2.1
 
 WORKDIR /root
 
