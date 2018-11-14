@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/dgraph-io/badger"
-	"github.com/ethereum/go-ethereum/event"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
@@ -18,24 +17,17 @@ import (
 type HandlerFunc func(*Context) error
 
 type Plasma struct {
-	config       Config
-	server       *echo.Echo
-	db           *DB
-	operator     *types.Account
-	rootChain    *core.RootChain
-	childChain   *core.ChildChain
-	subscription *plasmaSubscription
-}
-
-type plasmaSubscription struct {
-	depositCreated event.Subscription
-	exitStarted    event.Subscription
+	config     Config
+	server     *echo.Echo
+	db         *DB
+	operator   *types.Account
+	rootChain  *core.RootChain
+	childChain *core.ChildChain
 }
 
 func NewPlasma(conf Config) (*Plasma, error) {
 	p := &Plasma{
-		config:       conf,
-		subscription: &plasmaSubscription{},
+		config: conf,
 	}
 
 	p.initServer()
@@ -154,19 +146,12 @@ func (p *Plasma) Shutdown(ctx context.Context) error {
 }
 
 func (p *Plasma) Finalize() {
-	p.Unsubscribe() // should be unsubscribed before closing DB
 	p.db.Close()
-}
-
-func (p *Plasma) Unsubscribe() {
-	p.subscription.depositCreated.Unsubscribe()
-	p.subscription.exitStarted.Unsubscribe()
 }
 
 func (p *Plasma) watchDepositCreated() error {
 	sink := make(chan *core.RootChainDepositCreated)
-	sub, err := p.rootChain.WatchDepositCreated(context.Background(), sink)
-	if err != nil {
+	if _, err := p.rootChain.WatchDepositCreated(context.Background(), sink); err != nil {
 		return err
 	}
 
@@ -192,15 +177,12 @@ func (p *Plasma) watchDepositCreated() error {
 		}
 	}()
 
-	p.subscription.depositCreated = sub
-
 	return nil
 }
 
 func (p *Plasma) watchExitStarted() error {
 	sink := make(chan *core.RootChainExitStarted)
-	sub, err := p.rootChain.WatchExitStarted(context.Background(), sink)
-	if err != nil {
+	if _, err := p.rootChain.WatchExitStarted(context.Background(), sink); err != nil {
 		return err
 	}
 
@@ -224,8 +206,6 @@ func (p *Plasma) watchExitStarted() error {
 			}
 		}
 	}()
-
-	p.subscription.exitStarted = sub
 
 	return nil
 }
