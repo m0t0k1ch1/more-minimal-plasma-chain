@@ -11,7 +11,6 @@ func (p *Plasma) PutTxInHandler(c *Context) error {
 	if err != nil {
 		return c.JSONError(err)
 	}
-
 	confSig, err := c.GetConfirmationSignatureFromForm()
 	if err != nil {
 		return c.JSONError(err)

@@ -77,6 +77,7 @@ func (p *Plasma) initRoutes() {
 	p.GET("/txes/:txPos", p.GetTxHandler)
 	p.GET("/txes/:txPos/proof", p.GetTxProofHandler)
 	p.PUT("/txins/:txInPos", p.PutTxInHandler)
+	p.POST("/deposits", p.PostDepositHandler)
 }
 
 func (p *Plasma) initRootChain() error {
