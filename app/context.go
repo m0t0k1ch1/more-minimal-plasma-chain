@@ -2,7 +2,6 @@ package app
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -45,7 +44,7 @@ func (c *Context) getAddressFromPath(key string) (common.Address, error) {
 }
 
 func (c *Context) getUint64FromPath(key string) (uint64, error) {
-	return strconv.ParseUint(c.getPathParam(key), 10, 64)
+	return utils.StringToUint64(c.getPathParam(key))
 }
 
 func (c *Context) getPositionFromPath(key string) (types.Position, error) {
@@ -129,7 +128,7 @@ func (c *Context) getRequiredUint64FromForm(key string) (uint64, error) {
 		return 0, err
 	}
 
-	return strconv.ParseUint(s, 64, 10)
+	return utils.StringToUint64(s)
 }
 
 func (c *Context) getRequiredFormParam(key string) (string, error) {
