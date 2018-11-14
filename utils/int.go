@@ -21,5 +21,5 @@ func BytesToUint64(b []byte) (uint64, error) {
 }
 
 func StringToUint64(s string) (uint64, error) {
-	return strconv.ParseUint(s, 64, 10)
+	return strconv.ParseUint(s, 10, 64)
 }
