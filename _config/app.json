@@ -1,14 +1,14 @@
 {
-    "port": 1323,
-    "db": {
-        "dir": "/tmp/more-minimal-plasma-chain"
-    },
-    "operator": {
-        "privkey": "<operator's privkey>"
-    },
-    "rootchain": {
-        "rpc": "http://127.0.0.1:7545",
-        "ws": "ws://127.0.0.1:7545",
-        "address": "<root chain contract address>"
-    }
+  "port": 1323,
+  "db": {
+    "dir": "/tmp/more-minimal-plasma-chain"
+  },
+  "operator": {
+    "privkey": "<operator's privkey>"
+  },
+  "rootchain": {
+    "rpc": "http://127.0.0.1:7545",
+    "ws": "ws://127.0.0.1:7545",
+    "address": "<root chain contract address>"
+  }
 }
