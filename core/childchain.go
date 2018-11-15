@@ -371,8 +371,8 @@ func (cc *ChildChain) GetUTXOPositions(txn *badger.Txn, addr common.Address) ([]
 			return nil, err
 		}
 
-		// skip if txout was spent
-		if txOut.IsSpent {
+		// skip if txout was spent or exited
+		if txOut.IsSpent || txOut.IsExited {
 			continue
 		}
 
