@@ -1,4 +1,4 @@
-FROM m0t0k1ch1/mmpc-child-base:v0.2.1
+FROM m0t0k1ch1/mmpc-child-base:v0.2.2
 
 RUN apk --update add bash
 
