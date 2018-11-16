@@ -43,7 +43,7 @@ func main() {
 		panic(err)
 	}
 
-	done := make(chan bool, 1)
+	done := make(chan struct{}, 0)
 	go func() {
 		sigterm := make(chan os.Signal, 1)
 		signal.Notify(sigterm, syscall.SIGTERM)
