@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/dgraph-io/badger"
 	"github.com/labstack/echo"
@@ -132,13 +133,24 @@ func (p *Plasma) Logger() echo.Logger {
 }
 
 func (p *Plasma) Start() error {
+	// watch DepositCreated events
 	if err := p.watchDepositCreated(); err != nil {
 		return err
 	}
+
+	// watch ExitStarted events
 	if err := p.watchExitStarted(); err != nil {
 		return err
 	}
 
+	if p.config.Heartbeat.IsEnabled {
+		// keep WebSocket connection alive
+		if err := p.heartbeat(); err != nil {
+			return err
+		}
+	}
+
+	// start HTTP server
 	return p.server.Start(fmt.Sprintf(":%d", p.config.Port))
 }
 
@@ -205,6 +217,24 @@ func (p *Plasma) watchExitStarted() error {
 			}); err != nil {
 				p.Logger().Error(err)
 			}
+		}
+	}()
+
+	return nil
+}
+
+func (p *Plasma) heartbeat() error {
+	interval, err := p.config.Heartbeat.Interval()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			if err := p.rootChain.Ping(); err != nil {
+				p.Logger().Error(err)
+			}
+			time.Sleep(interval)
 		}
 	}()
 

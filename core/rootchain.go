@@ -304,3 +304,13 @@ func (rc *RootChain) WatchExitStarted(ctx context.Context, sink chan<- *RootChai
 		}
 	}), nil
 }
+
+func (rc *RootChain) Ping() error {
+	if err := rc.wsClient.Call(nil, "eth_getFilterLogs", "0x0"); err != nil {
+		if err.Error() == "filter not found" {
+			return nil
+		}
+		return err
+	}
+	return nil
+}

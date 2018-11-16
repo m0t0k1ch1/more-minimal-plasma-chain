@@ -10,5 +10,9 @@
     "rpc": "http://127.0.0.1:7545",
     "ws": "ws://127.0.0.1:7545",
     "address": "<root chain contract address>"
+  },
+  "heartbeat": {
+    "enabled": false,
+    "interval": 0
   }
 }
