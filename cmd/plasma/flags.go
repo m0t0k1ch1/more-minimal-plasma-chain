@@ -8,10 +8,13 @@ const (
 )
 
 var (
-	confFlag = cli.StringFlag{Name: "conf", Value: "config.json"}
+	// global options
+	confFlag = cli.StringFlag{Name: "conf", Value: "config.json", EnvVar: "PLASMA_CLI_CONFIG"}
 
+	// command options
 	addressFlag = cli.StringFlag{Name: "address", Value: nullAddressStr}
 	amountFlag  = cli.StringFlag{Name: "amount", Value: "0"}
+	directFlag  = cli.BoolFlag{Name: "direct"}
 	encodedFlag = cli.BoolFlag{Name: "encoded"}
 	indexFlag   = cli.StringFlag{Name: "index", Value: "0"}
 	numFlag     = cli.StringFlag{Name: "num", Value: "0"}

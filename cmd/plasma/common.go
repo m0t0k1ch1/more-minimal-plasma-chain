@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -37,7 +36,7 @@ func getString(c *cli.Context, f cli.Flag) string {
 }
 
 func getUint64(c *cli.Context, f cli.Flag) (uint64, error) {
-	return strconv.ParseUint(getString(c, f), 10, 64)
+	return utils.StringToUint64(getString(c, f))
 }
 
 func getPosition(c *cli.Context, f cli.Flag) (types.Position, error) {

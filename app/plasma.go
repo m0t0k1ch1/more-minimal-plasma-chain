@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/dgraph-io/badger"
-	"github.com/ethereum/go-ethereum/event"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
@@ -18,24 +18,19 @@ import (
 type HandlerFunc func(*Context) error
 
 type Plasma struct {
-	config       Config
-	server       *echo.Echo
-	db           *DB
-	operator     *types.Account
-	rootChain    *core.RootChain
-	childChain   *core.ChildChain
-	subscription *plasmaSubscription
-}
-
-type plasmaSubscription struct {
-	depositCreated event.Subscription
-	exitStarted    event.Subscription
+	config            Config
+	server            *echo.Echo
+	db                *DB
+	operator          *types.Account
+	rootChain         *core.RootChain
+	childChain        *core.ChildChain
+	heartbeater       *Heartbeater
+	heartbeatInterval time.Duration
 }
 
 func NewPlasma(conf Config) (*Plasma, error) {
 	p := &Plasma{
-		config:       conf,
-		subscription: &plasmaSubscription{},
+		config: conf,
 	}
 
 	p.initServer()
@@ -49,6 +44,15 @@ func NewPlasma(conf Config) (*Plasma, error) {
 		return nil, err
 	}
 	p.initChildChain()
+
+	if conf.Heartbeat.IsEnabled {
+		if err := p.initHeartbeater(); err != nil {
+			return nil, err
+		}
+		if err := p.initHeartbeatInterval(); err != nil {
+			return nil, err
+		}
+	}
 
 	return p, nil
 }
@@ -85,6 +89,7 @@ func (p *Plasma) initRoutes() {
 	p.GET("/txes/:txPos", p.GetTxHandler)
 	p.GET("/txes/:txPos/proof", p.GetTxProofHandler)
 	p.PUT("/txins/:txInPos", p.PutTxInHandler)
+	p.POST("/deposits", p.PostDepositHandler)
 }
 
 func (p *Plasma) initRootChain() error {
@@ -116,6 +121,24 @@ func (p *Plasma) initChildChain() error {
 	})
 }
 
+func (p *Plasma) initHeartbeater() error {
+	heartbeater, err := NewHeartbeater(p.rootChain.Ping)
+	if err != nil {
+		return err
+	}
+	p.heartbeater = heartbeater
+	return nil
+}
+
+func (p *Plasma) initHeartbeatInterval() error {
+	interval, err := p.config.Heartbeat.Interval()
+	if err != nil {
+		return err
+	}
+	p.heartbeatInterval = interval
+	return nil
+}
+
 func (p *Plasma) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
 	p.Add(http.MethodGet, path, h, m...)
 }
@@ -139,13 +162,24 @@ func (p *Plasma) Logger() echo.Logger {
 }
 
 func (p *Plasma) Start() error {
+	// watch DepositCreated events
 	if err := p.watchDepositCreated(); err != nil {
 		return err
 	}
+
+	// watch ExitStarted events
 	if err := p.watchExitStarted(); err != nil {
 		return err
 	}
 
+	if p.config.Heartbeat.IsEnabled {
+		// keep WebSocket connection alive
+		if err := p.heartbeat(); err != nil {
+			return err
+		}
+	}
+
+	// start HTTP server
 	return p.server.Start(fmt.Sprintf(":%d", p.config.Port))
 }
 
@@ -154,19 +188,16 @@ func (p *Plasma) Shutdown(ctx context.Context) error {
 }
 
 func (p *Plasma) Finalize() {
-	p.Unsubscribe() // should be unsubscribed before closing DB
 	p.db.Close()
-}
 
-func (p *Plasma) Unsubscribe() {
-	p.subscription.depositCreated.Unsubscribe()
-	p.subscription.exitStarted.Unsubscribe()
+	if p.config.Heartbeat.IsEnabled {
+		p.heartbeater.Stop()
+	}
 }
 
 func (p *Plasma) watchDepositCreated() error {
 	sink := make(chan *core.RootChainDepositCreated)
-	sub, err := p.rootChain.WatchDepositCreated(context.Background(), sink)
-	if err != nil {
+	if _, err := p.rootChain.WatchDepositCreated(context.Background(), sink); err != nil {
 		return err
 	}
 
@@ -192,15 +223,12 @@ func (p *Plasma) watchDepositCreated() error {
 		}
 	}()
 
-	p.subscription.depositCreated = sub
-
 	return nil
 }
 
 func (p *Plasma) watchExitStarted() error {
 	sink := make(chan *core.RootChainExitStarted)
-	sub, err := p.rootChain.WatchExitStarted(context.Background(), sink)
-	if err != nil {
+	if _, err := p.rootChain.WatchExitStarted(context.Background(), sink); err != nil {
 		return err
 	}
 
@@ -225,7 +253,23 @@ func (p *Plasma) watchExitStarted() error {
 		}
 	}()
 
-	p.subscription.exitStarted = sub
+	return nil
+}
+
+func (p *Plasma) heartbeat() error {
+	go func() {
+		for {
+			ok, err := p.heartbeater.Beat()
+			if err != nil {
+				p.Logger().Error(err)
+			}
+			if !ok {
+				return
+			}
+
+			time.Sleep(p.heartbeatInterval)
+		}
+	}()
 
 	return nil
 }

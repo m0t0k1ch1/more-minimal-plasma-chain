@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strconv"
-
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
@@ -71,7 +69,7 @@ func BytesToPosition(b []byte) (Position, error) {
 }
 
 func StrToPosition(s string) (Position, error) {
-	i, err := strconv.ParseUint(s, 10, 64)
+	i, err := utils.StringToUint64(s)
 	if err != nil {
 		return 0, err
 	}
