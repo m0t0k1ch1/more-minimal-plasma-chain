@@ -30,7 +30,7 @@ func (h *Heartbeater) Beat() (bool, error) {
 	}
 }
 
-func (h *Heartbeater) Quit() {
+func (h *Heartbeater) Stop() {
 	close(h.quitCh)
 	<-h.doneCh
 }

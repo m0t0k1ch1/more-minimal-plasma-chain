@@ -191,7 +191,7 @@ func (p *Plasma) Finalize() {
 	p.db.Close()
 
 	if p.config.Heartbeat.IsEnabled {
-		p.heartbeater.Quit()
+		p.heartbeater.Stop()
 	}
 }
 
