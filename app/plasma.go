@@ -18,12 +18,14 @@ import (
 type HandlerFunc func(*Context) error
 
 type Plasma struct {
-	config     Config
-	server     *echo.Echo
-	db         *DB
-	operator   *types.Account
-	rootChain  *core.RootChain
-	childChain *core.ChildChain
+	config            Config
+	server            *echo.Echo
+	db                *DB
+	operator          *types.Account
+	rootChain         *core.RootChain
+	childChain        *core.ChildChain
+	heartbeater       *Heartbeater
+	heartbeatInterval time.Duration
 }
 
 func NewPlasma(conf Config) (*Plasma, error) {
@@ -42,6 +44,15 @@ func NewPlasma(conf Config) (*Plasma, error) {
 		return nil, err
 	}
 	p.initChildChain()
+
+	if conf.Heartbeat.IsEnabled {
+		if err := p.initHeartbeater(); err != nil {
+			return nil, err
+		}
+		if err := p.initHeartbeatInterval(); err != nil {
+			return nil, err
+		}
+	}
 
 	return p, nil
 }
@@ -110,6 +121,24 @@ func (p *Plasma) initChildChain() error {
 	})
 }
 
+func (p *Plasma) initHeartbeater() error {
+	heartbeater, err := NewHeartbeater(p.rootChain.Ping)
+	if err != nil {
+		return err
+	}
+	p.heartbeater = heartbeater
+	return nil
+}
+
+func (p *Plasma) initHeartbeatInterval() error {
+	interval, err := p.config.Heartbeat.Interval()
+	if err != nil {
+		return err
+	}
+	p.heartbeatInterval = interval
+	return nil
+}
+
 func (p *Plasma) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) {
 	p.Add(http.MethodGet, path, h, m...)
 }
@@ -160,6 +189,10 @@ func (p *Plasma) Shutdown(ctx context.Context) error {
 
 func (p *Plasma) Finalize() {
 	p.db.Close()
+
+	if p.config.Heartbeat.IsEnabled {
+		p.heartbeater.Quit()
+	}
 }
 
 func (p *Plasma) watchDepositCreated() error {
@@ -224,17 +257,17 @@ func (p *Plasma) watchExitStarted() error {
 }
 
 func (p *Plasma) heartbeat() error {
-	interval, err := p.config.Heartbeat.Interval()
-	if err != nil {
-		return err
-	}
-
 	go func() {
 		for {
-			if err := p.rootChain.Ping(); err != nil {
+			ok, err := p.heartbeater.Beat()
+			if err != nil {
 				p.Logger().Error(err)
 			}
-			time.Sleep(interval)
+			if !ok {
+				return
+			}
+
+			time.Sleep(p.heartbeatInterval)
 		}
 	}()
 
