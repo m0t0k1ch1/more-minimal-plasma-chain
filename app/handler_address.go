@@ -1,6 +1,10 @@
 package app
 
-import "github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+import (
+	"sort"
+
+	"github.com/m0t0k1ch1/more-minimal-plasma-chain/core/types"
+)
 
 func (p *Plasma) GetAddressUTXOsHandler(c *Context) error {
 	addr, err := c.GetAddressFromPath()
@@ -16,6 +20,10 @@ func (p *Plasma) GetAddressUTXOsHandler(c *Context) error {
 	if err != nil {
 		return c.JSONError(err)
 	}
+
+	sort.Slice(utxoPoses, func(i, j int) bool {
+		return utxoPoses[i] < utxoPoses[j]
+	})
 
 	return c.JSONSuccess(map[string][]types.Position{
 		"utxos": utxoPoses,
