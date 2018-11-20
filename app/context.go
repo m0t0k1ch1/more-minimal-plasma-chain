@@ -1,6 +1,7 @@
 package app
 
 import (
+	"math/big"
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -72,8 +73,8 @@ func (c *Context) GetOwnerAddressFromForm() (common.Address, error) {
 	return c.getRequiredAddressFromForm("owner")
 }
 
-func (c *Context) GetAmountFromForm() (uint64, error) {
-	return c.getRequiredUint64FromForm("amount")
+func (c *Context) GetAmountFromForm() (*big.Int, error) {
+	return c.getRequiredBigIntFromForm("amount")
 }
 
 func (c *Context) getRequiredSignatureFromForm(key string) (types.Signature, error) {
@@ -122,13 +123,13 @@ func (c *Context) getRequiredAddressFromForm(key string) (common.Address, error)
 	return utils.HexToAddress(addrStr), nil
 }
 
-func (c *Context) getRequiredUint64FromForm(key string) (uint64, error) {
+func (c *Context) getRequiredBigIntFromForm(key string) (*big.Int, error) {
 	s, err := c.getRequiredFormParam(key)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return utils.StringToUint64(s)
+	return utils.StringToBigInt(s)
 }
 
 func (c *Context) getRequiredFormParam(key string) (string, error) {

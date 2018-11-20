@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/dgraph-io/badger"
@@ -96,7 +97,7 @@ func (cc *ChildChain) AddBlock(txn *badger.Txn, signer *types.Account) (uint64, 
 	return blk.Number, nil
 }
 
-func (cc *ChildChain) AddDepositBlock(txn *badger.Txn, ownerAddr common.Address, amount uint64, signer *types.Account) (uint64, error) {
+func (cc *ChildChain) AddDepositBlock(txn *badger.Txn, ownerAddr common.Address, amount *big.Int, signer *types.Account) (uint64, error) {
 	// create deposit tx
 	tx := types.NewTx()
 	txOut := types.NewTxOut(ownerAddr, amount)
@@ -229,10 +230,10 @@ func (cc *ChildChain) AddTxToMempool(txn *badger.Txn, tx *types.Tx) error {
 
 func (cc *ChildChain) ValidateTx(txn *badger.Txn, tx *types.Tx) error {
 	nullTxInNum := 0
-	iAmount, oAmount := uint64(0), uint64(0)
+	iAmount, oAmount := big.NewInt(0), big.NewInt(0)
 
 	for _, txOut := range tx.Outputs {
-		oAmount += txOut.Amount
+		oAmount.Add(oAmount, txOut.Amount)
 	}
 
 	for i, txIn := range tx.Inputs {
@@ -274,7 +275,7 @@ func (cc *ChildChain) ValidateTx(txn *badger.Txn, tx *types.Tx) error {
 			return ErrInvalidTxSignature
 		}
 
-		iAmount += inTxOut.Amount
+		iAmount.Add(iAmount, inTxOut.Amount)
 	}
 
 	// check txins validity
@@ -283,7 +284,7 @@ func (cc *ChildChain) ValidateTx(txn *badger.Txn, tx *types.Tx) error {
 	}
 
 	// check in/out balance
-	if iAmount < oAmount {
+	if oAmount.Cmp(iAmount) > 0 {
 		return ErrInvalidTxBalance
 	}
 
