@@ -16,7 +16,7 @@ require (
 	github.com/google/uuid v1.0.0
 	github.com/labstack/echo v0.0.0-20180911044237-1abaa3049251
 	github.com/labstack/gommon v0.2.7
-	github.com/m0t0k1ch1/fixed-merkle-tree v0.3.0
+	github.com/m0t0k1ch1/fixed-merkle-tree v0.4.0
 	github.com/mattn/go-colorable v0.0.9
 	github.com/mattn/go-isatty v0.0.4
 	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709

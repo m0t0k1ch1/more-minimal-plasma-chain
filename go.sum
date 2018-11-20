@@ -29,8 +29,8 @@ github.com/labstack/echo v0.0.0-20180911044237-1abaa3049251/go.mod h1:rWD2DNQgFb
 github.com/labstack/gommon v0.0.0-20180312174116-6fe1405d73ec/go.mod h1:/tj9csK2iPSBvn+3NLM9e52usepMtrd5ilFYA+wQNJ4=
 github.com/labstack/gommon v0.2.7 h1:2qOPq/twXDrQ6ooBGrn3mrmVOC+biLlatwgIu8lbzRM=
 github.com/labstack/gommon v0.2.7/go.mod h1:/tj9csK2iPSBvn+3NLM9e52usepMtrd5ilFYA+wQNJ4=
-github.com/m0t0k1ch1/fixed-merkle-tree v0.3.0 h1:a9+yZyBuOi9JFl5W+2U1sk+wfqfHKVNCRm+SvL8pAFo=
-github.com/m0t0k1ch1/fixed-merkle-tree v0.3.0/go.mod h1:p0ihzdy+F2O37j5K4qC5zbwob51/AsXVigxN1XL4JcM=
+github.com/m0t0k1ch1/fixed-merkle-tree v0.4.0 h1:PitRuzcGx1+78ZwdXRhwu3kRLuIDsULysAVJMYHqWBk=
+github.com/m0t0k1ch1/fixed-merkle-tree v0.4.0/go.mod h1:p0ihzdy+F2O37j5K4qC5zbwob51/AsXVigxN1XL4JcM=
 github.com/mattn/go-colorable v0.0.9 h1:UVL0vNpWh04HeJXV0KLcaT7r06gOH2l4OW6ddYRUIY4=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
