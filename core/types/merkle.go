@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/ethereum/go-ethereum/crypto/sha3"
-	merkle "github.com/m0t0k1ch1/fixed-merkle"
+	merkle "github.com/m0t0k1ch1/fixed-merkle-tree"
 )
 
 const (

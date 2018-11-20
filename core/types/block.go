@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
-	merkle "github.com/m0t0k1ch1/fixed-merkle"
+	merkle "github.com/m0t0k1ch1/fixed-merkle-tree"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
