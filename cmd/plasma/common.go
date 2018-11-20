@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -37,6 +38,10 @@ func getString(c *cli.Context, f cli.Flag) string {
 
 func getUint64(c *cli.Context, f cli.Flag) (uint64, error) {
 	return utils.StringToUint64(getString(c, f))
+}
+
+func getBigInt(c *cli.Context, f cli.Flag) (*big.Int, error) {
+	return utils.StringToBigInt(getString(c, f))
 }
 
 func getPosition(c *cli.Context, f cli.Flag) (types.Position, error) {

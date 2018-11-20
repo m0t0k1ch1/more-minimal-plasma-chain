@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"math/big"
 	"net/http"
 	"net/url"
 
@@ -16,10 +17,10 @@ type PostDepositResponse struct {
 	} `json:"result"`
 }
 
-func (c *Client) PostDeposit(ctx context.Context, ownerAddr common.Address, amount uint64) (uint64, error) {
+func (c *Client) PostDeposit(ctx context.Context, ownerAddr common.Address, amount *big.Int) (uint64, error) {
 	v := url.Values{}
 	v.Set("owner", utils.AddressToHex(ownerAddr))
-	v.Set("amount", utils.Uint64ToString(amount))
+	v.Set("amount", amount.String())
 
 	var resp PostDepositResponse
 	if err := c.doAPI(

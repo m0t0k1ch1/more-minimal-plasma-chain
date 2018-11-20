@@ -1,12 +1,14 @@
 package types
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 )
 
 type TxOutCore struct {
 	OwnerAddress common.Address `json:"owner"`
-	Amount       uint64         `json:"amount"`
+	Amount       *big.Int       `json:"amount"`
 }
 
 type TxOut struct {
@@ -15,7 +17,7 @@ type TxOut struct {
 	IsExited bool `json:"exited"`
 }
 
-func NewTxOut(ownerAddr common.Address, amount uint64) *TxOut {
+func NewTxOut(ownerAddr common.Address, amount *big.Int) *TxOut {
 	return &TxOut{
 		TxOutCore: &TxOutCore{
 			OwnerAddress: ownerAddr,
