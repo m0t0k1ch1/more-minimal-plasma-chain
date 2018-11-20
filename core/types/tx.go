@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -32,7 +33,7 @@ func NewTx() *Tx {
 
 	for i := 0; i < TxElementsNum; i++ {
 		tx.Inputs[i] = NewTxIn(0, 0, 0)
-		tx.Outputs[i] = NewTxOut(NullAddress, 0)
+		tx.Outputs[i] = NewTxOut(NullAddress, big.NewInt(0))
 	}
 
 	return tx

@@ -134,9 +134,9 @@ func (rc *RootChain) CommitPlasmaBlockRoot(a *types.Account, rootHash common.Has
 	return rc.contract.Transact(a.TransactOpts(), "commitPlasmaBlockRoot", rootHash)
 }
 
-func (rc *RootChain) Deposit(a *types.Account, amount uint64) (*gethtypes.Transaction, error) {
+func (rc *RootChain) Deposit(a *types.Account, amount *big.Int) (*gethtypes.Transaction, error) {
 	opts := a.TransactOpts()
-	opts.Value = new(big.Int).SetUint64(amount)
+	opts.Value = amount
 
 	return rc.contract.Transact(opts, "deposit")
 }

@@ -204,7 +204,7 @@ func (p *Plasma) watchDepositCreated() error {
 	go func() {
 		for log := range sink {
 			if err := p.db.Update(func(txn *badger.Txn) error {
-				newBlkNum, err := p.childChain.AddDepositBlock(txn, log.Owner, log.Amount.Uint64(), p.operator)
+				newBlkNum, err := p.childChain.AddDepositBlock(txn, log.Owner, log.Amount, p.operator)
 				if err != nil {
 					p.Logger().Error(err)
 				} else {

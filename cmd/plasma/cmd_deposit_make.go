@@ -16,7 +16,7 @@ var cmdDepositMake = cli.Command{
 		directFlag,
 	),
 	Action: func(c *cli.Context) error {
-		amount, err := getUint64(c, amountFlag)
+		amount, err := getBigInt(c, amountFlag)
 		if err != nil {
 			return err
 		}
