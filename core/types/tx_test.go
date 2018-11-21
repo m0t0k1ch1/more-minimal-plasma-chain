@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -18,7 +19,7 @@ func newTestDepositTx(t *testing.T) *Tx {
 	tx := NewTx()
 	tx.Outputs[0] = NewTxOut(
 		utils.HexToAddress("0x1111111111111111111111111111111111111111"),
-		1,
+		big.NewInt(1),
 	)
 	return tx
 }
