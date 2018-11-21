@@ -6,13 +6,15 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
 	merkle "github.com/m0t0k1ch1/fixed-merkle-tree"
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
 const (
-	MaxBlockTxesNum = 99999
+	MaxBlockTxesNum   = 99999
+	TxMerkleTreeDepth = 10
 )
 
 var (
@@ -73,11 +75,10 @@ func (blk *Block) MerkleTree() (*merkle.Tree, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		leaves[i] = leaf
 	}
 
-	return merkle.NewTree(merkleConfig(), leaves)
+	return merkle.NewTree(sha3.NewKeccak256(), TxMerkleTreeDepth, leaves)
 }
 
 func (blk *Block) Root() (common.Hash, error) {
