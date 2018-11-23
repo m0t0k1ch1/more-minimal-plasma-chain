@@ -30,6 +30,7 @@ func main() {
 		cmdExit,
 		cmdTx,
 		cmdTxIn,
+		cmdTxOut,
 	}
 	app.Flags = []cli.Flag{
 		confFlag,
