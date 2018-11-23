@@ -9,7 +9,7 @@ import (
 
 var cmdTxInConfirm = cli.Command{
 	Name:  "confirm",
-	Usage: "confirm tx input",
+	Usage: "confirm txin",
 	Flags: flags(
 		posFlag,
 		privKeyFlag,
