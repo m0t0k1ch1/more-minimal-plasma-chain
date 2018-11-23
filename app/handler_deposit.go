@@ -1,5 +1,6 @@
 package app
 
+// TODO: can be executed by only the operator
 func (p *Plasma) PostDepositHandler(c *Context) error {
 	c.Request().ParseForm()
 
