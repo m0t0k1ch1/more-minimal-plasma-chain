@@ -81,15 +81,16 @@ func (p *Plasma) initDB() error {
 }
 
 func (p *Plasma) initRoutes() {
-	p.GET("/ping", p.PingHandler)
 	p.GET("/addresses/:address/utxos", p.GetAddressUTXOsHandler)
 	p.POST("/blocks", p.PostBlockHandler)
 	p.GET("/blocks/:blkNum", p.GetBlockHandler)
+	p.POST("/deposits", p.PostDepositHandler)
+	p.GET("/ping", p.PingHandler)
 	p.POST("/txes", p.PostTxHandler)
 	p.GET("/txes/:txPos", p.GetTxHandler)
 	p.GET("/txes/:txPos/proof", p.GetTxProofHandler)
 	p.PUT("/txins/:txInPos", p.PutTxInHandler)
-	p.POST("/deposits", p.PostDepositHandler)
+	p.PUT("/txouts/:txOutPos", p.PutTxOutHandler)
 }
 
 func (p *Plasma) initRootChain() error {

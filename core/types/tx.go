@@ -185,6 +185,16 @@ func (tx *Tx) ExitOutput(outIndex uint64) error {
 	return nil
 }
 
+func (tx *Tx) RestoreOutput(outIndex uint64) error {
+	if !tx.IsExistOutput(outIndex) {
+		return ErrInvalidTxOutIndex
+	}
+
+	tx.GetOutput(outIndex).IsExited = false
+
+	return nil
+}
+
 func (tx *Tx) IsExistOutput(outIndex uint64) bool {
 	return outIndex < TxElementsNum
 }
