@@ -409,6 +409,32 @@ func (cc *ChildChain) ExitTxOut(txn *badger.Txn, txOutPos types.Position) error 
 	return cc.setTx(txn, blkNum, txIndex, tx)
 }
 
+func (cc *ChildChain) RestoreTxOut(txn *badger.Txn, txOutPos types.Position) error {
+	blkNum, txIndex, outIndex := types.ParseTxInPosition(txOutPos)
+
+	// check tx existence
+	tx, err := cc.getTx(txn, blkNum, txIndex)
+	if err != nil {
+		if err == badger.ErrKeyNotFound {
+			return ErrTxNotFound
+		} else {
+			return err
+		}
+	}
+
+	// restore txout
+	if err := tx.RestoreOutput(outIndex); err != nil {
+		if err == types.ErrInvalidTxOutIndex {
+			return ErrTxOutNotFound
+		} else {
+			return err
+		}
+	}
+
+	// update tx
+	return cc.setTx(txn, blkNum, txIndex, tx)
+}
+
 func (cc *ChildChain) currentBlockNumberKey() []byte {
 	return []byte(currentBlockNumberKey)
 }

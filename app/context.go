@@ -35,6 +35,10 @@ func (c *Context) GetTxInPositionFromPath() (types.Position, error) {
 	return c.getPositionFromPath("txInPos")
 }
 
+func (c *Context) GetTxOutPositionFromPath() (types.Position, error) {
+	return c.getPositionFromPath("txOutPos")
+}
+
 func (c *Context) getAddressFromPath(key string) (common.Address, error) {
 	addrStr := c.getPathParam(key)
 	if !utils.IsHexAddress(addrStr) {
@@ -75,6 +79,10 @@ func (c *Context) GetOwnerAddressFromForm() (common.Address, error) {
 
 func (c *Context) GetAmountFromForm() (*big.Int, error) {
 	return c.getRequiredBigIntFromForm("amount")
+}
+
+func (c *Context) GetExitedFromForm() (bool, error) {
+	return c.getRequiredBoolFromForm("exited")
 }
 
 func (c *Context) getRequiredSignatureFromForm(key string) (types.Signature, error) {
@@ -130,6 +138,22 @@ func (c *Context) getRequiredBigIntFromForm(key string) (*big.Int, error) {
 	}
 
 	return utils.StringToBigInt(s)
+}
+
+func (c *Context) getRequiredBoolFromForm(key string) (bool, error) {
+	s, err := c.getRequiredFormParam(key)
+	if err != nil {
+		return false, err
+	}
+
+	switch s {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	default:
+		return false, NewInvalidFormParamError(key)
+	}
 }
 
 func (c *Context) getRequiredFormParam(key string) (string, error) {
