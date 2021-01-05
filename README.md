@@ -2,7 +2,7 @@
 
 [![GoDoc](https://godoc.org/github.com/m0t0k1ch1/more-minimal-plasma-chain?status.svg)](https://godoc.org/github.com/m0t0k1ch1/more-minimal-plasma-chain)
 
-a Plasma chain for https://github.com/kfichter/more-minimal-plasma
+a Plasma chain for https://github.com/kfichter/more-minimal-plasma written in Go
 
 __NOTICE: This is an experimental software, don't run in production.__
 
