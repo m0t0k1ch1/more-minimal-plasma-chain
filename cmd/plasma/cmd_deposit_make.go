@@ -24,10 +24,11 @@ var cmdDepositMake = cli.Command{
 		if err != nil {
 			return err
 		}
+		isDirect := getBool(c, directFlag)
 
 		account := types.NewAccount(privKey)
 
-		if getBool(c, directFlag) {
+		if isDirect {
 			// deposit to child chain directly
 			blkNum, err := newClient().PostDeposit(context.Background(), account.Address(), amount)
 			if err != nil {

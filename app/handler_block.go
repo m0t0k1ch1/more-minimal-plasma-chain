@@ -6,6 +6,7 @@ import (
 	"github.com/m0t0k1ch1/more-minimal-plasma-chain/utils"
 )
 
+// TODO: can be executed by only the operator
 func (p *Plasma) PostBlockHandler(c *Context) error {
 	c.Request().ParseForm()
 
